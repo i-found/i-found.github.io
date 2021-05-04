@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport"  id="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0,user-scalable=no"/>
+	<link rel="stylesheet" type="text/css" href="css/music.css">
+	<link rel="stylesheet" href="../../index.css">
+	<!-- 两个点代表上一级 -->
+	<script type="text/javascript" src="js/lyrics.js"></script>
+	<title>许嵩 | 梦游计_2012</title>
+</head>
+<body>
+	<!--播放页面 -->
+	<div id="wrapper">
+		<!-- bg  背景图 -->
+		<div class="bg"></div>
+		<div class="bg-black"></div>
+		<!-- header  顶部歌曲名,歌手名 -->
+		<div class="header">
+			<!-- 返回图标 -->
+			<div id="tofirstpage" title="返回 | 歌曲精选"></div>
+			<!-- 歌曲名 -->
+			<div class="song" id="songName"></div>
+			<!-- 歌手名 -->
+			<div class="artist" id="artist"></div>
+		</div>
+		<!-- center  中间部分 -->
+		<div class="center" title="打开歌词">
+			<img id="styli" class="play-needle" src="img/play_needle.png" alt="">
+			<div class="disk-bg"></div>
+			<div class="disk">
+				<img class="disk-album-bg" src="" alt=""  >
+				<img class="disk-music-bg" src="img/play_disc.png" alt="">
+			</div>
+			<div class="disk">
+				<img class="disk-album-bg" src="" alt=""  >
+				<img class="disk-music-bg" src="img/play_disc.png" alt="">
+			</div>
+		</div>
+		<!-- 歌词 -->
+		<div class="lyric" title="返回主界面">
+			<div id="line"></div>
+			<ul></ul>
+		</div>
+		<!-- footer 底部 -->
+		<div class="footer">
+			<!--process 进度条部分 -->
+			<div id="process">
+				<!--currentTime 当前时间 -->
+				<span id="currentTime">00:00</span>
+				<!--process-bar 进度条 -->
+				<div id="process-bar">
+					<div id="process-all"></div>
+					<div id="process-cur">
+						<span id="cur-btn"></span>
+					</div>
+					<div id="process-ready"></div>
+				</div>
+				<!--total-time 总时间 -->
+				<span id="total-time"></span>
+			</div>
+			<div id="control">
+				        <!--loop 循环按钮  -->
+                <span class="loop" title="列表循环/单曲循环"></span>
+                <!--pre 上一曲按钮  -->
+                <span class="pre" title="上一首"></span>
+                <!--play 播放按钮  -->
+                <span class="play" title="播放"></span>
+                <!--pause 暂停按钮  -->
+                <span class="pause" style="display:none"  title="暂停"></span>
+                <!--next 下一曲按钮  -->
+                <span class="next" title="下一首"></span>
+                <!--list 列表按钮  -->
+                <span class="list" title="打开播放列表"></span>
+            </div>
+		</div>
+		<div id="list-mask"></div>
+		<div id="play-list">
+			<div>
+				<div class="list-title">播放列表<span id="playListCount"></span></div>
+				<div class="list-title-close">×</div>
+			</div>
+			<!-- 歌曲列表 -->
+			<ul></ul>
+		</div>
+		<!-- 主页 -->
+		<div id="stage">
+			<!-- logo企鹅 -->
+				<a href="https://i-found.gitee.io/" title="点我回主页哦~">
+					<img class="img1" src="../../img/企鹅.png">
+				</a>
+
+		  <section class="container">
+		    <div class="meet1"><img src="img/山水之间cover.jpeg" alt="" title="山水之间"></div>
+		    <div class="meet2"><img src="img/弹指一挥间cover.jpeg" alt="" title="弹指一挥间"></div>
+		    <div class="meet3"><img src="img/宇宙之大cover.jpeg" alt="" title="宇宙之大"></div>
+		    <div class="meet4"><img src="img/惊鸿一面cover.jfif" alt="" title="惊鸿一面"></div>
+		    <div class="meet5"><img src="img/七夕cover.jpg" alt="" title="七夕"></div>
+		    <div class="meet6"><img src="img/有桃花cover.jpeg" alt="" title="有桃花"></div>
+		    <!-- <div class="meet6"><img src="img/xxx.jpg" alt="" title="xxx"></div> -->
+		  </section>
+		</div>
+	</div>
+	<!-- 此处不显示 -->
+	<div style="display:none">
+		<audio  src="mp3/音阙诗听,昆玉 - 我已经到了幻想尽头.m4a"></audio>
+	</div>
+<script type="text/javascript" src="js/move.js"></script>
+<script type="text/javascript" src="js/music.js"></script>
+</body>
+</html>
