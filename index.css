@@ -1,0 +1,1076 @@
+
+
+/* 这里为初始化定义padding和margin,否则默认情况下body和html区域会有8px的间距*/
+
+*{
+padding:0px;
+margin: 0px;
+
+}
+/* 网页背景 */
+.bodybox{
+  width:100%;
+  height:2600px;
+  position: absolute;
+  top:0px;
+  left:0px;
+  /* 这里设置absolute定位方式，时为了不产生margin坍塌，否则将与子级块content-layout产生margin坍塌，自身被往下带 */
+  color: #424242;
+
+  background-color: #F5F6F9;
+  /* 这里定义网页内容展示部分的颜色：轻灰 */
+  /* background-image: linear-gradient(135deg,#F9B9B7 20%,#C0E3DE 80%); */
+  /* background-image: linear-gradient(to right, #eea2a2 0%, #bbc1bf 19%, #57c6e1 42%, #b49fda 79%, #7ac5d8 100%); */
+
+}
+
+
+
+
+
+/* 导航栏 */
+.Navi-Bar{
+  position:fixed;
+  left:0px;
+  top:0px;
+  z-index: 6;
+  height:60px;
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.95);
+  box-shadow:0px 2px 0px 0px rgba(0,0,0,0.04);
+  /* 观察位置用 */
+  /* border: 1px solid black; */
+  /* opacity: 10%; */
+
+
+}
+
+
+.Navi-Bar-content{
+  position: relative;
+  width:1200px;
+  height:inherit;
+/* 为了让导航栏内容居中 */
+margin:0 auto;
+/* 观察位置用 */
+/* background-color: pink; */
+/* border:1px solid black; */
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+/* 这里时测试浮动模型用的 */
+/* .TEST{
+  width:500px;
+  height:100px;
+  background-color: pink;
+  border: 1px solid black;
+} */
+
+
+/* 设置logo-企鹅的位置 */
+.img1{
+  /* 这里不能单一用浮动，设置的hover会影响后面的元素位置 */
+  /* float:left; */
+
+/* 定义logo位置，脱离文档流 */
+  position: absolute;
+  left:0px;
+  top: 11px;
+  height:38px;
+  /* 这里设置白色背景的原因：先前的方案为fixed,一张png图片，fixed、z-index向上后，脱离文档流之后就会出现边缘模糊的现象，此时的解决
+  方案为：设置background-color.
+  background-color:#fff; */
+
+  /* 观察位置用 */
+  /* border:1px solid black; */
+
+  /* 这里如果position fixed的话，浮动也跑不到头部去，img本身会看到浮动元素，但是top/left还是可以定义位置 */
+
+  /* position: fixed;
+  top:100px;
+  left:10px;
+  z-index: 7; */
+}
+
+.img1:hover{
+  left: -3px;
+  top: 7px;
+  height:45px;
+}
+
+
+
+
+
+/* 二级logo i-found */
+
+.Navi-Bar .img2{
+  float:left;
+  /* 定义图片大小 */
+  height:30px;
+  /* 观察位置用 */
+  /* border:1px solid black; */
+  /* 这里定义i-found图片的位置； */
+  margin-top: 15px;
+  margin-left: 46px;
+  /* background-image: linear-gradient(135deg,#F9B9B7 20%,#C0E3DE 80%);
+  background-image: linear-gradient(120deg, #d4fc79 0%, #96e6a1 100%); */
+  background-image: linear-gradient(to right, #eea2a2 0%, #bbc1bf 19%, #57c6e1 42%, #b49fda 79%, #7ac5d8 100%);
+  opacity: 50%;
+
+}
+
+.Navi-Bar .img2:hover{
+
+  background-image: linear-gradient(135deg,#F9B9B7 20%,#C0E3DE 80%);
+  /* background-image: linear-gradient(120deg, #d4fc79 0%, #96e6a1 100%); */
+}
+
+
+/* 分标题快区域 */
+
+.Navi-Bar ul{
+  float:left;
+  list-style: none;
+  /* 观察位置用 */
+  /* border:1px solid black; */
+  /* 定义整个ul位置 */
+  margin-left:255px;
+
+}
+
+/* 清除浮动流 */
+.Navi-Bar ul::after{
+  content: "";
+  display: block;
+  clear: both;
+
+}
+
+
+
+
+.Navi-Bar ul li{
+  float:left;
+  /* background-color: pink; */
+  width:60px;
+  height: 60px;
+  text-align:center;
+  line-height: 60px;
+  /* 控制各个小标题的间距 */
+  margin: 0 22px;
+
+}
+
+a{
+  text-decoration: none;
+  color:#828282;
+}
+
+.Navi-Bar ul li a{
+  font-size: 16px;
+  font-family: sans-serif;
+  display:inline-block;
+  height:32px;
+  line-height: 32px;
+  padding:0 12px;
+  border-radius: 16px;
+  /* 观察位置用 */
+  /* background-color: purple; */
+}
+
+
+.Navi-Bar ul .search a{
+    /* 由于内部缺少了内容（ep:发现），导致位置变化，所以定位调整至合适位置 */
+  position: relative;
+  top:15px;
+  border-radius: 0px;
+
+/* 观察位置用 */
+  /* background-color: blue; */
+  background-repeat: no-repeat;
+  background-image: url(./img/search.png);
+}
+
+
+
+.Navi-Bar ul .search a:hover{
+
+  background-image: url(./img/search-hover.png);
+}
+
+
+
+
+
+.Navi-Bar ul .search{
+
+/* 将margin-left由22px改为以下数值,，即调整搜索框的位置 */
+  margin-left: 283px;
+
+/* 观察位置用 */
+  /* background-color: pink; */
+}
+
+
+
+
+
+.Navi-Bar ul li .first{
+
+  color :#FF8B8B;
+  font-weight: 600;
+
+
+
+}
+
+
+
+
+.Navi-Bar ul li .buttom:hover{
+  color:#fff;
+  background-color: #67C0E0;
+}
+
+
+
+
+
+.content-layout{
+  width:1200px;
+  /* 观察位置用 */
+  /* background-color: pink; */
+  position: relative;
+  /* 定位与导航栏的相对位置 */
+  margin: 65px auto;
+  padding: 0 20px 20px 20px;
+  /* 父级元素触发bfc规则，这样就不会产生垂直方向的margin坍塌 */
+  overflow: hidden;
+  margin-bottom: 0px;
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+/* 书签页 */
+
+/* 这里是第一个书签页面 */
+.bookmark1{
+  float: left;
+  position:relative;
+  /* left:50%; */
+  margin-top: 20px;
+  margin-right: 20px;
+  /* margin属于块的初始属性 */
+  width:550px;
+  height:360px;
+  padding:20px;
+  border-radius:22px;
+  font-size:24px;
+  font-family:Microsoft JhengHei;
+  /* font-weight: bold; */
+  line-height:34px;
+  color:#E5E8DC;
+  background-color:rgba(97,191,173, 0);
+  background-image:url('./img/pexels-ann-h-1930381.jpg');
+  background-size:590px 400px;
+  background-blend-mode: multiply;
+  /* opacity: 0; */
+
+
+}
+
+
+.bookmark1:hover{
+  background-color:rgba(97,191,173, 0.5);
+  box-shadow:6px 6px 15px 2px rgba(0,0,0,0.15);
+
+}
+
+
+
+
+
+/* 日期 */
+.DATE{
+  height:35px;
+  margin-top: 10px;
+  margin-left: 10px;
+  margin-bottom:90px;
+  /* 观察位置用 */
+  /* border:1px solid black; */
+  font-size: 35px;
+  line-height: 35px;
+
+/* 控制文本之间的距离 */
+
+
+}
+
+
+/* id应用选择器#来定义 */
+#theDate{
+  float: left;
+  color:rgba(255,192,203,0.9);
+  /* 把字体大小、行距放到父级，来达到修改的目的，因为id定义后在其它css文件中就无法修改此属性了 */
+  /* font-size: 35px; */
+  font-family: Helvetica;
+  /* line-height: 35px; */
+  /* background-color: yellow; */
+
+}
+
+
+.date2{
+  float: left;
+  font-size:14px;
+  line-height:17px;
+  font-family: Helvetica;
+  margin-left: 5px;
+  /* background-color: pink; */
+
+
+}
+
+
+
+
+/* 文本内容 */
+.content{
+  text-indent:2em;
+  text-align:justify;
+
+}
+
+
+.author{
+  text-indent:2em;
+  text-align:right;
+  font-size:16px;
+  line-height: 62px;
+
+}
+
+/* 这里是第二个书签页面 */
+
+
+.bookmark2{
+  width:590px;
+  height:400px;
+  float: left;
+  position:relative;
+  /* left:50%; */
+  margin-top: 20px;
+  /* margin-right: 20px; */
+  /* margin属于块的初始属性 */
+
+
+  border-radius:22px;
+  font-size:24px;
+  font-family:STXihei;
+  line-height:34px;
+
+  background-color:rgba(255, 255, 255, 1);
+
+
+}
+
+
+
+.bookmark2:hover{
+  /* background-color:rgba(0, 12, 100, 0.15); */
+  box-shadow:6px 6px 15px 2px rgba(0,0,0,0.08);
+  /* box-shadow: 0 4px 8px 0 rgb(0 0 0 / 5%); */
+
+}
+
+.bookmark2-left{
+  width:430px;
+  height:400px;
+  /* background-color: pink; */
+  border-radius:22px 0px 0px 22px;
+  float: left;
+
+  /* text-align: center; */
+  overflow: hidden;
+
+}
+
+
+
+.bookmark2-left img{
+  /* width:inherit; */
+height: inherit;
+position: relative;
+left:-60px;
+
+}
+
+
+
+
+
+.bookmark2-right{
+  width:160px;
+  height:400px;
+  /* background-color: purple; */
+  border-radius:0px 22px 22px 0px;
+    float: left;
+
+
+
+
+}
+
+
+
+.bookmark2-right ul{
+  margin-top: 82px;
+    /* margin-left:50px; */
+    list-style: none;
+/* 观察位置用 */
+  /* background-color: blue; */
+
+
+}
+
+
+
+.bookmark2-right ul li{
+  width:60px;
+  height:60px;
+  line-height: 60px;
+  text-align: center;
+  border-radius: 30px;
+  margin-bottom: 22px;
+  /* 控制左右距离 */
+  margin-left: 48px;
+  /* 观察位置用 */
+  /* border: 1px solid #000; */
+
+  font-size: 50px;
+  font-family:STFangsong;
+  font-weight: bold;
+
+}
+
+
+
+
+.bookmark2-right ul .fit1{
+
+border-radius: 10px;
+background-color: #FF8B8B;
+color:#F9F8E6;
+
+
+}
+
+
+.bookmark2-right ul .fit2{
+background-color: #F9F7E8;
+color:#62BFAD;
+
+
+
+
+}
+
+.bookmark2-right ul .fit3{
+background-color: #61BFAD;
+color:#FFFFFF;
+
+
+
+
+}
+
+
+
+
+
+
+
+
+/* 这里是第三个书签页面 */
+
+
+.bookmark3{
+  float: left;
+  position:relative;
+  /* left:50%; */
+  margin-top: 20px;
+  margin-right: 20px;
+  /* margin属于块的初始属性 */
+  width:265px;
+  height:265px;
+  padding:10px;
+  border-radius:22px;
+  font-size:24px;
+  font-family:STXihei;
+  line-height:34px;
+  color:#E5E8DC;
+  background: #fff;
+  /* background-color:rgba(0, 0, 0, 0.65); */
+  /* background-image:url('./img/pexels-ann-h-3482441.jpg');
+  background-size: auto 285px; */
+  /* background-blend-mode: multiply; */
+
+
+}
+
+
+.bookmark3:hover{
+
+  box-shadow:6px 6px 15px 2px rgba(0,0,0,0.08);
+
+}
+
+
+
+
+
+.bookmark-content{
+  display: inline-block;
+  width:100%;
+  height:100%;
+  /* 观察位置用 */
+  /* background-color: pink; */
+
+
+}
+
+
+.in-img{
+  width:100%;
+  height: 61.8%;
+  /* background-color: red; */
+  border-radius: 6px;
+  overflow: hidden;
+
+
+
+
+
+
+}
+
+
+.in-img img{
+  width:inherit;
+  position: relative;
+  /* 控制显示位置 */
+  /* top: -10px; */
+  /* opacity: 1%; */
+
+
+
+
+}
+
+
+.in-text{
+
+  width:92%;
+  /* 调整文本与边缘间距 */
+  padding:0 4%;
+  height: 38.2%;
+
+
+/* 调整上下位置用 */
+  margin-top: 12px;
+
+  /* 观察位置用 */
+  /* background-color: blue; */
+
+
+
+
+}
+
+.in-text p{
+
+  font-size: 16px;
+  color: #2D3F56;
+  line-height: 26px;
+  font-family: PingFangSC-Medium;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: justify;
+  /* 设置最大高度 */
+  max-height: 52px;
+
+  /* 观察位置用 */
+  /* background-color: red; */
+
+
+/* 内容超出范围后···显示 */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    word-break: break-word;
+
+
+
+
+
+
+
+}
+
+
+.in-text span{
+
+  font-family: PingFangSC-Regular;
+    font-size: 13px;
+    color: #BCBCBC;
+    /* 控制字间距 */
+    letter-spacing: 0;
+    line-height: 18px;
+    position: absolute;
+    /* 控制文本上下距离 */
+    bottom: 30px;
+
+
+}
+
+
+
+
+
+
+
+
+
+
+.bookmark4{
+  float: left;
+  position:relative;
+  /* left:50%; */
+  margin-top: 20px;
+  /* margin-right: 20px; */
+  /* margin属于块的初始属性 */
+  width:265px;
+  height:265px;
+  padding:10px;
+  border-radius:22px;
+  font-size:24px;
+  font-family:STXihei;
+  line-height:34px;
+  color:#E5E8DC;
+  background:#fff;
+  /* background-color:rgba(0, 0, 0, 0.65); */
+  /* background-image:url('./img/pexels-ann-h-3482441.jpg');
+  background-size: auto 285px; */
+  /* background-blend-mode: multiply; */
+
+
+}
+
+
+.bookmark4:hover{
+
+  box-shadow:6px 6px 15px 2px rgba(0,0,0,0.08);
+
+}
+
+
+
+
+
+
+.bookmark5{
+  float: left;
+  position:relative;
+  /* left:50%; */
+  margin-top: 20px;
+  margin-right: 20px;
+  /* margin属于块的初始属性 */
+  width:590px;
+  height:590px;
+  /* padding:10px; */
+  border-radius:22px;
+  font-size:24px;
+  font-family:STXihei;
+  line-height:34px;
+  color:#E5E8DC;
+  background: #fff;
+
+
+  overflow: hidden;
+  /* background-color:rgba(0, 0, 0, 0.65); */
+  /* background-image:url('./img/pexels-ann-h-3482441.jpg');
+  background-size: auto 590px; */
+  /* background-blend-mode: multiply; */
+
+
+}
+
+
+
+.bookmark5:hover{
+
+  box-shadow:6px 6px 15px 2px rgba(0,0,0,0.08);
+
+}
+
+
+
+.bookmark5 .bookmark5-img{
+  display: block;
+  width:100%;
+  height:390px;
+  /* background-color: purple; */
+  background-image: url(./img/pexels-carla-medeiros-2778144.jpg);
+  background-size: 600px auto;
+  background-repeat: no-repeat;
+
+/* 百分比可以理解为图片从上对齐到下对齐可移动范围高度(超出可视范围)的百分比.0即上对齐,100%,下对齐,50%居中对齐. */
+  background-position: center 0%;
+
+
+
+}
+
+
+
+/* 这里测试background-attachment各个属性的意思，fixed:固定在浏览器可视区域，scroll：固定在元素容器上，local：固定在元素内容区域； */
+/* .bookmark5 p {
+  background-size: 1000px auto;
+  background-image: url(./img/pexels-carla-medeiros-2778144.jpg);
+  background-attachment: fixed;
+} */
+
+
+
+
+
+.bookmark5-content{
+  width:100%;
+  height:150px;
+  /* 为了避免产生margin坍塌 */
+  position: absolute;
+  /* border: 1px solid black; */
+    /* 观察位置用 */
+  /* background-color: purple; */
+
+  /* opacity: 30%; */
+
+
+}
+
+
+
+
+.bookmark5-content a{
+  width:510px;
+  display: block;
+  text-align: justify;
+
+
+
+
+  font-size: 26px;
+  font-family: "PingFangSC-Regular";
+  color: #0F2540;
+  margin: 20px 40px 10px 40px;
+  line-height: 36px;
+  font-weight: bolder;
+
+  /* 观察位置用 */
+  /* background-color: yellow; */
+
+
+
+
+    /* 内容超出范围后···显示 */
+    /* 设置最大高度 */
+    max-height: 72px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    word-break: break-word;
+
+
+
+}
+
+.bookmark5-content a:hover{
+  color:#FF8B8B;
+
+
+}
+
+
+
+
+
+.bookmark5-content p{
+  margin: 0 40px;
+  font-size: 13px;
+  word-wrap: break-word;
+  font-family: "PingFangSC-Regular";
+  color: #BCBCBC;
+  line-height: 20px;
+  /* 观察位置用 */
+  /* background-color: yellow; */
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+
+
+
+
+
+
+}
+
+
+
+.icon-footer{
+  color: #C9D6DE;
+    /* font-size: 12px;
+    line-height: 14px; */
+    width: 510px;
+    padding: 0px 40px;
+    /* position:absolute;此时元素转化为inline-block,这样才会被子级元素撑开 */
+    position: absolute;
+    /* 定位离底端距离 */
+    bottom: 20px;
+    /* 观察位置用 */
+    /* background-color: yellow; */
+    background-clip: content-box;
+    /* border:1px solid black; */
+
+
+}
+
+
+
+.icon-footer-autor{
+  float: right;
+  font-family: "PingFangSC-Regular";
+  font-size: 13px;
+  line-height: 18px;
+  color: #BCBCBC;
+  /* 观察位置用 */
+  /* background-color: pink; */
+
+}
+
+
+
+/* 方法1：通过调整位置和透明度去除 */
+/* .only-bookmark{
+  position: absolute;
+  top: 0px;
+  opacity: 0%;
+
+} */
+
+
+
+.only-bookmark{
+  /* 观察位置用 */
+  background-color: red;
+  width: 0px;
+  height: 0px;
+  /* 溢出隐藏文字 */
+  /* 产生bfc,与flow区域不重合 */
+  overflow: hidden;
+/* 方法二：直接用display:none; */
+
+}
+
+
+
+
+
+
+
+
+
+/* 背景音乐样式*/
+
+.musicbox{
+position: relative;
+left:50%;
+/* margin-top:-60px; */
+margin-left: -150px;
+width:300px;
+height:55px;
+text-align: center;
+/* opacity: 55%; */
+/* border: 1px solid pink; */
+}
+
+/* 时间展示 */
+
+
+.TIME{
+width:580px;
+height:280px;
+padding:10px;
+/* position: relative;
+left:50%;
+margin-top:15px;
+margin-left: -290px; */
+margin:100px auto;
+background-color:#FF8FA4;
+box-shadow:8px 8px 18px #616161;
+border-radius: 10px;
+
+
+}
+
+
+.timebox{
+  width:580px;
+  height:200px;
+  /* padding:1px; */
+  /* margin:0 auto; */
+  background-color: rgba(50,50,50,0.1);
+  border-radius: 5px;
+
+}
+
+
+.time{
+  color:#E5E8DC;
+  text-align:center;
+  font-size:140px;
+  font-family:"等线";
+  line-height:200px;
+}
+
+
+
+.date-dayBox{
+  width:580px;
+  height:66px;
+  text-align: center;
+  /* background-color: purple; */
+
+}
+
+
+.date-day{
+  color:#BEDFD4;
+  /* border:3px solid black; */
+  margin:50px;
+  font-size:50px;
+  line-height: 66px;
+  font-family: Microsoft YaHei light;
+}
+
+
+
+
+
+.to-top{
+  position: fixed;
+  right:25px;
+  bottom:28px;
+  /* 以上三个属性都必须 */
+  width:46px;
+  height:46px;
+  background-color:#ff8b8b;
+  border-radius: 50%;
+  box-shadow:0px 3px 6px 2px rgba(255,139,139,0.32);
+  z-index: 5;
+
+
+}
+
+.to-top a img{
+  width:100%;
+
+
+
+}
+
+
+
+
+/* 底部链接栏 */
+
+.footer-Bar{
+  position: absolute;
+  /* 定位到父级bodybox的最底端 */
+  bottom: 0px;
+  width:100%;
+  height:140px;
+  background-color: #fff;
+  box-shadow:0px -1px 5px 0px rgba(0,0,0,0.12);
+  text-align: center;
+  font-size: 36px;
+
+
+}
+
+
+
+
+
+
+.doc {
+  /* 正常不需要这一句，但却少了，动效会往上跑 ,让动效以此为定位元素*/
+	position: relative;
+  /* top:-300px; */
+ 	/* margin-left: 100px;
+  margin-top: 2000px; */
+  /* 它出生的位置就在前面，需要很大值才有效果(在content-layout里头时) */
+ 	width: inherit;
+ 	height: inherit;
+  overflow: hidden;
+}
+
+
+
+.doc--bg2{
+ 	/* background-color: #f40; */
+ 	/* background-image: url(../img/image/bg2.jpg); */
+ 	/* background-position: 0 0;
+ 	background-repeat: no-repeat;
+ 	background-size: cover; */
+}
+
+.nav{
+
+	width:100px;
+	height: 100px;
+	background-color: pink;
+
+
+
+
+}

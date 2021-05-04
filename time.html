@@ -1,0 +1,49 @@
+<html>
+<head>
+<meta http-equiv="Content-Type” content="text/html; charset=utf-8">
+<title>动态显示年月日星期时分秒</title>
+<script type="text/javascript">
+var days=new  Array ("日", "一", "二", "三", "四", "五", "六");
+function showDT() {
+  var currentDT = new Date();
+  var y,m,date,day,hs,ms,ss,theDateStr;
+  y = currentDT.getFullYear(); //四位整数表示的年份
+  m = (currentDT.getMonth()+1); //月
+  date = currentDT.getDate(); //日
+  day = currentDT.getDay(); //星期
+  hs = currentDT.getHours(); //时
+  ms = currentDT.getMinutes(); //分
+  ss = currentDT.getSeconds(); //秒
+  theDateStr = y+"年"+m+"月"+date+"日 星期"+days[day]+" "+hs+":"+ms+":"+ss;
+  theYearStr = y+"年";
+  theDayStr = date;
+  document.getElementById("theClock"). innerHTML =theDateStr;
+  document.getElementById("theYear"). innerHTML =theYearStr;
+  document.getElementById("theDate"). innerHTML =theDayStr;
+  // setTimeout 在执行时,是在载入后延迟指定时间后,去执行一次表达式,仅执行一次
+  window.setTimeout( showDT, 1000);
+}
+</script>
+</head>
+
+<body onload="showDT()">
+<div id="theClock" ></div>
+<div id="theYear" ></div>
+<div id="theDate" ></div>
+
+
+<!-- <script>
+  function time(){var h=new Date().getHours();h=h<10?("0"+h):h;var m=new Date().getMinutes();m=m<10?("0"+m):m;var s=new Date().getSeconds();s=s<10?("0"+s):s;document.getElementById("time").innerHTML=h+":"+m+":"+s}
+  function date(){var m=new Date().getMonth();m=m+1;var d=new Date().getDate();d=d<10?("0"+d):d;document.getElementById("date").innerHTML=m+"月"+d+"日"}
+  function day(){var x;var day=new Date().getDay();switch(day){case 0:x="日";break;case 1:x="一";break;case 2:x="二";break;case 3:x="三";break;case 4:x="四";break;case 5:x="五";break;case 6:x="六";break}document.getElementById("day").innerHTML=" 星期"+x}setInterval(time,500);setInterval(date,700);setInterval(day,1000);
+</script>
+
+
+<div id="date" ></div>
+<div id="day" ></div> -->
+
+
+
+
+</body>
+</html>
