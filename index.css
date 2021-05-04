@@ -1033,6 +1033,8 @@ border-radius: 10px;
   box-shadow:0px -1px 5px 0px rgba(0,0,0,0.12);
   text-align: center;
   font-size: 36px;
+  /* 观察位置用 */
+  /* background-color:pink; */
 
 
 }
@@ -1052,6 +1054,8 @@ border-radius: 10px;
  	width: inherit;
  	height: inherit;
   overflow: hidden;
+  /* 观察位置用 */
+  /* background-color: yellow; */
 }
 
 
