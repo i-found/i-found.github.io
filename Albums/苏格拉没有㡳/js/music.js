@@ -1,67 +1,74 @@
 /////////////////////<----------数据区-------->/////////////////////////
 var data=[
             {
-                song:"山水之间",
+                song:"幻听",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 山水之间.m4a",
-                img:'css/img/山水之间cover.jpeg',
-                lyric:'山水之间'
+                src:"mp3/许嵩 - 幻听.m4a",
+                img:'css/img/幻听cover.png',
+                lyric:'幻听'
             },
             {
-                song:"弹指一挥间",
+                song:"全球变冷",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 弹指一挥间.m4a",
-                img:'css/img/弹指一挥间cover.jpeg',
-                lyric:'弹指一挥间'
+                src:"mp3/许嵩 - 全球变冷.m4a",
+                img:'css/img/全球变冷cover.png',
+                lyric:'全球变冷'
             },
             {
-                song:"宇宙之大",
+                song:"对话老师",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 宇宙之大.m4a",
-                img:'css/img/宇宙之大cover.jpeg',
-                lyric:'宇宙之大'
+                src:"mp3/许嵩 - 对话老师.m4a",
+                img:'css/img/对话老师cover.png',
+                lyric:'对话老师'
             },
             {
-                song:"惊鸿一面",
+                song:"闺蜜",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 惊鸿一面.m4a",
-                img:'css/img/惊鸿一面cover.jfif',
-                lyric:'惊鸿一面'
+                src:"mp3/许嵩 - 闺蜜.m4a",
+                img:'css/img/闺蜜cover.png',
+                lyric:'闺蜜'
             },
             {
-                song:"七夕",
+                song:"装糊涂",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 七夕.m4a",
-                img:'css/img/七夕cover.jpg',
-                lyric:'七夕'
+                src:"mp3/许嵩 - 装糊涂.m4a",
+                img:'css/img/装糊涂cover.png',
+                lyric:'装糊涂'
             },
             {
-                song:"有桃花",
+                song:"胡萝卜须",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 有桃花.m4a",
-                img:'css/img/有桃花cover.jpeg',
-                lyric:'有桃花'
+                src:"mp3/许嵩 - 胡萝卜须.m4a",
+                img:'css/img/胡萝卜须cover.png',
+                lyric:'胡萝卜须'
             },
             {
-                song:"梧桐灯",
+                song:"亲情式的爱情",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 梧桐灯.m4a",
-                img:'css/img/梧桐灯cover.jpeg',
-                lyric:'梧桐灯'
+                src:"mp3/许嵩 - 亲情式的爱情.m4a",
+                img:'css/img/亲情式的爱情cover.png',
+                lyric:'亲情式的爱情'
             },
             {
-                song:"隐隐约约",
+                song:"伴虎",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 隐隐约约.m4a",
-                img:'css/img/隐隐约约cover.jpg',
-                lyric:'隐隐约约'
+                src:"mp3/许嵩 - 伴虎.m4a",
+                img:'css/img/伴虎cover.png',
+                lyric:'伴虎'
             },
             {
-                song:"等到烟火清凉",
+                song:"Play With Style",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 等到烟火清凉.m4a",
-                img:'css/img/等到烟火清凉cover.jfif',
-                lyric:'等到烟火清凉'
+                src:"mp3/许嵩 - Play With Style.m4a",
+                img:'css/img/PlayWithStylecover.png',
+                lyric:'PlayWithStyle'
+            },
+            {
+                song:"心疼你的过去",
+                singer:"许嵩",
+                src:"mp3/许嵩 - 心疼你的过去.m4a",
+                img:'css/img/心疼你的过去cover.png',
+                lyric:'心疼你的过去'
             }
 ];
 ///////////////////<-------变量区-------->//////////////////////////////////////
