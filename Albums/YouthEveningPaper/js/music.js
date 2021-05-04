@@ -32,7 +32,7 @@ var data=[
                 song:"燕归巢",
                 singer:"许嵩",
                 src:"mp3/许嵩 - 燕归巢.m4a",
-                img:'css/img/燕归巢们cover.jpg',
+                img:'css/img/燕归巢cover.jpg',
                 lyric:'燕归巢'
             },
             {
