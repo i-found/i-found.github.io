@@ -1,0 +1,351 @@
+/* 在这里定义样式哦 */
+
+*{
+	margin: 0;
+	padding: 0;
+}
+
+/* 网页背景 */
+.bodybox{
+  width:100%;
+  height:2600px;
+  position: absolute;
+  top:0px;
+  left:0px;
+  /* 这里设置absolute定位方式，时为了不产生margin坍塌，否则将与子级块content-layout产生margin坍塌，自身被往下带 */
+  color: #424242;
+
+  background-color: #F5F6F9;
+  /* 这里定义网页内容展示部分的颜色：轻灰 */
+  /* background-image: linear-gradient(135deg,#F9B9B7 20%,#C0E3DE 80%); */
+  /* background-image: linear-gradient(to right, #eea2a2 0%, #bbc1bf 19%, #57c6e1 42%, #b49fda 79%, #7ac5d8 100%); */
+
+}
+
+
+
+/* 导航栏 */
+.Navi-Bar{
+  position:fixed;
+  left:0px;
+  top:0px;
+  z-index: 6;
+  height:60px;
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.95);
+  box-shadow:0px 2px 0px 0px rgba(0,0,0,0.04);
+  /* 观察位置用 */
+  /* border: 1px solid black; */
+	/* background-color: yellow; */
+  /* opacity: 10%; */
+
+
+}
+
+
+
+.Navi-Bar-content{
+  position: relative;
+  width:1200px;
+  height:inherit;
+/* 为了让导航栏内容居中 */
+margin:0 auto;
+/* 观察位置用 */
+/* background-color: pink; */
+/* border:1px solid black; */
+
+}
+
+
+/* 设置logo-企鹅的位置 */
+.img1{
+  /* 这里不能单一用浮动，设置的hover会影响后面的元素位置 */
+  /* float:left; */
+
+/* 定义logo位置，脱离文档流 */
+  position: absolute;
+  left:0px;
+  top: 11px;
+  height:38px;
+  /* 这里设置白色背景的原因：先前的方案为fixed,一张png图片，fixed、z-index向上后，脱离文档流之后就会出现边缘模糊的现象，此时的解决
+  方案为：设置background-color.
+  background-color:#fff; */
+
+  /* 观察位置用 */
+  /* border:1px solid black; */
+
+  /* 这里如果position fixed的话，浮动也跑不到头部去，img本身会看到浮动元素，但是top/left还是可以定义位置 */
+
+  /* position: fixed;
+  top:100px;
+  left:10px;
+  z-index: 7; */
+}
+
+.img1:hover{
+  left: -3px;
+  top: 7px;
+  height:45px;
+}
+
+
+
+
+
+/* 二级logo i-found */
+
+.Navi-Bar .img2{
+  float:left;
+  /* 定义图片大小 */
+  height:30px;
+  /* 观察位置用 */
+  /* border:1px solid black; */
+  /* 这里定义i-found图片的位置； */
+  margin-top: 15px;
+  margin-left: 46px;
+  /* background-image: linear-gradient(135deg,#F9B9B7 20%,#C0E3DE 80%);
+  background-image: linear-gradient(120deg, #d4fc79 0%, #96e6a1 100%); */
+  background-image: linear-gradient(to right, #eea2a2 0%, #bbc1bf 19%, #57c6e1 42%, #b49fda 79%, #7ac5d8 100%);
+	opacity: 60%;
+
+}
+
+.Navi-Bar .img2:hover{
+
+  background-image: linear-gradient(135deg,#F9B9B7 20%,#C0E3DE 80%);
+  /* background-image: linear-gradient(120deg, #d4fc79 0%, #96e6a1 100%); */
+}
+
+.Navi-Bar .content-subject{
+  float:left;
+  /* list-style: none; */
+  /* 观察位置用 */
+  /* border:1px solid black; */
+  /* 定义整个ul位置 */
+  margin-left:255px;
+
+}
+
+/* 清除浮动流 */
+.Navi-Bar .Navi-Bar-content div::after{
+  content: "";
+  display: block;
+  clear: both;
+
+}
+
+
+
+
+.Navi-Bar .Navi-Bar-content div div{
+  float:left;
+	/* 观察位置用 */
+  /* background-color: pink; */
+  width:60px;
+  height: 60px;
+  text-align:center;
+  line-height: 60px;
+  /* 控制各个小标题的间距 */
+  margin: 0 22px;
+
+}
+
+a{
+  text-decoration: none;
+  color:#828282;
+}
+
+.Navi-Bar .content-subject div a{
+  font-size: 16px;
+  font-family: sans-serif;
+  display:inline-block;
+  height:32px;
+  line-height: 32px;
+  padding:0 12px;
+  border-radius: 16px;
+  /* 观察位置用 */
+  /* background-color: purple; */
+}
+
+
+.Navi-Bar .content-subject .search a{
+    /* 由于内部缺少了内容（ep:发现），导致位置变化，所以定位调整至合适位置 */
+  position: relative;
+  top:15px;
+  border-radius: 0px;
+
+/* 观察位置用 */
+  /* background-color: blue; */
+  background-repeat: no-repeat;
+  background-image: url(./img/search.png);
+}
+
+
+
+.Navi-Bar .content-subject .search a:hover{
+
+  background-image: url(./img/search-hover.png);
+}
+
+
+
+
+
+.Navi-Bar .content-subject .search{
+
+/* 将margin-left由22px改为以下数值,，即调整搜索框的位置 */
+  margin-left: 283px;
+
+/* 观察位置用 */
+  /* background-color: purple; */
+}
+
+
+
+
+.Navi-Bar .content-subject .first{
+
+  color :#FF8B8B;
+  font-weight: 600;
+
+
+
+}
+
+
+
+
+
+.Navi-Bar .content-subject .buttom:hover{
+  color:#fff;
+  background-color: #67C0E0;
+}
+
+
+
+
+
+
+
+
+.changebox{
+
+	/* 定位轮播图位置 */
+	margin-top: 80px;
+	width: 100%;
+	height: 340px;
+
+	position: relative;
+}
+
+.list{
+	width: 1200px;
+	height: 300px;
+	overflow: hidden;
+	position: absolute;
+	left: 50%;
+	margin-left: -600px;
+}
+
+.btn{
+	position: absolute;
+	top: 50%;
+	margin-top: -50px;
+	width: 64px;
+	height: 64px;
+	line-height: 100px;
+	font-size: 30px;
+	color: white;
+	text-decoration: none;
+	text-align: center;
+	/* background: rgba(0,255,0,.5); */
+	cursor: pointer;
+}
+
+
+.btn img:hover{
+	opacity: 60%;
+
+}
+
+
+
+
+.next{
+	right: 0;
+}
+
+
+/* 这个标签不能修改 */
+li{
+	position: absolute;
+	top: 0;
+	left: 0;
+	list-style: none;
+	opacity: 0;
+	transition: all 0.3s ease-out;
+}
+.list li img{
+	width: 751px;
+	height: 300px;
+	border:none;
+	float: left;
+}
+.p1{
+	transform:translate3d(-224px,0,0) scale(0.81);
+}
+.p2{
+	transform:translate3d(0px,0,0) scale(0.81);
+	transform-origin:0 50%;
+	opacity: 0.8;
+	z-index: 2;
+}
+.p3{
+	transform:translate3d(224px,0,0) scale(1);
+	z-index: 3;
+	opacity: 1;
+}
+.p4{
+	transform:translate3d(449px,0,0) scale(0.81);
+	transform-origin:100% 50%;
+	opacity: 0.8;
+	z-index: 2;
+}
+.p5{
+	transform:translate3d(672px,0,0) scale(0.81);
+}
+.p6{
+	transform:translate3d(896px,0,0) scale(0.81);
+}
+.p7{
+	transform:translate3d(1120px,0,0) scale(0.81);
+}
+
+.buttons{
+	position: absolute;
+	width: 1200px;
+	height: 30px;
+	bottom: 0;
+	left: 50%;
+	margin-left: -600px;
+	text-align: center;
+	padding-top: 10px;
+}
+.buttons a{
+	display: inline-block;
+	width: 35px;
+	height: 5px;
+	padding-top: 4px;
+	cursor: pointer;
+}
+
+span{
+	display: block;
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	background: #ffcc00;
+}
+.blue{
+	background: #19AAD1;
+}
