@@ -23,19 +23,81 @@ margin: 0px;
     font-weight: normal;
 }
 
+@font-face {
+
+    font-family:'Hiragino Sans GB W3';
+    src:url('./font/Hiragino Sans GB W3.otf') format('truetype');
+    font-style:normal;
+    font-weight: normal;
+}
+
+@font-face {
+
+    font-family:'PingFang-SC-Regular';
+    src:url('./font/PingFang-SC-Regular.ttf') format('truetype');
+    font-style:normal;
+    font-weight: normal;
+}
+
 
 
 
 /* 在这里测试字体样式 */
 
-.test-font{
+.test-font1{
 
-  font-family: 'Avenir-Book','single_maltaregular';
+  /* font-family:'Hiragino Sans GB W3', 'PingFang-SC-Regular','Avenir-Book','single_maltaregular'; */
   color:pink;
   position: absolute;
   left: 220px;
   z-index: 100;
   font-size: 80px;
+  background-color: #eee;
+  display: none;
+}
+.test-font2{
+
+  font-family:'Hiragino Sans GB W3';
+  color:pink;
+  position: absolute;
+  left: 220px;
+  top:100px;
+  z-index: 100;
+  font-size: 80px;
+  background-color: #eee;
+  display: none;
+}.test-font3{
+
+  font-family:'PingFang-SC-Regular';
+  color:pink;
+  position: absolute;
+  left: 220px;
+  top:200px;
+  z-index: 100;
+  font-size: 80px;
+  background-color: #eee;
+  display: none;
+}.test-font4{
+
+  font-family:'Avenir-Book';
+  color:pink;
+  position: absolute;
+  left: 220px;
+  top: 300px;
+  z-index: 100;
+  font-size: 80px;
+  background-color: #eee;
+  display: none;
+}.test-font5{
+
+  font-family:'single_maltaregular';
+  color:pink;
+  position: absolute;
+  left: 220px;
+  top: 400px;
+  z-index: 100;
+  font-size: 80px;
+  background-color: #eee;
   display: none;
 }
 
