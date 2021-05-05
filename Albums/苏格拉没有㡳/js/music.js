@@ -1,74 +1,74 @@
 /////////////////////<----------数据区-------->/////////////////////////
 var data=[
             {
-                song:"幻听",
+                song:"想象之中",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 幻听.m4a",
-                img:'css/img/幻听cover.png',
-                lyric:'幻听'
+                src:"mp3/许嵩 - 想象之中.m4a",
+                img:'css/img/想象之中cover.png',
+                lyric:'想象之中'
             },
             {
-                song:"全球变冷",
+                song:"微博控",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 全球变冷.m4a",
-                img:'css/img/全球变冷cover.png',
-                lyric:'全球变冷'
+                src:"mp3/许嵩 - 微博控.m4a",
+                img:'css/img/微博控cover.png',
+                lyric:'微博控'
             },
             {
-                song:"对话老师",
+                song:"千百度",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 对话老师.m4a",
-                img:'css/img/对话老师cover.png',
-                lyric:'对话老师'
+                src:"mp3/许嵩 - 千百度.m4a",
+                img:'css/img/千百度cover.png',
+                lyric:'千百度'
             },
             {
-                song:"闺蜜",
+                song:"河山大好",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 闺蜜.m4a",
-                img:'css/img/闺蜜cover.png',
-                lyric:'闺蜜'
+                src:"mp3/许嵩 - 河山大好.m4a",
+                img:'css/img/河山大好cover.png',
+                lyric:'河山大好'
             },
             {
-                song:"装糊涂",
+                song:"降温",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 装糊涂.m4a",
-                img:'css/img/装糊涂cover.png',
-                lyric:'装糊涂'
+                src:"mp3/许嵩 - 降温.m4a",
+                img:'css/img/降温cover.png',
+                lyric:'降温'
             },
             {
-                song:"胡萝卜须",
+                song:"拆东墙",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 胡萝卜须.m4a",
-                img:'css/img/胡萝卜须cover.png',
-                lyric:'胡萝卜须'
+                src:"mp3/许嵩 - 拆东墙.m4a",
+                img:'css/img/拆东墙cover.png',
+                lyric:'拆东墙'
             },
             {
-                song:"亲情式的爱情",
+                song:"医生",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 亲情式的爱情.m4a",
-                img:'css/img/亲情式的爱情cover.png',
-                lyric:'亲情式的爱情'
+                src:"mp3/许嵩 - 医生.m4a",
+                img:'css/img/医生cover.jpg',
+                lyric:'医生'
             },
             {
-                song:"伴虎",
+                song:"双人旁",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 伴虎.m4a",
-                img:'css/img/伴虎cover.png',
-                lyric:'伴虎'
+                src:"mp3/许嵩 - 双人旁.m4a",
+                img:'css/img/双人旁cover.jpg',
+                lyric:'双人旁'
             },
             {
-                song:"Play With Style",
+                song:"毁人不倦",
                 singer:"许嵩",
-                src:"mp3/许嵩 - Play With Style.m4a",
-                img:'css/img/PlayWithStylecover.png',
+                src:"mp3/许嵩 - 毁人不倦.m4a",
+                img:'css/img/毁人不倦cover.jpg',
                 lyric:'PlayWithStyle'
             },
             {
-                song:"心疼你的过去",
+                song:"敬酒不吃",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 心疼你的过去.m4a",
-                img:'css/img/心疼你的过去cover.png',
-                lyric:'心疼你的过去'
+                src:"mp3/许嵩 - 敬酒不吃.m4a",
+                img:'css/img/敬酒不吃cover.jpg',
+                lyric:'敬酒不吃'
             }
 ];
 ///////////////////<-------变量区-------->//////////////////////////////////////
