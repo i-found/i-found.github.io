@@ -7,6 +7,40 @@ padding:0px;
 margin: 0px;
 
 }
+@font-face {
+    font-family: 'single_maltaregular';
+    src: url('./font/singlemalta-webfont.woff2') format('woff2'),
+         url('./font/singlemalta-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+
+    font-family:'Avenir-Book';
+    src:url('./font/Avenir-Book.ttf') format('truetype');
+    font-style:normal;
+    font-weight: normal;
+}
+
+
+
+
+/* 在这里测试字体样式 */
+
+.test-font{
+
+  font-family: 'Avenir-Book','single_maltaregular';
+  color:pink;
+  position: absolute;
+  left: 220px;
+  z-index: 100;
+  font-size: 80px;
+  display: none;
+}
+
+
+
 /* 网页背景 */
 .bodybox{
   width:100%;
@@ -326,9 +360,16 @@ a{
   font-size: 35px;
   line-height: 35px;
 
+
 /* 控制文本之间的距离 */
 
 
+}
+
+/* 测试字体 */
+
+#Month{
+  /* font-family: 'single_maltaregular'; */
 }
 
 
@@ -338,7 +379,8 @@ a{
   color:rgba(255,192,203,0.9);
   /* 把字体大小、行距放到父级，来达到修改的目的，因为id定义后在其它css文件中就无法修改此属性了 */
   /* font-size: 35px; */
-  font-family: Helvetica;
+  font-family:  'Avenir-Book',Helvetica;
+  /* font-family: 'single_maltaregular'; */
   /* line-height: 35px; */
   /* background-color: yellow; */
 
