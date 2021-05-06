@@ -61,7 +61,7 @@ var data=[
                 singer:"许嵩",
                 src:"mp3/许嵩 - 毁人不倦.m4a",
                 img:'css/img/毁人不倦cover.jpg',
-                lyric:'PlayWithStyle'
+                lyric:'毁人不倦'
             },
             {
                 song:"敬酒不吃",
