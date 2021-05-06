@@ -1,74 +1,67 @@
 /////////////////////<----------数据区-------->/////////////////////////
 var data=[
             {
-                song:"幻听",
+                song:"庐州月",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 幻听.m4a",
-                img:'css/img/幻听cover.png',
-                lyric:'幻听'
+                src:"mp3/许嵩 - 庐州月.m4a",
+                img:'css/img/庐州月cover.png',
+                lyric:'庐州月'
             },
             {
-                song:"全球变冷",
+                song:"叹服",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 全球变冷.m4a",
-                img:'css/img/全球变冷cover.png',
-                lyric:'全球变冷'
+                src:"mp3/许嵩 - 叹服.m4a",
+                img:'css/img/叹服cover.png',
+                lyric:'叹服'
             },
             {
-                song:"对话老师",
+                song:"单人旅途",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 对话老师.m4a",
-                img:'css/img/对话老师cover.png',
-                lyric:'对话老师'
+                src:"mp3/许嵩 - 单人旅途.m4a",
+                img:'css/img/单人旅途cover.png',
+                lyric:'单人旅途'
             },
             {
-                song:"闺蜜",
+                song:"在那不遥远的地方",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 闺蜜.m4a",
-                img:'css/img/闺蜜cover.png',
-                lyric:'闺蜜'
+                src:"mp3/许嵩 - 在那不遥远的地方.m4a",
+                img:'css/img/在那不遥远的地方cover.png',
+                lyric:'在那不遥远的地方'
             },
             {
-                song:"装糊涂",
+                song:"不煽情",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 装糊涂.m4a",
-                img:'css/img/装糊涂cover.png',
-                lyric:'装糊涂'
+                src:"mp3/许嵩 - 不煽情.m4a",
+                img:'css/img/不煽情cover.png',
+                lyric:'不煽情'
             },
             {
-                song:"胡萝卜须",
+                song:"灰色头像",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 胡萝卜须.m4a",
-                img:'css/img/胡萝卜须cover.png',
-                lyric:'胡萝卜须'
+                src:"mp3/许嵩 - 灰色头像.m4a",
+                img:'css/img/灰色头像cover.png',
+                lyric:'灰色头像'
             },
             {
-                song:"亲情式的爱情",
+                song:"白马非马",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 亲情式的爱情.m4a",
-                img:'css/img/亲情式的爱情cover.png',
-                lyric:'亲情式的爱情'
+                src:"mp3/许嵩 - 白马非马.m4a",
+                img:'css/img/白马非马cover.png',
+                lyric:'白马非马'
             },
             {
-                song:"伴虎",
+                song:"我们的恋爱是对生命的严重浪费",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 伴虎.m4a",
-                img:'css/img/伴虎cover.png',
-                lyric:'伴虎'
+                src:"mp3/许嵩 - 我们的恋爱是对生命的严重浪费.m4a",
+                img:'css/img/我们的恋爱是对生命的严重浪费cover.png',
+                lyric:'我们的恋爱是对生命的严重浪费'
             },
             {
-                song:"Play With Style",
+                song:"我无所谓",
                 singer:"许嵩",
-                src:"mp3/许嵩 - Play With Style.m4a",
-                img:'css/img/PlayWithStylecover.png',
-                lyric:'PlayWithStyle'
-            },
-            {
-                song:"心疼你的过去",
-                singer:"许嵩",
-                src:"mp3/许嵩 - 心疼你的过去.m4a",
-                img:'css/img/心疼你的过去cover.png',
-                lyric:'心疼你的过去'
+                src:"mp3/许嵩 - 我无所谓.m4a",
+                img:'css/img/我无所谓cover.png',
+                lyric:'我无所谓'
             }
 ];
 ///////////////////<-------变量区-------->//////////////////////////////////////
