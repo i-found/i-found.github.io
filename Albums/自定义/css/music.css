@@ -2,6 +2,43 @@
 	margin: 0;
 	padding: 0;
 }
+
+@font-face {
+
+    font-family: 'I.Ming-7.00';
+          src: url('./font/I.Ming-7.00.eot');
+          src:
+            url('./font/I.Ming-7.00.eot?#font-spider') format('embedded-opentype'),
+            url('./font/I.Ming-7.00.woff2') format('woff2'),
+            url('./font/I.Ming-7.00.woff') format('woff'),
+            url('./font/I.Ming-7.00.ttf') format('truetype'),
+            url('./font/I.Ming-7.00.svg') format('svg');
+          font-weight: normal;
+          font-style: normal;
+}
+
+.songlryic{
+	font-family: "I.Ming-7.00";
+	font-size:12px;
+	color:#fff;
+	background-color:pink;
+	display: none;
+
+}
+
+.songname-artist{
+	font-family: "I.Ming-7.00";
+	font-size:12px;
+	color:#f40;
+	background-color:#eee;
+	display: none;
+
+}
+
+
+
+
+
 li{
 	list-style: none;
 }
@@ -139,10 +176,10 @@ opacity: 0.4;
 	text-overflow: ellipsis;
 	font-size: 28px;
 	text-align: center;
-	font-weight: bold;
+	/* font-weight: bold; */
 	/* margin: 8px; */
 	/* font-family: '微软雅黑'; */
-	font-family: "PingFangSC-Regular";
+	font-family: "I.Ming-7.00";
 	position: relative;
 	/* top: 0;
 	left: 42.5%; */
@@ -496,7 +533,7 @@ opacity: 0.4;
 	top: 147px;
 	width: 100%;
 	color: #fff;
-	font-family: '微软雅黑';
+	font-family: 'I.Ming-7.00';
 	text-align: center;
 }
 .lyric ul li{
