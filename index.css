@@ -7,37 +7,70 @@ padding:0px;
 margin: 0px;
 
 }
+
+
+
+
+
+
 @font-face {
-    font-family: 'single_maltaregular';
-    src: url('./font/singlemalta-webfont.woff2') format('woff2'),
-         url('./font/singlemalta-webfont.woff') format('woff');
-    font-weight: normal;
-    font-style: normal;
+
+    font-family: 'PingFang-SC-Regular';
+          src: url('./font/PingFang-SC-Regular.eot');
+          src:
+            url('./font/PingFang-SC-Regular.eot?#font-spider') format('embedded-opentype'),
+            url('./font/PingFang-SC-Regular.woff2') format('woff2'),
+            url('./font/PingFang-SC-Regular.woff') format('woff'),
+            url('./font/PingFang-SC-Regular.ttf') format('truetype'),
+            url('./font/PingFang-SC-Regular.svg') format('svg');
+          font-weight: normal;
+          font-style: normal;
+}
+
+
+@font-face {
+
+    font-family: '字体传奇南安体';
+          src: url('./font/字体传奇南安体.eot');
+          src:
+            url('./font/字体传奇南安体.eot?#font-spider') format('embedded-opentype'),
+            url('./font/字体传奇南安体.woff2') format('woff2'),
+            url('./font/字体传奇南安体.woff') format('woff'),
+            url('./font/字体传奇南安体.ttf') format('truetype'),
+            url('./font/字体传奇南安体.svg') format('svg');
+          font-weight: normal;
+          font-style: normal;
 }
 
 @font-face {
 
-    font-family:'Avenir-Book';
-    src:url('./font/Avenir-Book.ttf') format('truetype');
-    font-style:normal;
-    font-weight: normal;
+    font-family: 'Avenir-Book';
+          src: url('./font/Avenir-Book.eot');
+          src:
+            url('./font/Avenir-Book.eot?#font-spider') format('embedded-opentype'),
+            url('./font/Avenir-Book.woff2') format('woff2'),
+            url('./font/Avenir-Book.woff') format('woff'),
+            url('./font/Avenir-Book.ttf') format('truetype'),
+            url('./font/Avenir-Book.svg') format('svg');
+          font-weight: normal;
+          font-style: normal;
 }
 
 @font-face {
 
-    font-family:'Hiragino Sans GB W3';
-    src:url('./font/Hiragino Sans GB W3.otf') format('truetype');
-    font-style:normal;
-    font-weight: normal;
+    font-family: '鸿雷板书简体';
+          src: url('./font/鸿雷板书简体.eot');
+          src:
+            url('./font/鸿雷板书简体.eot?#font-spider') format('embedded-opentype'),
+            url('./font/鸿雷板书简体.woff2') format('woff2'),
+            url('./font/鸿雷板书简体.woff') format('woff'),
+            url('./font/鸿雷板书简体.ttf') format('truetype'),
+            url('./font/鸿雷板书简体.svg') format('svg');
+          font-weight: normal;
+          font-style: normal;
 }
 
-@font-face {
 
-    font-family:'PingFang-SC-Regular';
-    src:url('./font/PingFang-SC-Regular.ttf') format('truetype');
-    font-style:normal;
-    font-weight: normal;
-}
 
 
 
@@ -46,7 +79,7 @@ margin: 0px;
 
 .test-font1{
 
-  /* font-family:'Hiragino Sans GB W3', 'PingFang-SC-Regular','Avenir-Book','single_maltaregular'; */
+  /* font-family:'Avenir-Book', 'PingFang-SC-Regular','Avenir-Book','single_maltaregular'; */
   color:pink;
   position: absolute;
   left: 220px;
@@ -57,7 +90,7 @@ margin: 0px;
 }
 .test-font2{
 
-  font-family:'Hiragino Sans GB W3';
+  font-family:'PingFang-SC-Regular';
   color:pink;
   position: absolute;
   left: 220px;
@@ -66,35 +99,41 @@ margin: 0px;
   font-size: 80px;
   background-color: #eee;
   display: none;
-}.test-font3{
+}
+.test-font3{
 
-  font-family:'PingFang-SC-Regular';
+  font-family:'字体传奇南安体';
   color:pink;
   position: absolute;
   left: 220px;
   top:200px;
   z-index: 100;
-  font-size: 80px;
-  background-color: #eee;
+  width:500px;
+  height: 500px;
+  font-size: 40px;
+  line-height: 100px;
+  background-color: #aaa;
   display: none;
-}.test-font4{
+}
+.test-font4{
 
   font-family:'Avenir-Book';
   color:pink;
   position: absolute;
   left: 220px;
-  top: 300px;
+  top: 500px;
   z-index: 100;
   font-size: 80px;
   background-color: #eee;
   display: none;
-}.test-font5{
+}
+.test-font5{
 
-  font-family:'single_maltaregular';
+  font-family:'鸿雷板书简体';
   color:pink;
   position: absolute;
   left: 220px;
-  top: 400px;
+  top: 600px;
   z-index: 100;
   font-size: 80px;
   background-color: #eee;

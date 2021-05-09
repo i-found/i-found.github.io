@@ -33,13 +33,24 @@ html,body{
 	/* background-color: pink; */
 }
 
+/* 设置logo-企鹅的位置 */
 .img1{
 
-margin:36px 0 0 42px;
-
-
-
+/* 定义logo位置，脱离文档流 */
+  position: absolute;
+  left:0px;
+  top: 11px;
+  height:38px;
+	margin:36px 0 0 42px;
 }
+
+.img1:hover{
+  left: -3px;
+  top: 7px;
+  height:45px;
+}
+
+
 
 
 
@@ -130,8 +141,8 @@ opacity: 0.4;
 	text-align: center;
 	font-weight: bold;
 	/* margin: 8px; */
-	/* font-family: '微软雅黑'; */
-	font-family: "PingFangSC-Regular";
+	font-family: '微软雅黑';
+	/* font-family: "PingFangSC-Regular"; */
 	position: relative;
 	/* top: 0;
 	left: 42.5%; */
