@@ -2,6 +2,69 @@
 	margin: 0;
 	padding: 0;
 }
+
+@font-face {
+
+    font-family: 'SweiSpringSugarCJKtc-ExtraLight';
+          src: url('./font/SweiSpringSugarCJKtc-ExtraLight.eot');
+          src:
+            url('./font/SweiSpringSugarCJKtc-ExtraLight.eot?#font-spider') format('embedded-opentype'),
+            url('./font/SweiSpringSugarCJKtc-ExtraLight.woff2') format('woff2'),
+            url('./font/SweiSpringSugarCJKtc-ExtraLight.woff') format('woff'),
+            url('./font/SweiSpringSugarCJKtc-ExtraLight.ttf') format('truetype'),
+            url('./font/SweiSpringSugarCJKtc-ExtraLight.svg') format('svg');
+          font-weight: normal;
+          font-style: normal;
+}
+@font-face {
+
+    font-family: 'SweiSpringSugarCJKtc-Regular';
+          src: url('./font/SweiSpringSugarCJKtc-Regular.eot');
+          src:
+            url('./font/SweiSpringSugarCJKtc-Regular.eot?#font-spider') format('embedded-opentype'),
+            url('./font/SweiSpringSugarCJKtc-Regular.woff2') format('woff2'),
+            url('./font/SweiSpringSugarCJKtc-Regular.woff') format('woff'),
+            url('./font/SweiSpringSugarCJKtc-Regular.ttf') format('truetype'),
+            url('./font/SweiSpringSugarCJKtc-Regular.svg') format('svg');
+          font-weight: normal;
+          font-style: normal;
+}
+
+@font-face {
+
+    font-family: 'Avenir-Book';
+          src: url('./font/Avenir-Book.eot');
+          src:
+            url('./font/Avenir-Book.eot?#font-spider') format('embedded-opentype'),
+            url('./font/Avenir-Book.woff2') format('woff2'),
+            url('./font/Avenir-Book.woff') format('woff'),
+            url('./font/Avenir-Book.ttf') format('truetype'),
+            url('./font/Avenir-Book.svg') format('svg');
+          font-weight: normal;
+          font-style: normal;
+}
+
+.songlryic{
+	font-family: "SweiSpringSugarCJKtc-ExtraLight","Avenir-Book";
+	font-size:12px;
+	color:#fff;
+	background-color:pink;
+	display: none;
+
+}
+
+.songname-artist{
+	font-family: "SweiSpringSugarCJKtc-Regular";
+	font-size:12px;
+	color:#f40;
+	background-color:#eee;
+	display: none;
+
+}
+
+
+
+
 li{
 	list-style: none;
 }
@@ -49,8 +112,6 @@ html,body{
   top: 7px;
   height:45px;
 }
-
-
 
 
 
@@ -139,10 +200,10 @@ opacity: 0.4;
 	text-overflow: ellipsis;
 	font-size: 28px;
 	text-align: center;
-	font-weight: bold;
+	/* font-weight: bold; */
 	/* margin: 8px; */
 	/* font-family: '微软雅黑'; */
-	font-family: '鸿雷板书简体';
+	font-family: "SweiSpringSugarCJKtc-Regular";
 	position: relative;
 	/* top: 0;
 	left: 42.5%; */
@@ -441,7 +502,7 @@ opacity: 0.4;
 	line-height:20px;
 	text-align:center;
 	color:#eee;
-	font-family: Arial;
+	font-family: 'Avenir-Book';
 	font-weight: lighter;
 	font-size: 12px;
 	position: relative;
@@ -496,7 +557,7 @@ opacity: 0.4;
 	top: 147px;
 	width: 100%;
 	color: #fff;
-	font-family: '微软雅黑';
+	font-family: 'SweiSpringSugarCJKtc-ExtraLight';
 	text-align: center;
 }
 .lyric ul li{
