@@ -82,7 +82,7 @@ margin: 0px;
   /* font-family:'Avenir-Book', 'PingFang-SC-Regular','Avenir-Book','single_maltaregular'; */
   color:pink;
   position: absolute;
-  left: 220px;
+  left: 20px;
   z-index: 100;
   font-size: 80px;
   background-color: #eee;
@@ -93,7 +93,7 @@ margin: 0px;
   font-family:'PingFang-SC-Regular';
   color:pink;
   position: absolute;
-  left: 220px;
+  left: 20px;
   top:100px;
   z-index: 100;
   font-size: 80px;
@@ -105,11 +105,11 @@ margin: 0px;
   font-family:'字体传奇南安体';
   color:pink;
   position: absolute;
-  left: 220px;
-  top:200px;
+  left: 20px;
+  top:350px;
   z-index: 100;
-  width:500px;
-  height: 500px;
+  /* width:500px; */
+  /* height: 500px; */
   font-size: 40px;
   line-height: 100px;
   background-color: #aaa;
@@ -120,7 +120,7 @@ margin: 0px;
   font-family:'Avenir-Book';
   color:pink;
   position: absolute;
-  left: 220px;
+  left: 20px;
   top: 500px;
   z-index: 100;
   font-size: 80px;
@@ -132,7 +132,7 @@ margin: 0px;
   font-family:'鸿雷板书简体';
   color:pink;
   position: absolute;
-  left: 220px;
+  left: 20px;
   top: 600px;
   z-index: 100;
   font-size: 80px;
@@ -316,7 +316,8 @@ a{
 
 .Navi-Bar ul li a{
   font-size: 16px;
-  font-family: sans-serif;
+  /* font-family: sans-serif; */
+  font-family:'PingFang-SC-Regular';
   display:inline-block;
   height:32px;
   line-height: 32px;
@@ -712,7 +713,7 @@ color:#FFFFFF;
   width:100%;
   height: 61.8%;
   /* background-color: red; */
-  border-radius: 6px;
+  border-radius: 12px;
   overflow: hidden;
 
 

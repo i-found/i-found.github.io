@@ -40,11 +40,11 @@
 <div class="bodybox">
 
 <!-- 在这里测试字体样式 -->
-  <div class="test-font1">多少岁月你好呀doyoudo123456</div>
-  <div class="test-font2">多少岁月你好呀doyoudo123456</div>
-  <div class="test-font3">想象之中 我在哪里doyoudo123456</div>
-  <div class="test-font4">1234567890</div>
-  <div class="test-font5">庐州月你好呀doyoudo123456</div>
+  <div class="test-font1">默认字体-多少岁月你好呀doyoudo123456</div>
+  <div class="test-font2">'PingFang-SC-Regular'字体-多少岁月你好呀doyoudo123456</div>
+  <div class="test-font3">'传奇南安体'字体-想象之中 我在哪里doyoudo123456</div>
+  <div class="test-font4">'Avenir-Book'英文字体-1234567890</div>
+  <div class="test-font5">'鸿雷板书简体'字体-庐州月你好呀doyoudo123456</div>
 
 
 <!-- 导航栏 -->
@@ -164,7 +164,31 @@
 
 <div class="bookmark3 new1">
 
+  <!-- 播放音乐 -->
+  <audio id="music" src="./Albums/others/南妮 - 十年.m4a" loop autoplay></audio>
+  <img id="musicImg" src="./Albums/TreasureHunting/css/img/play_rdi_btn_play-touch.png" onClick="play()" alt="play" title="播放" style="width:40px;height:40px;cursor:pointer;position:absolute;left:50%;margin-left:-20px;top:72px;">
+  <script>
+  window.onload = function(){
+       var audio = document.getElementById('music');
+           audio.pause();//打开页面时无音乐
+  }
+  function play() {
+      var audio = document.getElementById('music');
+      if (audio.paused) {
+          audio.play();
+          document.getElementById('musicImg').src="./Albums/TreasureHunting/css/img/play_rdi_btn_pause-touch.png";
+          document.getElementById('musicImg').title="暂停";
+      }else{
+          audio.pause();
+          // audio.currentTime = 0;//音乐从头播放
+          document.getElementById('musicImg').src="./Albums/TreasureHunting/css/img/play_rdi_btn_play-touch.png";
+            document.getElementById('musicImg').title="播放";
+      }
+  }
+  </script>
+
   <a  class="bookmark-content" href="#">
+
     <div class="in-img">
       <img src="./img/Flower.jpg" alt="">
     </div>
@@ -213,7 +237,7 @@
 
     <div class="in-text">
       <p>潮汐</p>
-      <span>陈筱筱 · 1小时前</span>
+      <span>陈筱筱 · <time class="lately-a" datetime="2021-05-22T10:10:41+00:00"></time></span>
 
     </div>
   </a>
