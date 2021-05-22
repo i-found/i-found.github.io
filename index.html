@@ -3,12 +3,32 @@
   <head>
     <meta charset="utf-8">
     <title>i-found | 幻想尽头</title>
-    <!-- 时钟挂件的js -->
+    <!-- 音乐点击播放插件，要提上来，不知道为什么会影响到bookmark1的时间展示 -->
     <script type="text/javascript">
+    window.onload = function(){
+         var audio = document.getElementById('music');
+             audio.pause();//打开页面时无音乐
+    }
+    function play() {
+        var audio = document.getElementById('music');
+        if (audio.paused) {
+            audio.play();
+            document.getElementById('musicImg').src="./Albums/TreasureHunting/css/img/play_rdi_btn_pause-touch.png";
+            document.getElementById('musicImg').title="暂停";
+        }else{
+            audio.pause();
+            // audio.currentTime = 0;//音乐从头播放
+            document.getElementById('musicImg').src="./Albums/TreasureHunting/css/img/play_rdi_btn_play-touch.png";
+              document.getElementById('musicImg').title="播放";
+        }
+    }
+    </script>
+    <!-- 时钟挂件的js -->
+    <!-- <script type="text/javascript">
       function time(){var h=new Date().getHours();h=h<10?("0"+h):h;var m=new Date().getMinutes();m=m<10?("0"+m):m;var s=new Date().getSeconds();s=s<10?("0"+s):s;document.getElementById("time").innerHTML=h+":"+m+":"+s}
       function date(){var m=new Date().getMonth();m=m+1;var d=new Date().getDate();d=d<10?("0"+d):d;document.getElementById("date").innerHTML=m+"月"+d+"日"}
       function day(){var x;var day=new Date().getDay();switch(day){case 0:x="日";break;case 1:x="一";break;case 2:x="二";break;case 3:x="三";break;case 4:x="四";break;case 5:x="五";break;case 6:x="六";break}document.getElementById("day").innerHTML=" 星期"+x}setInterval(time,500);setInterval(date,700);setInterval(day,1000);
-    </script>
+    </script> -->
     <script type="text/javascript">
     var days=new  Array ("日", "一", "二", "三", "四", "五", "六");
     function showDT() {
@@ -29,26 +49,6 @@
       document.getElementById("theClock"). innerHTML =theDateStr;
       // setTimeout 在执行时,是在载入后延迟指定时间后,去执行一次表达式,仅执行一次
       window.setTimeout( showDT, 1000);
-    }
-    </script>
-    <!-- 音乐点击播放插件，要提上来，不知道为什么会影响到bookmark1的时间展示 -->
-    <script type="text/javascript">
-    window.onload = function(){
-         var audio = document.getElementById('music');
-             audio.pause();//打开页面时无音乐
-    }
-    function play() {
-        var audio = document.getElementById('music');
-        if (audio.paused) {
-            audio.play();
-            document.getElementById('musicImg').src="./Albums/TreasureHunting/css/img/play_rdi_btn_pause-touch.png";
-            document.getElementById('musicImg').title="暂停";
-        }else{
-            audio.pause();
-            // audio.currentTime = 0;//音乐从头播放
-            document.getElementById('musicImg').src="./Albums/TreasureHunting/css/img/play_rdi_btn_play-touch.png";
-              document.getElementById('musicImg').title="播放";
-        }
     }
     </script>
     <link rel="stylesheet" href="index.css">
