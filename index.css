@@ -725,8 +725,8 @@ color:#FFFFFF;
 
 .in-img img{
   width:inherit;
-  position: relative;
   /* 控制显示位置 */
+  /* position: relative; */
   /* top: -10px; */
   /* opacity: 1%; */
 
