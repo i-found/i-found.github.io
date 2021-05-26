@@ -635,7 +635,7 @@ var data=[
             scrollToMove(ul,42*(this.index-2),400);
         };
         li.innerHTML=data[i].song;
-        span.innerHTML=data[i].singer+" | 青年晚报";
+        span.innerHTML=data[i].singer+" | 苏格拉没有㡳";
         li.appendChild(span);
         ul.appendChild(li);
     }

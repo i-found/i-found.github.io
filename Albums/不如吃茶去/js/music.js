@@ -628,7 +628,7 @@ var data=[
             scrollToMove(ul,42*(this.index-2),400);
         };
         li.innerHTML=data[i].song;
-        span.innerHTML=data[i].singer+" | 青年晚报";
+        span.innerHTML=data[i].singer+" | 不如吃茶去";
         li.appendChild(span);
         ul.appendChild(li);
     }
