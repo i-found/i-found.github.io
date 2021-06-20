@@ -137,13 +137,42 @@ hr {
 	font-size: 16px;
 	border-radius: 0;
 	margin-top: 20px;
+	opacity: 1;
+	transition: all 1s linear;
+}
+.newstyle{
+	border-radius: 5px;
+
+
+
 }
 .btn-default:hover, .btn-default:focus, .btn-default.focus, .btn-default:active, .btn-default.active {
 	color: #fff;
-	background-color: #121d1f;
-	border-color: #121d1f;
+	opacity: 0.5;
+	background-color: #81C7D4;
+	border-color: #81C7D4;
+	border-radius: 10px;
 }
 /* Header Section */
+
+
+/* 设置logo-企鹅的位置 */
+.img1{
+  position: absolute;
+  left:26px;
+  top: 26px;
+  height:48px;
+	transition: all 1s linear;
+}
+
+.img1:hover{
+	transform:scale(1.5);
+}
+
+
+
+
+
 .intro {
 	display: table;
 	width: 100%;
