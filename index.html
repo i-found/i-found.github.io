@@ -136,6 +136,8 @@
     }
     </script>
     <script type="text/javascript" src="js/SmoothScroll.js"></script>
+    <link rel="stylesheet" href="./dist/meplayer.css">
+    <link rel="stylesheet" href="main.css">
     <link rel="stylesheet" href="index.css">
     <link rel="stylesheet" type="text/css"media="screen and (max-width:1080px)"href="tinyScreen.css" />
     <link rel="icon" href="./img/ico.png" type="image/x-icon">
@@ -250,6 +252,10 @@
 
 
 <div class="bookmark3">
+  <!-- 音乐播放插件 -->
+    <div class="container1">
+      <div class="music1"></div>
+    </div>
 
   <a  class="bookmark-content" href="#">
     <div class="in-img">
@@ -315,8 +321,16 @@
 
 
 
-
 <div class="bookmark4">
+
+  <!-- 音乐播放插件 -->
+  <!-- 备注：此处js中"music"要被执行调用，否则music1不会被执行 -->
+    <div class="container">
+      <div class="music"></div>
+    </div>
+    <script src="./dist/meplayer.min.js"></script>
+    <script src="main.js"></script>
+
 
   <a  class="bookmark-content" href="#">
     <div class="in-img">
