@@ -754,7 +754,8 @@
 }
 
 .icon-play:before { content: '\e801'; } /* '' */
-.icon-pause:before { content: '\e802'; } /* '' */
+.icon-play:hover { color:#FEE140; }
+.icon-pause:before { content: '\e802';color: #FEE140; } /* '' */
 .icon-clock:before { content: '\e803'; } /* '' */
 .icon-volume:before { content: '\e804'; } /* '' */
 .icon-spin:before { content: '\e800'; } /* '' */

@@ -14,22 +14,6 @@
     opacity: 54%;
 }
 
-.container1 {
-    width: 90px;
-    margin: 0 0;
-    /* 这里调整整体大小 */
-    transform: scale(0.5,0.5);
-    /* 观察位置用 */
-    /* background-color:yellow; */
-    overflow: hidden;
-    cursor: pointer;
-    border-radius: 50%;
-    position: absolute;
-    left:34%;
-    top:15%;
-    opacity: 54%;
-}
-
 .meplayer-container-mini {
     margin: 0 auto;
 }
