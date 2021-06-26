@@ -1,46 +1,31 @@
 .container {
-    width: 90px;
-    margin: 0 0;
-    /* 这里调整整体大小 */
-    transform: scale(0.5,0.5);
-    /* 观察位置用 */
-    /* background-color:pink; */
-    overflow: hidden;
-    cursor: pointer;
-    border-radius: 50%;
-    position: absolute;
-    left:34%;
-    top:15%;
-    opacity: 54%;
+    width: 450px;
+    /* margin: 50px auto 0; */
+    /* border:1px solid black; */
 }
 
 .meplayer-container-mini {
-    margin: 0 auto;
+  width: 90px;
+  margin: 0 0 0 -45px;
+  /* 这里调整整体大小 */
+  transform: scale(0.5,0.5);
+  /* 观察位置用 */
+  /* background-color:pink; */
+  overflow: hidden;
+  cursor: pointer;
+  border-radius: 50%;
+  position: absolute;
+  left:50%;
+  top:15%;
+  opacity: 54%;
 }
 
 .meplayer-container {
-    margin: 0 auto;
-}
-
-button {
-    font-size: 14px;
-    line-height: 30px;
-
-    display: block;
-
-    width: 120px;
-    height: 30px;
-    margin: 70px auto;
-
-    text-align: center;
-
-    color: #777;
-    border: none;
-    background-color: #fff;
-
-    -webkit-appearance: none;
-
-       -moz-appearance: none;
-
-            appearance: none;
+    width: 430px;
+    margin: 0 0;
+    position: absolute;
+    right:180px;
+    top:290px;
+    z-index: 10;
+    opacity: 66%;
 }

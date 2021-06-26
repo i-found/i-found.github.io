@@ -728,6 +728,62 @@
 
 }
 
+.meplayer-container {
+    width: 610px;
+    right:284px;
+    top:910px;
+}
+
+.meplayer-container-mini {
+  width: 90px;
+  margin: 0 0 0 -45px;
+  /* 这里调整整体大小 */
+  transform: scale(0.8,0.8);
+  /* 观察位置用 */
+  /* background-color:pink; */
+  overflow: hidden;
+  cursor: pointer;
+  border-radius: 50%;
+  position: absolute;
+  left:50%;
+  top:21%;
+  opacity: 54%;
+}
+
+
+.foxbox{
+  position: absolute;
+  margin-top: 160px;
+  /* 由于父级定位元素的变化，这里需要调整位置 */
+  margin-left: -14px;
+  /* border:1px solid black; */
+
+
+
+}
+
+
+.foxbox .meplayer-container-mini .meplayer-control-play{
+
+
+
+color: #60af37;
+
+}
+
+
+#musicImg{
+
+  width:80px;
+  height:80px;
+  cursor:pointer;
+  position:absolute;
+  left:50%;
+  margin-left:-40px;
+  top:95px;
+}
+
+
 
 .only-bookmark{
 
@@ -747,6 +803,7 @@
   color:#E5E8DC;
   background: #fff;
   opacity: 100%;
+  display: inline-block;
   /* background-color:rgba(0, 0, 0, 0.65); */
   /* background-image:url('./img/pexels-ann-h-3482441.jpg');
   background-size: auto 442px; */

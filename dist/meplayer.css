@@ -10,6 +10,7 @@
     height: 90px;
 
     background: #FFF;
+    /* 阴影控制 */
     box-shadow: 0 0 20px rgba(59, 59, 177, .18);
 }
 
@@ -107,7 +108,7 @@
     transition: all .6s cubic-bezier(0, .36, .51, 1.39);
     letter-spacing: 1px;
 
-    color: #6A6B6F;
+    color: #3bb2ea;
 }
 
 .meplayer-container .meplayer-meta-author {
@@ -162,7 +163,7 @@
     width: 220px;
     height: 100%;
     margin-top: -45px;
-    margin-left: -120px;
+    margin-left: -100px;
 
     -webkit-transition: all 1s;
 
@@ -297,7 +298,7 @@
 .meplayer-container .meplayer-control-play {
     position: absolute;
     top: -25px;
-    right: 0;
+    right: -22px;
 
     width: 50px;
     height: 50px;
@@ -307,7 +308,7 @@
     transition: top .6s cubic-bezier(0, .74, .61, 1.35);
     text-align: center;
 
-    color: #D94240;
+    color: #FF758C;
     border-radius: 50%;
     background: #FFF;
     box-shadow: 0 0 10px rgba(59, 59, 177, .22);
@@ -416,8 +417,8 @@
     transition: all .7s;
     -webkit-transform: scale(.9, .9);
             transform: scale(.9, .9);
-
-    color: rgba(217, 66, 64, .5);
+/* 这里调整时钟的颜色 */
+    color: rgba(255,117,140, .5);
 }
 
 .meplayer-container.meplayer-isplaying .meplayer-duration i {
@@ -504,7 +505,8 @@
     height: 90px;
     background: #FFF;
     border-radius: 50%;
-    box-shadow: 0 0 20px rgba(59, 59, 177, .18);
+    /* 阴影控制 */
+    /* box-shadow: 0 0 20px rgba(59, 59, 177, .18); */
 }
 
 .meplayer-isplaying.meplayer-container-mini {
@@ -526,14 +528,24 @@
     font-size: 26px;
     line-height: 90px;
     left: 50%;
-    /* 这里微调位置 */
     margin-top: -45px;
     margin-left: -45px;
-    /* 这里定义播放暂停按钮颜色 */
+    /* 这里调整图标颜色 */
     color: #FF758C;
     /* 这里调整按钮大小 */
     transform: scale(1.6,1.6);
 }
+
+.colorbox .meplayer-container-mini .meplayer-control-play{
+
+
+
+color: #37af61;
+
+}
+
+
+
 
 .meplayer-container-mini .meplayer-control-play [class^='icon-'] {
     line-height: 90px;
@@ -582,7 +594,7 @@
     line-height: 90px;
     border-radius: 50%;
     text-align: center;
-    color: #2793e6;
+    color: rgba(0, 0, 0, 0.9);
     font-size: 30px;
     -webkit-transition: all 0.8s;
     transition: all 0.8s;
