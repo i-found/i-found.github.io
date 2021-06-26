@@ -20,7 +20,7 @@ mePlayer1({
     title: '气象站台',
     author: 'UU',
     loop: true,
-    cover: './幻想尽头cover.jpg',
+    cover: '',
     lrc:
       ''
   },
@@ -36,7 +36,7 @@ mePlayer2({
     title: '西柚',
     author: 'UU',
     loop: true,
-    cover: './幻想尽头cover.jpg',
+    cover: '',
     lrc:
       ''
   },
@@ -52,7 +52,7 @@ mePlayer3({
     title: '潮汐-DJ',
     author: '傅梦彤',
     loop: true,
-    cover: './幻想尽头cover.jpg',
+    cover: '',
     lrc:
       ''
   },
@@ -69,7 +69,7 @@ mePlayer4({
     title: '一直很安静',
     author: '阿桑',
     loop: true,
-    cover: './幻想尽头cover.jpg',
+    cover: '',
     lrc:
       ''
   },
@@ -86,7 +86,7 @@ mePlayer5({
     title: '爱你f',
     author: '陈芳语',
     loop: true,
-    cover: './幻想尽头cover.jpg',
+    cover: '',
     lrc:
       ''
   },
@@ -103,7 +103,7 @@ mePlayer6({
     title: '白月光与朱砂痣',
     author: '大籽',
     loop: true,
-    cover: './幻想尽头cover.jpg',
+    cover: '',
     lrc:
       ''
   },
@@ -121,7 +121,7 @@ mePlayer7({
     title: '下一站天后',
     author: 'Twins',
     loop: true,
-    cover: './幻想尽头cover.jpg',
+    cover: '',
     lrc:
       ''
   },
@@ -137,7 +137,7 @@ mePlayer8({
     title: 'IFoundMyself',
     author: 'UU',
     loop: true,
-    cover: './幻想尽头cover.jpg',
+    cover: '',
     lrc:
       ''
   },
@@ -149,11 +149,11 @@ mePlayer8({
 mePlayer9({
   theme: 'mini',
   music: {
-    src: './Albums/others/IFoundMyself.mp3',
-    title: 'I Found Myself',
-    author: 'UU',
+    src: './Albums/others/爱你-Live.m4a',
+    title: '爱你 (Live)',
+    author: '偶像练习生 第一季',
     loop: true,
-    cover: './幻想尽头cover.jpg',
+    cover: '',
     lrc:
       ''
   },
@@ -166,11 +166,11 @@ mePlayer9({
 mePlayer10({
   theme: 'mini',
   music: {
-    src: './Albums/others/IFoundMyself.mp3',
-    title: 'I Found Myself',
-    author: 'UU',
+    src: './Albums/others/forya.m4a',
+    title: 'for ya',
+    author: '蒋小呢',
     loop: true,
-    cover: './幻想尽头cover.jpg',
+    cover: '',
     lrc:
       ''
   },
@@ -182,11 +182,11 @@ mePlayer10({
 mePlayer11({
   theme: 'mini',
   music: {
-    src: './Albums/others/IFoundMyself.mp3',
-    title: 'I Found Myself',
-    author: 'UU',
+    src: './Albums/others/杏花弦外雨.m4a',
+    title: '杏花弦外雨',
+    author: 'CRITTY/司夏',
     loop: true,
-    cover: './幻想尽头cover.jpg',
+    cover: '',
     lrc:
       ''
   },
@@ -199,11 +199,11 @@ mePlayer11({
 mePlayer12({
   theme: 'mini',
   music: {
-    src: './Albums/others/IFoundMyself.mp3',
-    title: 'I Found Myself',
-    author: 'UU',
+    src: './Albums/others/都怪我.m4a',
+    title: '都怪我',
+    author: '葛雨晴',
     loop: true,
-    cover: './幻想尽头cover.jpg',
+    cover: '',
     lrc:
       ''
   },

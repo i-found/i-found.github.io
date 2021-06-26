@@ -366,6 +366,16 @@
   }
 /* 这里是第二个书签页面 */
 
+.in-text p {
+font-weight: bolder;
+}
+.in-text p:hover{
+  color: #FF8B8B;
+}
+
+
+
+
   .bookmark2{
     float: left;
     position:relative;
