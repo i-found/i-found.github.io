@@ -713,7 +713,7 @@ color:#FFFFFF;
   width:100%;
   height: 61.8%;
   /* background-color: red; */
-  border-radius: 12px;
+  border-radius: 12px 12px 0 0;
   overflow: hidden;
 
 
@@ -767,24 +767,24 @@ color:#FFFFFF;
   text-align: justify;
   /* 设置最大高度 */
   max-height: 52px;
-
   /* 观察位置用 */
   /* background-color: red; */
-
-
 /* 内容超出范围后···显示 */
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     word-break: break-word;
 
-
-
-
-
-
-
 }
+
+.in-text p:hover{
+  color: #ff758c;
+}
+
+.in-text .Tokyo-color:hover{
+  color: #ff9221;
+}
+
 
 
 .in-text span{
