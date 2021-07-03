@@ -738,37 +738,27 @@ font-weight: bolder;
 
 }
 
+
+.container1 {
+    /* width: 450px; */
+    transform: scale(1,1);
+    top:21%;
+
+    /* margin: 50px auto 0; */
+    /* border:1px solid black; */
+}
+
 .meplayer-container {
     width: 610px;
     right:284px;
     top:910px;
 }
 
-.meplayer-container-mini {
-  width: 90px;
-  margin: 0 0 0 -45px;
-  /* 这里调整整体大小 */
-  transform: scale(0.8,0.8);
-  /* 观察位置用 */
-  /* background-color:pink; */
-  overflow: hidden;
-  cursor: pointer;
-  border-radius: 50%;
-  position: absolute;
-  left:50%;
-  top:21%;
-  opacity: 54%;
-}
 
 
 .foxbox{
-  position: absolute;
-  margin-top: 160px;
-  /* 由于父级定位元素的变化，这里需要调整位置 */
-  margin-left: -14px;
-  /* border:1px solid black; */
-
-
+  /* 调整位置 */
+  margin-top: 80px;
 
 }
 

@@ -4,20 +4,31 @@
     /* border:1px solid black; */
 }
 
+.container1 {
+    /* width: 450px; */
+    transform: scale(0.5,0.5);
+    opacity: 54%;
+    position: absolute;
+    left:50%;
+    top:24%;
+
+    /* margin: 50px auto 0; */
+    /* border:1px solid black; */
+}
+
 .meplayer-container-mini {
   width: 90px;
   margin: 0 0 0 -45px;
   /* 这里调整整体大小 */
-  transform: scale(0.5,0.5);
+  /* transform: scale(0.5,0.5); */
   /* 观察位置用 */
   /* background-color:pink; */
   overflow: hidden;
   cursor: pointer;
   border-radius: 50%;
   position: absolute;
-  left:50%;
-  top:15%;
-  opacity: 54%;
+  /* opacity: 54%; */
+  /* 此处不能加透明度和缩放，否则音量调整无法自动消失 */
 }
 
 .meplayer-container {

@@ -276,7 +276,7 @@
     transition: all .9s;
     text-align: center;
 
-    color: rgba(150, 150, 150, .75);
+    color: #1db2f9;
 }
 
 .meplayer-container.meplayer-adjusting-volume .meplayer-volume-bg {
@@ -292,7 +292,7 @@
     transition: width .2s;
 
     border-radius: 1px;
-    background: rgba(150, 150, 150, .75);
+    background: #26baff;
 }
 
 .meplayer-container .meplayer-control-play {
@@ -594,7 +594,7 @@ color: #37af61;
     line-height: 90px;
     border-radius: 50%;
     text-align: center;
-    color: rgba(0, 0, 0, 0.9);
+    color: #1db2f9;
     font-size: 30px;
     -webkit-transition: all 0.8s;
     transition: all 0.8s;
