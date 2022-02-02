@@ -1,0 +1,19 @@
+C:\Users\ChenXiaoYan\Desktop\i-found
+font-spider C:\Users\ChenXiaoYan\Desktop\i-found\index.html
+
+
+脚本批量化修改html字体文件:（注意是/）
+/c/Users/ChenXiaoYan/Desktop/i-found
+
+css中@font-face 就会生成默认的五个字体文件
+
+一个html引用多个css文件，如果都用到同一种字体，那么字体文件的生成会（影响）同步到外部css(ep:主music.css,外部index.css)，
+所以最好断开，只使用一个css文件（把外部需要的样式copy过来）。
+
+
+	<link rel="stylesheet" href="../../index.css">
+	<!-- 两个点代表上一级 -->
+
+
+
+

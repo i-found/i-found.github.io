@@ -196,6 +196,7 @@ mePlayer11({
 
 
 
+
 mePlayer12({
   theme: 'mini',
   music: {
@@ -208,5 +209,22 @@ mePlayer12({
       ''
   },
   target: '.music12',
+  autoplay: false
+})
+
+
+
+mePlayer13({
+  theme: 'mini',
+  music: {
+    src: './Albums/others/KissandCry.mp3',
+    title: 'Kiss and Cry',
+    author: 'Ken Arai',
+    loop: true,
+    cover: '',
+    lrc:
+      ''
+  },
+  target: '.music13',
   autoplay: false
 })
