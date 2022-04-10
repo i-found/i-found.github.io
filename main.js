@@ -228,3 +228,59 @@ mePlayer13({
   target: '.music13',
   autoplay: false
 })
+
+
+
+
+mePlayer14({
+  theme: 'mini',
+  music: {
+    src: './Albums/others/莫文蔚-盛夏的果实.mp3',
+    title: '盛夏的果实',
+    author: '莫文蔚',
+    loop: true,
+    cover: '',
+    lrc:
+      ''
+  },
+  target: '.music14',
+  autoplay: false
+})
+
+
+
+
+mePlayer15({
+  theme: 'mini',
+  music: {
+    src: './Albums/others/胡夏&郁可唯-知否知否.mp3',
+    title: '知否知否',
+    author: '胡夏&郁可唯',
+    loop: true,
+    cover: '',
+    lrc:
+      ''
+  },
+  target: '.music15',
+  autoplay: false
+})
+
+
+
+
+
+
+mePlayer16({
+  theme: 'mini',
+  music: {
+    src: './Albums/others/音阙诗听&李佳思-雨水.mp3',
+    title: '雨水',
+    author: '音阙诗听&李佳思',
+    loop: true,
+    cover: '',
+    lrc:
+      ''
+  },
+  target: '.music16',
+  autoplay: false
+})

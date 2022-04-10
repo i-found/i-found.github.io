@@ -726,14 +726,21 @@ color:#FFFFFF;
 
 .in-img img{
   width:inherit;
-  /* 控制显示位置 */
+  /* 控制位置用 */
+  /* margin-top: -50px; */
+  /* 控制显示位置 禁用*/
   /* position: relative; */
   /* top: -10px; */
   /* opacity: 1%; */
 
+}
 
+.in-img .rain{
+  margin-top: 0px;
+}
 
-
+.in-img .Fruit{
+  margin-top: -30px;
 }
 
 
@@ -779,10 +786,21 @@ color:#FFFFFF;
 
 .in-text p:hover{
   color: #ff758c;
+  font-weight: bold;
 }
 
 .in-text .Tokyo-color:hover{
   color: #ff9221;
+}
+
+
+.in-text .Rain-Color:hover{
+  color: #1B813E;
+}
+
+
+.in-text .Fruit-Color:hover{
+  color: #FFB11B;
 }
 
 
