@@ -536,14 +536,14 @@
     transform: scale(1.6,1.6);
 }
 
-.colorbox .meplayer-container-mini .meplayer-control-play{
-
-
-
+.colorbox-green .meplayer-container-mini .meplayer-control-play{
 color: #37af61;
-
 }
 
+
+.colorbox-orange .meplayer-container-mini .meplayer-control-play{
+color: #ff9f00;
+}
 
 
 
@@ -768,6 +768,8 @@ color: #37af61;
 .icon-play:before { content: '\e801'; } /* '' */
 .icon-play:hover { color:#FEE140; }
 .icon-pause:before { content: '\e802';color: #FEE140; } /* '' */
+/* 改色 暂停键 */
+.music15 .icon-pause:before { content: '\e802';color: #ff758c; } /* '' */
 .icon-clock:before { content: '\e803'; } /* '' */
 .icon-volume:before { content: '\e804'; } /* '' */
 .icon-spin:before { content: '\e800'; } /* '' */
