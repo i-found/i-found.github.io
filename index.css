@@ -71,6 +71,24 @@ margin: 0px;
 }
 
 
+@font-face {
+
+    font-family: 'LXGWWenKai-Regular';
+          src: url('./font/LXGWWenKai-Regular.eot');
+          src:
+            url('./font/LXGWWenKai-Regular.eot?#font-spider') format('embedded-opentype'),
+            url('./font/LXGWWenKai-Regular.woff2') format('woff2'),
+            url('./font/LXGWWenKai-Regular.woff') format('woff'),
+            url('./font/LXGWWenKai-Regular.ttf') format('truetype'),
+            url('./font/LXGWWenKai-Regular.svg') format('svg');
+          font-weight: normal;
+          font-style: normal;
+}
+
+
+
+
+
 
 
 

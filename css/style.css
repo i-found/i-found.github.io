@@ -6,6 +6,23 @@ body, html {
 	width: 100% !important;
 	height: 100% !important;
 }
+
+@font-face {
+
+    font-family: 'LXGWWenKai-Regular';
+          src: url('../font/LXGWWenKai-Regular.eot');
+          src:
+            url('../font/LXGWWenKai-Regular.eot?#font-spider') format('embedded-opentype'),
+            url('../font/LXGWWenKai-Regular.woff2') format('woff2'),
+            url('../font/LXGWWenKai-Regular.woff') format('woff'),
+            url('../font/LXGWWenKai-Regular.ttf') format('truetype'),
+            url('../font/LXGWWenKai-Regular.svg') format('svg');
+          font-weight: normal;
+          font-style: normal;
+}
+
+
+
 h2 {
 	margin: 0 0 20px 0;
 	color: #555;
@@ -189,6 +206,12 @@ hr {
 .section-title.center {
 	padding: 10px 0 40px 0;
 }
+
+
+.section-title.center h2{
+font-family: 'LXGWWenKai-Regular';
+}
+
 .intro h1 {
 	font-size: 60px;
 	font-weight: 600;
@@ -243,19 +266,76 @@ ol.type li {
 }
 ol.type li a {
 	border: 1px solid #777;
+	border-radius: 5px;
 	color: #555;
 	padding: 8px 20px;
+	background-color: transparent;
+	opacity: 1;
+	transition: all 1s linear;
 }
 ol.type li a.active {
-	background: #222;
-	border: 1px solid #222;
+	background: #81C7D4;
+	border: 1px solid #81C7D4;
 	color: #fff;
 }
 ol.type li a:hover {
-	background: #222;
-	border: 1px solid #222;
+	background: #ff758c;
+	border: 1px solid #ff758c;
 	color: #fff;
 }
+
+ol.type li .girl-colorbox.active {
+	background: #ff758c;
+	border: 1px solid #ff758c;
+	font-weight: bold;
+	opacity: 0.5;
+}
+ol.type li .girl-colorbox:hover {
+	background: #81C7D4;
+	border: 1px solid #81C7D4;
+	font-weight: bold;
+	opacity: 0.5;
+}
+
+
+
+ol.type li .graphic-colorbox.active {
+	background: #ffb600;
+	border: 1px solid #ffb600;
+	font-weight: bold;
+	opacity: 0.5;
+}
+ol.type li .graphic-colorbox:hover {
+	background: #19aad1;
+	border: 1px solid #19aad1;
+	font-weight: bold;
+	opacity: 0.5;
+}
+
+
+
+ol.type li .others-colorbox.active {
+	background: #20ad65;
+	border: 1px solid #20ad65;
+	font-weight: bold;
+	opacity: 0.5;
+}
+ol.type li .others-colorbox:hover {
+	background: #fec8be;
+	border: 1px solid #fec8be;
+	font-weight: bold;
+	opacity: 0.5;
+}
+
+
+
+
+
+
+
+
+
+
 .isotope-item {
 	z-index: 2
 }
@@ -289,6 +369,9 @@ ol.type li a:hover {
 }
 .portfolio-item {
 	margin: 15px 0;
+	/* 这里定义图片的圆角 */
+	border-radius:10px;
+	overflow: hidden;
 	-webkit-transition: all 0.5s ease-out;
 	-moz-transition: all 0.5s ease-out;
 	-ms-transition: all 0.5s ease-out;

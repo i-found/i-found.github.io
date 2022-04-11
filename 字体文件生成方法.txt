@@ -7,7 +7,7 @@ font-spider C:\Users\ChenXiaoYan\Desktop\i-found\index.html
 
 css中@font-face 就会生成默认的五个字体文件
 
-一个html引用多个css文件，如果都用到同一种字体，那么字体文件的生成会（影响）同步到外部css(ep:主music.css,外部index.css)，
+一个html引用多个css文件，如果都用到同一种字体，那么字体文件的生成会（影响）同步到外部css(ep:主music.css,外部index.css)，如果外部字很多 就不是想要的结果了
 所以最好断开，只使用一个css文件（把外部需要的样式copy过来）。
 
 

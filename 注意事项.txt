@@ -1,3 +1,10 @@
  
 歌曲插件：
 歌曲名：注意不要含有空格
+
+
+HTML: <div class="about wrap"></div>
+
+css: .about.wrap{...};
+
+备注:第二个CSS选择器是选择同时含有about和wrap的元素（中间没有空格）；
