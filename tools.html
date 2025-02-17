@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文本处理工具</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            background-color: #f0f4f8;
+            overflow-y: auto;
+        }
+        .container {
+            width: 50%;
+            background-color: #ffffff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin: 20px 0;
+        }
+        .container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+            font-weight: 600;
+        }
+        label, .output-container h3 {
+            font-size: 16px;
+            margin-bottom: 8px;
+            display: block;
+            text-align: center;
+            color: #555;
+            font-weight: normal;
+        }
+        textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            resize: none;
+            box-sizing: border-box;
+            overflow: hidden;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+        textarea:focus {
+            outline: none;
+        }
+        #textInput:focus {
+            border-color: #4caf50;
+        }
+        .output-container textarea:focus {
+            border-color: #48c6ef;
+        }
+        button {
+            padding: 12px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease, font-weight 0.2s ease;
+            flex: 1; /* 使按钮自适应宽度 */
+        }
+        button:hover {
+            background-color: #45a049;
+            font-weight: bold;
+        }
+        .output-container {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .output-container button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            background-image: linear-gradient(to top, #48c6ef 0%, #6f86d6 100%);
+            color: white;
+            transition: background-image 0.3s ease, font-weight 0.2s ease;
+        }
+        .output-container button:hover {
+            background-image: linear-gradient(to top, #37ecba 0%, #72afd3 100%);
+            font-weight: bold;
+        }
+
+        /* -------------------新增样式------------------- */
+        .button-group {
+            display: flex;
+            gap: 10px; /* 按钮间距 */
+            margin-bottom: 15px; /* 与输入框的间距 */
+        }
+
+        #inputAction {
+            background-color: #E195AB; /* 背景颜色 */
+            color: white; /* 文字颜色 */
+            border: 1px solid #E195AB;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 12px;
+            flex: 1; /* 使按钮自适应宽度 */
+            transition: background-color 0.3s ease, color 0.3s ease, font-weight 0.2s ease; /* 过渡效果 */
+        }
+
+        #inputAction:hover {
+            font-weight: bold; /* 鼠标悬停时加粗 */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>文本处理工具</h2>
+        <label for="textInput">请输入文本：</label>
+        <textarea id="textInput" rows="4" oninput="handleInputChange(this)"></textarea>
+
+        <!-- 按钮组 -->
+        <div class="button-group">
+            <button id="inputAction" onclick="handleInputAction()">粘贴</button>
+            <button onclick="processText()">确定</button>
+        </div>
+
+        <div class="output-container">
+            <h3>处理后的文本：</h3>
+            <textarea id="outputText" rows="4"></textarea>
+            <button onclick="copyText()">复制</button>
+        </div>
+    </div>
+
+    <script>
+        const insertRules = {
+            12: [6], 13: [7], 14: [7], 15: [8], 16: [8],
+            17: [9], 18: [9], 19: [10], 20: [10], 21: [14,7],
+            22: [14,7], 23: [16,8], 24: [16,8], 25: [16,8],
+            26: [18,9], 27: [18,9], 28: [18,9], 29: [20,10], 30: [20,10]
+        };
+
+        function processText() {
+            const inputElement = document.getElementById('textInput');
+            
+            // 预处理：删除所有空格/换行
+            const cleanedText = inputElement.value
+                .replace(/[\s\u3000]/g, '')
+                .trim();
+
+            // 更新输入框显示
+            inputElement.value = cleanedText;
+            adjustHeight(inputElement);
+
+            // 标点处理
+            let processed = cleanedText.replace(/[，。；]/g, '\n')
+                                      .replace(/[“”]/g, '')
+                                      .replace(/[：？]/g, m => m + '\n');
+
+            // 处理末尾换行
+            processed = processed.replace(/\n+$/, '');
+
+            // 插入空行
+            let lines = processed.split('\n');
+            const lineCount = lines.length;
+            if (insertRules[lineCount]) {
+                insertRules[lineCount]
+                    .sort((a,b) => b - a)
+                    .forEach(pos => lines.splice(pos, 0, ''));
+            }
+
+            // 添加结尾空格
+            lines.push('  ');
+            const outputElement = document.getElementById('outputText');
+            outputElement.value = lines.join('\n');
+            adjustOutputHeight(outputElement);
+        }
+
+        function copyText() {
+            const outputText = document.getElementById('outputText');
+            
+            // 现代浏览器剪贴板API
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(outputText.value)
+                    .then(() => showCopyAlert(outputText.value))
+                    .catch(() => fallbackCopy(outputText));
+            } else {
+                fallbackCopy(outputText);
+            }
+        }
+
+        function fallbackCopy(element) {
+            element.select();
+            try {
+                const success = document.execCommand('copy');
+                if (success) {
+                    showCopyAlert(element.value);
+                } else {
+                    alert('复制失败，请手动选择文本复制');
+                }
+            } catch (err) {
+                alert('复制失败，请手动选择文本复制');
+            }
+        }
+
+        function showCopyAlert(text) {
+            const lines = text.split('\n');
+            const nonEmptyLines = lines.filter(line => line.trim().length > 0 && line.trim() !== '  ');
+            const totalLines = nonEmptyLines.length;
+
+            if (totalLines < 12 || totalLines > 30) {
+                alert(`内容已复制，总共 ${totalLines} 行`);
+                return;
+            }
+
+            let sections = [];
+            let currentSection = 0;
+            for (const line of lines) {
+                if (line.trim() === '') {
+                    sections.push(currentSection);
+                    currentSection = 0;
+                } else if (line.trim() !== '  ') {
+                    currentSection++;
+                }
+            }
+            if (currentSection > 0) sections.push(currentSection);
+
+            alert(`内容已复制，总共 ${totalLines} 行，分别为 ${sections.join('、')} 行`);
+        }
+
+        function adjustHeight(element) {
+            element.style.height = 'auto';
+            element.style.height = element.scrollHeight + 'px';
+        }
+
+        function adjustOutputHeight(element) {
+            element.style.height = 'auto';
+            element.style.height = element.scrollHeight + 'px';
+        }
+
+        /* -------------------新增功能------------------- */
+        function handleInputAction() {
+            const input = document.getElementById('textInput');
+            if (input.value.trim() === '') {
+                // 粘贴功能
+                navigator.clipboard.readText().then(text => {
+                    input.value = text;
+                    adjustHeight(input);
+                    updateButtonState(input); // 更新按钮状态
+                }).catch(() => alert('无法读取剪贴板内容'));
+            } else {
+                // 清除功能
+                input.value = '';
+                adjustHeight(input);
+                updateButtonState(input); // 更新按钮状态
+            }
+        }
+
+        function handleInputChange(element) {
+            adjustHeight(element);
+            updateButtonState(element); // 实时更新按钮状态
+        }
+
+        function updateButtonState(input) {
+            const btn = document.getElementById('inputAction');
+            btn.textContent = input.value.trim() ? '清除' : '粘贴'; // 根据内容动态修改按钮文字
+        }
+
+        // 页面加载时默认设置按钮为“粘贴”
+        document.addEventListener('DOMContentLoaded', () => {
+            updateButtonState(document.getElementById('textInput'));
+        });
+    </script>
+</body>
+</html>
