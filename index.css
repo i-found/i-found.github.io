@@ -372,10 +372,10 @@ a{
 .Navi-Bar ul .search{
 
 /* 将margin-left由22px改为以下数值，即调整搜索框的位置 */
-  margin-left: 143px;
+  margin-left: 43px;
 
 /* 观察位置用 */
-  /* background-color: pink; */
+  background-color: pink; 
 }
 
 
