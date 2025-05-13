@@ -3,190 +3,161 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>时间轴转SRT文本工具</title>
+    <title>时间轴&amp;SRT文本互转工具</title>
     <link rel="icon" href="./img/ico-text-tools.png" type="image/x-icon">
+    <!-- 保持原有样式不变 -->
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background: #f0f2f5;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-        }
-
-        .main-container {
-            width: 560px;
-            max-width: 90%;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-            padding: 32px;
-        }
-
-        h1 {
-            color: #2d3436;
-            text-align: center;
-            font-size: 24px;
-            margin-bottom: 28px;
-            font-weight: 600;
-        }
-
-        #editor {
-            width: 100%;
-            height: 200px;
-            padding: 14px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            resize: vertical;
-            font-size: 14px;
-            line-height: 1.6;
-            margin-bottom: 24px;
-            transition: border-color 0.2s;
-        }
-
-        .action-buttons {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-        }
-
-        .btn {
-            padding: 12px 0;
-            border: none;
-            border-radius: 8px;
-            font-size: 15px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-
-        #convertBtn { background: #0984e3; color: white; }
-        #copyBtn { background: #00b894; color: white; }
-
-        @media (max-width: 600px) {
-            .action-buttons { grid-template-columns: 1fr; }
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #f0f2f5; min-height: 100vh; display: flex; justify-content: center; align-items: center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; }
+        .main-container { width: 560px; max-width: 90%; background: white; border-radius: 12px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08); padding: 32px; }
+        h1 { color: #2d3436; text-align: center; font-size: 24px; margin-bottom: 28px; font-weight: 600; }
+        #editor { width: 100%; height: 200px; padding: 14px; border: 2px solid #e0e0e0; border-radius: 8px; resize: vertical; font-size: 14px; line-height: 1.6; margin-bottom: 24px; transition: border-color 0.2s; }
+        .action-buttons { display: grid; grid-template-columns: 1fr; gap: 12px; }
+        #actionBtn { padding: 12px 0; border: none; border-radius: 8px; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; background: #0984e3; color: white; }
+        #actionBtn.copy-mode { background: #00b894; }
+        @media (max-width: 600px) { .action-buttons { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
     <div class="main-container">
-        <h1>时间轴转SRT文本工具</h1>
-        <textarea id="editor" placeholder="📋 请在此粘贴时间轴内容..."></textarea>
+        <h1>Time axis↔SRT</h1>
+        <textarea id="editor" placeholder="📋 粘贴SRT或时间轴内容..."></textarea>
         <div class="action-buttons">
-            <button id="convertBtn" class="btn">🚀 立即转换</button>
-            <button id="copyBtn" class="btn">📋 复制结果</button>
+            <button id="actionBtn">🚀 智能转换</button>
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const editor = document.getElementById('editor');
-            const convertBtn = document.getElementById('convertBtn');
-            const copyBtn = document.getElementById('copyBtn');
+            const actionBtn = document.getElementById('actionBtn');
+            let isConvertMode = true;
 
-            // 转换功能
-            convertBtn.addEventListener('click', async () => {
+            // 新增缺失的函数定义
+            const detectContentType = (text) => {
+                const srtPattern = /\d+\s+\d{2}:\d{2}:\d{2},\d{3}\s+-+>\s+\d{2}:\d{2}:\d{2},\d{3}/;
+                const timelinePattern = /^(\s*(\d{1,2}:)?\d{1,2}:\d{2}\s+\S+)/;
+                
+                if (srtPattern.test(text)) return 'srt';
+                if (timelinePattern.test(text)) return 'timeline';
+                return 'unknown';
+            };
+
+            // SRT转时间轴函数
+            const convertSRTToTimeline = (srtText) => {
+                const blocks = srtText.split(/\n\s*\n/);
+                let timeline = '';
+                
+                blocks.forEach(block => {
+                    const lines = block.split('\n').filter(l => l.trim());
+                    if (lines.length < 3) return;
+
+                    const timeMatch = lines[1].match(/(\d{2}:\d{2}:\d{2}),\d{3}/);
+                    if (!timeMatch) return;
+                    
+                    const [_, startTime] = timeMatch;
+                    const content = lines.slice(2).join(' ').trim();
+                    
+                    timeline += `${formatTimeToMMSS(startTime)} ${content}\n`;
+                });
+                
+                return timeline.trim() || '错误：SRT转换失败';
+            };
+
+            // 时间轴转SRT函数
+            const convertTimelineToSRT = (timeline) => {
+                const items = timeline.split('\n')
+                    .map(line => line.trim())
+                    .filter(line => /^(\d{1,2}:)?\d{1,2}:\d{2}\s+.+/.test(line));
+
+                if (!items.length) return '错误：无效的时间轴格式';
+
+                let output = '';
+                
+                items.forEach((item, index) => {
+                    const timeMatch = item.match(/^((\d{1,2}:)?\d{1,2}:\d{2})/);
+                    if (!timeMatch) return;
+                    
+                    const startSec = timeToSeconds(timeMatch[0]);
+                    const endSec = (index < items.length - 1) ? 
+                        timeToSeconds(items[index+1].match(/^((\d{1,2}:)?\d{1,2}:\d{2})/)[0]) : 
+                        startSec + 180;
+
+                    output += `${index + 1}\n${secondsToSRTTime(startSec)} --> ${secondsToSRTTime(endSec)}\n${item.slice(timeMatch[0].length).trim()}\n\n`;
+                });
+
+                return output.trim() || '错误：时间轴转换失败';
+            };
+
+            // 工具函数
+            const timeToSeconds = (timeStr) => {
+                const parts = timeStr.split(':');
+                return parts.length === 3 ? 
+                    parts[0]*3600 + parts[1]*60 + parseInt(parts[2]) : 
+                    parts[0]*60 + parseInt(parts[1]);
+            };
+
+            const secondsToSRTTime = (totalSec) => {
+                const h = Math.floor(totalSec / 3600);
+                const m = Math.floor((totalSec % 3600) / 60);
+                const s = totalSec % 60;
+                return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')},000`;
+            };
+
+            const formatTimeToMMSS = (timeStr) => {
+                const [h, m, s] = timeStr.split(':').map(Number);
+                const totalSec = h * 3600 + m * 60 + s;
+                return totalSec >= 3600 ? 
+                    `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}` :
+                    `${(h*60 + m).toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+            };
+
+            // 事件监听
+            actionBtn.addEventListener('click', async () => {
                 try {
-                    let inputText = editor.value.trim();
-                    if (!inputText) {
-                        inputText = await navigator.clipboard.readText();
+                    if(isConvertMode) {
+                        let inputText = editor.value.trim();
+                        if (!inputText) {
+                            inputText = await navigator.clipboard.readText();
+                            editor.value = inputText;
+                        }
+                        
+                        const contentType = detectContentType(inputText);
+                        let output = '';
+                        
+                        if (contentType === 'srt') {
+                            output = convertSRTToTimeline(inputText);
+                        } else if (contentType === 'timeline') {
+                            output = convertTimelineToSRT(inputText);
+                        } else {
+                            throw new Error('无法识别的内容格式');
+                        }
+                        
+                        editor.value = output || '错误：转换结果为空';
+                        editor.scrollTop = 0;
+                        
+                        actionBtn.textContent = '📋 复制结果';
+                        actionBtn.classList.add('copy-mode');
+                        isConvertMode = false;
+                    } else {
+                        await navigator.clipboard.writeText(editor.value);
+                        alert('内容已复制到剪贴板');
+                        
+                        editor.value = '';
+                        editor.scrollTop = 0;
+                        actionBtn.textContent = '🚀 智能转换';
+                        actionBtn.classList.remove('copy-mode');
+                        isConvertMode = true;
                     }
-                    editor.value = convertToSRT(inputText);
-                    editor.scrollTop = editor.scrollHeight;
                 } catch (error) {
-                    alert('操作失败，请检查内容格式');
-                }
-            });
-
-            // 复制功能
-            copyBtn.addEventListener('click', async () => {
-                try {
-                    await navigator.clipboard.writeText(editor.value);
-                    alert('内容已复制到剪贴板');
-                } catch (error) {
-                    alert('请手动复制内容');
+                    editor.value = `错误：${error.message}`;
+                    editor.scrollTop = 0;
+                    actionBtn.textContent = '🚀 智能转换';
+                    actionBtn.classList.remove('copy-mode');
+                    isConvertMode = true;
                 }
             });
         });
-
-        function convertToSRT(timeline) {
-            const lines = timeline.split('\n')
-                .map(line => line.trim())
-                .filter(line => {
-                    // 支持以下格式：
-                    // HH:MM:SS 文本
-                    // MM:SS 文本
-                    // M:S 文本
-                    return /^(\d{1,2}:){0,2}\d{1,2}:\d{2}\s+.+/.test(line);
-                });
-
-            if (lines.length === 0) return '错误：未检测到有效时间轴格式';
-
-            let output = '';
-            
-            const parseTime = (timeStr) => {
-                const parts = timeStr.split(':');
-                // 自动补全时间格式
-                while(parts.length < 3) parts.unshift('00');
-                return {
-                    h: parseInt(parts[0]),
-                    m: parseInt(parts[1]),
-                    s: parseInt(parts[2])
-                };
-            };
-
-            const timeToSeconds = (timeStr) => {
-                const {h, m, s} = parseTime(timeStr);
-                return h * 3600 + m * 60 + s;
-            };
-
-            const formatSRTTime = (totalSeconds) => {
-                const h = Math.floor(totalSeconds / 3600);
-                const m = Math.floor((totalSeconds % 3600) / 60);
-                const s = totalSeconds % 60;
-                return [
-                    h.toString().padStart(2, '0'),
-                    m.toString().padStart(2, '0'),
-                    s.toString().padStart(2, '0')
-                ].join(':') + ',000';
-            };
-
-            lines.forEach((line, index) => {
-                // 提取时间部分
-                const timeMatch = line.match(/^(\d{1,2}:){0,2}\d{1,2}:\d{2}/);
-                if (!timeMatch) return;
-                
-                const timePart = timeMatch[0];
-                const content = line.slice(timePart.length).trim();
-                const start = timeToSeconds(timePart);
-
-                // 计算结束时间
-                let end;
-                if (index < lines.length - 1) {
-                    const nextTime = lines[index+1].match(/^(\d{1,2}:){0,2}\d{1,2}:\d{2}/)[0];
-                    end = timeToSeconds(nextTime);
-                } else {
-                    end = start + 180; // 最后一项+3分钟
-                }
-
-                output += `${index+1}\n` +
-                         `${formatSRTTime(start)} --> ${formatSRTTime(end)}\n` +
-                         `${content}\n\n`;
-            });
-
-            return output.trim();
-        }
     </script>
 </body>
 </html>
