@@ -198,8 +198,12 @@
 
 
   <!-- ========== 记录区域 ========== -->
-  <div class="add-record-wrap">
+  <!-- 添加记录 - 右上角 -->
+  <div class="add-record-fixed" id="addRecordWrap">
     <button class="add-record-btn" id="addRecordBtn">＋ 添加记录</button>
+  </div>
+  <!-- 同步设置 - 左下角 -->
+  <div class="sync-settings-fixed">
     <button class="sync-settings-btn" id="syncSettingsBtn" title="同步设置">⚙</button>
     <span class="sync-status" id="syncStatus" style="display:none;"></span>
   </div>
@@ -234,12 +238,10 @@
     }
 
 /* ========== 记录功能样式 ========== */
-.add-record-wrap {
-  text-align: center;
+.add-record-fixed {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  top: 120px;
+  right: 25px;
   z-index: 100;
 }
 .add-record-btn {
@@ -262,29 +264,35 @@
 }
 
 /* 同步设置按钮 */
+.sync-settings-fixed {
+  position: fixed;
+  left: 25px;
+  bottom: 28px;
+  z-index: 5;
+}
 .sync-settings-btn {
   display: block;
-  margin: 8px auto 0;
-  width: 36px; height: 36px;
+  width: 46px; height: 46px;
   border-radius: 50%;
-  border: 1px solid #ddd;
-  background: #fff;
-  font-size: 18px;
+  border: none;
+  background: rgba(0,0,0,0.55);
+  font-size: 20px;
   cursor: pointer;
-  color: #999;
+  color: #fff;
   transition: all 0.3s;
-  line-height: 34px;
+  line-height: 46px;
   text-align: center;
   padding: 0;
 }
-.sync-settings-btn:hover { color: #333; border-color: #aaa; }
-.sync-settings-btn.configured { color: #27ae60; border-color: #27ae60; }
+.sync-settings-btn:hover { background: rgba(0,0,0,0.75); }
+.sync-settings-btn.configured { background: rgba(39,174,96,0.7); }
+.sync-settings-btn.configured:hover { background: rgba(39,174,96,0.9); }
 
 .sync-status {
   display: block;
   text-align: center;
-  font-size: 12px;
-  margin-top: 6px;
+  font-size: 11px;
+  margin-top: 2px;
   color: #27ae60;
 }
 .sync-status.error { color: #e74c3c; }
@@ -391,7 +399,7 @@
 .record-delete {
   position: absolute;
   top: 10px;
-  right: 14px;
+  right: 48px;
   width: 26px; height: 26px;
   line-height: 26px;
   text-align: center;
@@ -404,6 +412,23 @@
   transition: all 0.2s;
 }
 .record-delete:hover { background: #ff4757; color: #fff; }
+
+.record-edit {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  width: 26px; height: 26px;
+  line-height: 26px;
+  text-align: center;
+  border-radius: 50%;
+  background: #eee;
+  color: #999;
+  font-size: 14px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+.record-edit:hover { background: #ff6b81; color: #fff; }
 
 .records-empty {
   text-align: center;
@@ -739,6 +764,7 @@
   const GITHUB_PATH = 'data/records.json';
   var records = [];
   var editingImageData = null;
+  var editingRecordId = null; // 编辑模式下的记录 ID
   var githubSha = null; // records.json 的 sha，更新时需要
 
   // ========== Token 管理 ==========
@@ -876,6 +902,7 @@
     for (var i = records.length - 1; i >= 0; i--) {
       var r = records[i];
       html += '<div class="record-card" data-id="' + r.id + '">';
+      html += '<button class="record-edit" data-id="' + r.id + '" title="编辑">✎</button>';
       html += '<button class="record-delete" data-id="' + r.id + '" title="删除">×</button>';
       if (r.title) {
         html += '<div class="record-title">' + escapeHtml(r.title) + '</div>';
@@ -884,7 +911,7 @@
       if (r.image) {
         html += '<img class="record-image" src="' + r.image + '" alt="记录图片" data-src="' + r.image + '">';
       }
-      html += '<span class="record-time">' + r.time + '</span>';
+      html += '<span class="record-time">' + (r.updatedTime ? '修改于 ' + r.updatedTime : r.time) + '</span>';
       html += '<div style="clear:both;"></div>';
       html += '</div>';
     }
@@ -898,21 +925,51 @@
   }
 
   // 打开弹窗
-  function openModal() {
+  function openModal(recordId) {
+    editingRecordId = recordId || null;
     var now = Date.now();
-    document.getElementById('recordText').value = '';
-    document.getElementById('recordTitle').value = '';
-    document.getElementById('modalTime').textContent = formatTime(now);
-    document.getElementById('imagePreviewArea').style.display = 'none';
-    document.getElementById('imageInput').value = '';
-    editingImageData = null;
+    if (editingRecordId) {
+      // 编辑模式：填充已有数据
+      var record = findRecord(editingRecordId);
+      if (record) {
+        document.getElementById('recordTitle').value = record.title || '';
+        document.getElementById('recordText').value = record.text || '';
+        document.getElementById('modalTime').textContent = '修改于 ' + formatTime(now);
+        if (record.image) {
+          document.getElementById('imagePreviewArea').style.display = 'block';
+          document.getElementById('imagePreview').src = record.image;
+          editingImageData = record.image;
+        } else {
+          document.getElementById('imagePreviewArea').style.display = 'none';
+          document.getElementById('imageInput').value = '';
+          editingImageData = null;
+        }
+      }
+    } else {
+      // 新增模式
+      document.getElementById('recordText').value = '';
+      document.getElementById('recordTitle').value = '';
+      document.getElementById('modalTime').textContent = formatTime(now);
+      document.getElementById('imagePreviewArea').style.display = 'none';
+      document.getElementById('imageInput').value = '';
+      editingImageData = null;
+    }
     document.getElementById('recordModal').classList.add('show');
     document.getElementById('recordTitle').focus();
+  }
+
+  // 查找记录
+  function findRecord(id) {
+    for (var i = 0; i < records.length; i++) {
+      if (records[i].id === id) return records[i];
+    }
+    return null;
   }
 
   // 关闭弹窗
   function closeModal() {
     document.getElementById('recordModal').classList.remove('show');
+    editingRecordId = null;
   }
 
   // 处理图片选择
@@ -940,13 +997,26 @@
       return;
     }
     var now = Date.now();
-    records.push({
-      id: now,
-      title: title || '',
-      text: text || '',
-      image: editingImageData || '',
-      time: formatTime(now)
-    });
+    if (editingRecordId) {
+      // 编辑模式：更新已有记录
+      var record = findRecord(editingRecordId);
+      if (record) {
+        record.title = title || '';
+        record.text = text || '';
+        record.image = editingImageData || '';
+        record.updatedTime = formatTime(now);
+      }
+      editingRecordId = null;
+    } else {
+      // 新增模式
+      records.push({
+        id: now,
+        title: title || '',
+        text: text || '',
+        image: editingImageData || '',
+        time: formatTime(now)
+      });
+    }
     saveRecords();
     render();
     closeModal();
@@ -998,6 +1068,9 @@
   document.getElementById('recordsContainer').addEventListener('click', function(e) {
     if (e.target.classList.contains('record-delete')) {
       deleteRecord(parseInt(e.target.getAttribute('data-id')));
+    }
+    if (e.target.classList.contains('record-edit')) {
+      openModal(parseInt(e.target.getAttribute('data-id')));
     }
     if (e.target.classList.contains('record-image')) {
       openLightbox(e.target.getAttribute('data-src'));
