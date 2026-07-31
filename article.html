@@ -223,15 +223,13 @@
               document.getElementById("Month").innerText = allmonths[date.getMonth()];
               </script>
 
-        <div class="date2">
-<!-- 定义年份 -->
-            <div id="theYear"></div>
-        </div>
                 </div>
 
 
   <!-- ========== 记录区域 ========== -->
-  <button class="add-record-btn" id="addRecordBtn">＋ 添加记录</button>
+  <div class="add-record-wrap">
+    <button class="add-record-btn" id="addRecordBtn">＋ 添加记录</button>
+  </div>
   <div class="records-container" id="recordsContainer">
     <div class="records-empty" id="recordsEmpty">还没有记录，点击上方按钮添加第一条吧~</div>
   </div>
@@ -262,9 +260,13 @@
     }
 
 /* ========== 记录功能样式 ========== */
+.add-record-wrap {
+  text-align: center;
+  margin-top: 30px;
+}
 .add-record-btn {
-  display: block;
-  margin: 30px auto 20px;
+  display: inline-block;
+  margin: 0 auto 20px;
   padding: 12px 36px;
   background: linear-gradient(135deg, #ff6b81, #ff4757);
   color: #fff;
