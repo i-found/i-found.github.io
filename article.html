@@ -2,7 +2,7 @@
 <html lang="en" dir="ltr">
   <head>
     <meta charset="utf-8">
-    <title>阅读 | 随时都要一起</title>
+    <title>记录 | 随时都要一起</title>
     <!-- 音乐点击播放插件，要提上来，不知道为什么会影响到bookmark1的时间展示 -->
     <script type="text/javascript">
     window.onload = function(){
@@ -235,6 +235,13 @@
   我们这一生做什么都是已经注定了的，他心想。你生存的方式都是你的才能所在。
 </div>
 <div class="author">---海明威《乞力马扎罗的雪》</div>
+
+  <!-- ========== 记录区域 ========== -->
+  <button class="add-record-btn" id="addRecordBtn">＋ 添加记录</button>
+  <div class="records-container" id="recordsContainer">
+    <div class="records-empty" id="recordsEmpty">还没有记录，点击上方按钮添加第一条吧~</div>
+  </div>
+
 </div>
 
 
@@ -248,7 +255,8 @@
     -webkit-box-shadow: 0 15px 15px 0 rgb(15 37 64 / 10%);
     box-shadow: 0 15px 15px 0 rgb(15 37 64 / 10%);
     border-radius: 2px;
-    margin: 80px auto 15px auto;}
+    margin: 80px auto 15px auto;
+    padding-bottom: 40px;}
 
     .date2{
       float: left;
@@ -257,14 +265,211 @@
       font-family: Helvetica;
       margin-left: 5px;
       color:#f40;
-      /* background-color: pink; */
-
-
     }
 
+/* ========== 记录功能样式 ========== */
+.add-record-btn {
+  display: block;
+  margin: 30px auto 20px;
+  padding: 12px 36px;
+  background: linear-gradient(135deg, #ff6b81, #ff4757);
+  color: #fff;
+  border: none;
+  border-radius: 30px;
+  font-size: 16px;
+  cursor: pointer;
+  letter-spacing: 2px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(255,71,87,0.3);
+}
+.add-record-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255,71,87,0.45);
+}
 
+.records-container {
+  max-width: 750px;
+  margin: 0 auto;
+  padding: 10px 20px;
+}
+.record-card {
+  background: #fafafa;
+  border-radius: 8px;
+  padding: 20px 24px;
+  margin-bottom: 16px;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transition: all 0.3s ease;
+  animation: fadeInUp 0.4s ease;
+}
+.record-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
+.record-text {
+  font-size: 16px;
+  line-height: 1.8;
+  color: #333;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin-bottom: 12px;
+}
+.record-image {
+  max-width: 100%;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.record-image:hover { transform: scale(1.02); }
 
+.record-time {
+  font-size: 13px;
+  color: #999;
+  float: right;
+}
+.record-delete {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  width: 26px; height: 26px;
+  line-height: 26px;
+  text-align: center;
+  border-radius: 50%;
+  background: #eee;
+  color: #999;
+  font-size: 14px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+.record-delete:hover { background: #ff4757; color: #fff; }
+
+.records-empty {
+  text-align: center;
+  color: #bbb;
+  font-size: 15px;
+  padding: 30px 0;
+}
+
+/* 弹窗遮罩 */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 999;
+  justify-content: center;
+  align-items: center;
+}
+.modal-overlay.show { display: flex; }
+
+.modal-content {
+  background: #fff;
+  border-radius: 10px;
+  padding: 30px;
+  width: 90%;
+  max-width: 560px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+.modal-content h3 {
+  margin: 0 0 18px;
+  font-size: 20px;
+  color: #333;
+  text-align: center;
+}
+.modal-content textarea {
+  width: 100%;
+  min-height: 140px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 15px;
+  line-height: 1.7;
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+.modal-content textarea:focus { border-color: #ff6b81; }
+
+/* 图片预览 */
+.image-preview-area { margin-top: 12px; }
+.image-preview-area img {
+  max-width: 100%; max-height: 200px;
+  border-radius: 6px;
+  display: block;
+  margin: 0 auto;
+}
+.image-preview-area .remove-img {
+  display: block;
+  margin: 8px auto 0;
+  background: none;
+  border: none;
+  color: #ff4757;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+/* 图片上传按钮 */
+.img-upload-label {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 8px 20px;
+  background: #f0f0f0;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #666;
+  transition: all 0.2s;
+}
+.img-upload-label:hover { background: #e0e0e0; }
+.img-upload-label input { display: none; }
+
+/* 弹窗按钮 */
+.modal-buttons {
+  margin-top: 20px;
+  text-align: center;
+}
+.modal-buttons button {
+  padding: 10px 30px;
+  border: none;
+  border-radius: 25px;
+  font-size: 15px;
+  cursor: pointer;
+  margin: 0 8px;
+  transition: all 0.2s;
+}
+.btn-save {
+  background: linear-gradient(135deg, #ff6b81, #ff4757);
+  color: #fff;
+}
+.btn-save:hover { opacity: 0.85; }
+.btn-cancel {
+  background: #e0e0e0;
+  color: #666;
+}
+.btn-cancel:hover { background: #d0d0d0; }
+
+/* 图片灯箱 */
+.image-lightbox {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 1001;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+.image-lightbox.show { display: flex; }
+.image-lightbox img {
+  max-width: 90%;
+  max-height: 90%;
+  border-radius: 4px;
+}
 </style>
 
 
@@ -399,6 +604,210 @@
 <!-- 音乐播放插件的js,要放在内容的后面才能生效 -->
     <script src="./dist/meplayer.min.js"></script>
     <script src="main.js"></script>
+
+<!-- ========== 添加记录弹窗 ========== -->
+<div class="modal-overlay" id="recordModal">
+  <div class="modal-content">
+    <h3>添加记录</h3>
+    <textarea id="recordText" placeholder="写下你想记录的..."></textarea>
+    <div class="image-preview-area" id="imagePreviewArea" style="display:none;">
+      <img id="imagePreview" src="" alt="预览图片">
+      <button class="remove-img" id="removeImage">移除图片</button>
+    </div>
+    <label class="img-upload-label" for="imageInput">📷 添加图片</label>
+    <input type="file" id="imageInput" accept="image/*">
+    <div class="modal-buttons">
+      <button class="btn-cancel" id="cancelRecord">取消</button>
+      <button class="btn-save" id="saveRecord">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 图片灯箱 ========== -->
+<div class="image-lightbox" id="imageLightbox">
+  <img id="lightboxImg" src="" alt="查看大图">
+</div>
+
+<script>
+// ========== 记录功能 JS ==========
+(function() {
+  const STORAGE_KEY = 'suihe_records';
+  var records = [];
+  var editingImageData = null;
+
+  // 加载记录
+  function loadRecords() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      records = raw ? JSON.parse(raw) : [];
+    } catch(e) {
+      records = [];
+    }
+  }
+
+  // 保存到 localStorage
+  function saveRecords() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+  }
+
+  // 格式化时间
+  function formatTime(ts) {
+    var d = new Date(ts);
+    var pad = function(n) { return n < 10 ? '0' + n : n; };
+    return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) +
+           ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+
+  // 渲染所有记录
+  function render() {
+    var container = document.getElementById('recordsContainer');
+    var empty = document.getElementById('recordsEmpty');
+
+    if (records.length === 0) {
+      container.innerHTML = '<div class="records-empty">还没有记录，点击上方按钮添加第一条吧~</div>';
+      return;
+    }
+
+    var html = '';
+    for (var i = records.length - 1; i >= 0; i--) {
+      var r = records[i];
+      html += '<div class="record-card" data-id="' + r.id + '">';
+      html += '<button class="record-delete" data-id="' + r.id + '" title="删除">×</button>';
+      html += '<div class="record-text">' + escapeHtml(r.text) + '</div>';
+      if (r.image) {
+        html += '<img class="record-image" src="' + r.image + '" alt="记录图片" data-src="' + r.image + '">';
+      }
+      html += '<span class="record-time">' + r.time + '</span>';
+      html += '<div style="clear:both;"></div>';
+      html += '</div>';
+    }
+    container.innerHTML = html;
+  }
+
+  function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+  }
+
+  // 打开弹窗
+  function openModal() {
+    document.getElementById('recordText').value = '';
+    document.getElementById('imagePreviewArea').style.display = 'none';
+    document.getElementById('imageInput').value = '';
+    editingImageData = null;
+    document.getElementById('recordModal').classList.add('show');
+    document.getElementById('recordText').focus();
+  }
+
+  // 关闭弹窗
+  function closeModal() {
+    document.getElementById('recordModal').classList.remove('show');
+  }
+
+  // 处理图片选择
+  function handleImage(file) {
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      alert('图片不要超过 2MB 哦~');
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      editingImageData = e.target.result;
+      document.getElementById('imagePreview').src = e.target.result;
+      document.getElementById('imagePreviewArea').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // 保存记录
+  function saveRecord() {
+    var text = document.getElementById('recordText').value.trim();
+    if (!text && !editingImageData) {
+      alert('请输入文字或添加图片~');
+      return;
+    }
+    var now = Date.now();
+    records.push({
+      id: now,
+      text: text || '',
+      image: editingImageData || '',
+      time: formatTime(now)
+    });
+    saveRecords();
+    render();
+    closeModal();
+  }
+
+  // 删除记录
+  function deleteRecord(id) {
+    if (!confirm('确定删除这条记录吗？')) return;
+    records = records.filter(function(r) { return r.id !== id; });
+    saveRecords();
+    render();
+  }
+
+  // 图片灯箱
+  function openLightbox(src) {
+    document.getElementById('lightboxImg').src = src;
+    document.getElementById('imageLightbox').classList.add('show');
+  }
+  function closeLightbox() {
+    document.getElementById('imageLightbox').classList.remove('show');
+  }
+
+  // ========== 事件绑定 ==========
+  document.getElementById('addRecordBtn').addEventListener('click', openModal);
+  document.getElementById('cancelRecord').addEventListener('click', closeModal);
+  document.getElementById('recordModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+
+  document.getElementById('imageInput').addEventListener('change', function() {
+    if (this.files && this.files[0]) handleImage(this.files[0]);
+  });
+
+  document.getElementById('removeImage').addEventListener('click', function() {
+    editingImageData = null;
+    document.getElementById('imagePreview').src = '';
+    document.getElementById('imagePreviewArea').style.display = 'none';
+    document.getElementById('imageInput').value = '';
+  });
+
+  document.getElementById('saveRecord').addEventListener('click', saveRecord);
+
+  // 键盘快捷键 Ctrl+Enter 保存
+  document.getElementById('recordText').addEventListener('keydown', function(e) {
+    if (e.ctrlKey && e.key === 'Enter') saveRecord();
+  });
+
+  // 删除事件委托
+  document.getElementById('recordsContainer').addEventListener('click', function(e) {
+    if (e.target.classList.contains('record-delete')) {
+      deleteRecord(parseInt(e.target.getAttribute('data-id')));
+    }
+    if (e.target.classList.contains('record-image')) {
+      openLightbox(e.target.getAttribute('data-src'));
+    }
+  });
+
+  // 灯箱关闭
+  document.getElementById('imageLightbox').addEventListener('click', closeLightbox);
+
+  // 支持跨标签同步
+  window.addEventListener('storage', function(e) {
+    if (e.key === STORAGE_KEY) {
+      loadRecords();
+      render();
+    }
+  });
+
+  // 初始化
+  loadRecords();
+  render();
+})();
+</script>
 
   </body>
 </html>
