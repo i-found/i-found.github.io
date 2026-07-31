@@ -194,36 +194,7 @@
 <!-- 内容布局 -->
 <div class="content-layout">
 
-  <div class="bookmark-detail">
-        <div class="DATE"
-             style="
-             float: right;
-             margin: 40px 72px 0 0;
-             width: 85px;height: 85px;
-             position: relative;
-             font-size: 40px;
-             font-weight: bold;
-             color: #333;
-             line-height: 36px;"
-        >
-              <!-- 定义日 -->
-              <div id="theDate"></div>
-                  <!-- 定义英文月份 -->
-              <div id="Month"></div>
-              <script type="text/javascript">
-              var allmonths = ['1','2','3','4','5','6','7','8','9','10','11','12'];
-              var date = new Date();//可以在date中指定日期转换
-              console.log(
-                 date.getDate() +
-                 ' ' +
-                 allmonths[date.getMonth()] +
-                 ' ' +
-                 date.getFullYear()
-              );
-              document.getElementById("Month").innerText = allmonths[date.getMonth()];
-              </script>
-
-                </div>
+<div class="bookmark-detail">
 
 
   <!-- ========== 记录区域 ========== -->
@@ -248,7 +219,8 @@
     box-shadow: 0 15px 15px 0 rgb(15 37 64 / 10%);
     border-radius: 2px;
     margin: 80px auto 15px auto;
-    padding-bottom: 40px;}
+    padding-bottom: 40px;
+    position: relative;}
 
     .date2{
       float: left;
@@ -262,7 +234,11 @@
 /* ========== 记录功能样式 ========== */
 .add-record-wrap {
   text-align: center;
-  margin-top: 30px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
 }
 .add-record-btn {
   display: inline-block;
