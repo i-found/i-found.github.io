@@ -991,7 +991,7 @@
     var html = '';
     for (var i = filtered.length - 1; i >= 0; i--) {
       var r = filtered[i];
-      html += '<div class="record-card" data-id="' + r.id + '">';
+      html += '<div class="record-card" data-id="' + r.id + '" id="record-' + r.id + '">';
       html += '<button class="record-edit" data-id="' + r.id + '" title="编辑">✎</button>';
       html += '<button class="record-delete" data-id="' + r.id + '" title="删除">×</button>';
       if (r.title) {
@@ -1208,16 +1208,44 @@
     if (e.ctrlKey && e.key === 'Enter') saveRecord();
   });
 
-  // 删除事件委托
+  // 删除/编辑/点击跳转 事件委托
   document.getElementById('recordsContainer').addEventListener('click', function(e) {
     if (e.target.classList.contains('record-delete')) {
       deleteRecord(parseInt(e.target.getAttribute('data-id')));
+      return;
     }
     if (e.target.classList.contains('record-edit')) {
       openModal(parseInt(e.target.getAttribute('data-id')));
+      return;
     }
     if (e.target.classList.contains('record-image')) {
       openLightbox(e.target.getAttribute('data-src'));
+      return;
+    }
+    // 搜索模式下点击卡片内容 → 跳转到该记录
+    var searchTerm = searchInput.value.trim();
+    if (searchTerm) {
+      var card = e.target.closest('.record-card');
+      if (card) {
+        var targetId = card.getAttribute('data-id');
+        // 清空搜索、收起搜索框、重新渲染全部
+        searchPopup.classList.remove('open');
+        searchIconBtn.classList.remove('active');
+        searchInput.value = '';
+        render();
+        // 滚动到目标记录
+        var targetEl = document.getElementById('record-' + targetId);
+        if (targetEl) {
+          targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // 高亮闪烁
+          targetEl.style.transition = 'box-shadow 0.15s ease';
+          targetEl.style.boxShadow = '0 0 0 3px #ff6b81';
+          setTimeout(function() {
+            targetEl.style.boxShadow = '';
+            setTimeout(function() { targetEl.style.transition = ''; }, 150);
+          }, 600);
+        }
+      }
     }
   });
 
