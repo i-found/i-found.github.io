@@ -208,17 +208,20 @@
 
 
   <!-- ========== 记录区域 ========== -->
-  <!-- 添加记录 - 右上角 -->
+  <!-- 添加记录 - 右上角浮动 -->
   <div class="add-record-fixed" id="addRecordWrap">
-    <button class="add-record-btn" id="addRecordBtn">＋ 添加记录</button>
+    <button class="add-record-btn" id="addRecordBtn" onclick="openAddRecordModal()">＋ 添加记录</button>
   </div>
   <!-- 同步设置 - 左下角 -->
   <div class="sync-settings-fixed">
-    <button class="sync-settings-btn" id="syncSettingsBtn" title="同步设置">⚙</button>
+    <button class="sync-settings-btn" id="syncSettingsBtn" title="同步设置" onclick="openSyncModalFn()">⚙</button>
     <span class="sync-status" id="syncStatus" style="display:none;"></span>
   </div>
   <div class="records-container" id="recordsContainer">
-    <div class="records-empty" id="recordsEmpty">还没有记录，点击上方按钮添加第一条吧~</div>
+    <div class="records-empty" id="recordsEmpty">
+      <p>还没有记录~</p>
+      <button class="add-record-btn-inline" onclick="openAddRecordModal()">＋ 点这里添加第一条记录</button>
+    </div>
   </div>
 
 </div>
@@ -789,7 +792,7 @@
     </label>
     <div class="modal-buttons">
       <button class="btn-cancel" id="cancelRecord">取消</button>
-      <button class="btn-save" id="saveRecordBtn">保存</button>
+      <button class="btn-save" id="saveRecordBtn" onclick="window._saveRecord && window._saveRecord()">保存</button>
     </div>
   </div>
 </div>
@@ -1359,6 +1362,15 @@
       });
     }
   }
+
+  // 暴露给内联 onclick 调用
+  window._saveRecord = saveRecord;
+  window.openAddRecordModal = function() { openModal(); };
+  window.openSyncModalFn = function() {
+    document.getElementById('githubToken').value = getToken();
+    document.getElementById('syncFeedback').style.display = 'none';
+    document.getElementById('syncModal').classList.add('show');
+  };
 
   init();
 </script>
