@@ -896,7 +896,7 @@ li.search { position: relative; }
     showSyncStatus('同步中…', 'syncing');
     return githubAPI('GET').then(function(data) {
       githubSha = data.sha;
-      var content = JSON.parse(atob(data.content));
+      var content = JSON.parse(decodeURIComponent(escape(atob(data.content))));
       showSyncStatus('已同步 ✓', 'success');
       setTimeout(function() { showSyncStatus('', ''); }, 2000);
       return content;
