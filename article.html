@@ -200,6 +200,8 @@
   <!-- ========== 记录区域 ========== -->
   <div class="add-record-wrap">
     <button class="add-record-btn" id="addRecordBtn">＋ 添加记录</button>
+    <button class="sync-settings-btn" id="syncSettingsBtn" title="同步设置">⚙</button>
+    <span class="sync-status" id="syncStatus" style="display:none;"></span>
   </div>
   <div class="records-container" id="recordsContainer">
     <div class="records-empty" id="recordsEmpty">还没有记录，点击上方按钮添加第一条吧~</div>
@@ -258,6 +260,82 @@
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(255,71,87,0.45);
 }
+
+/* 同步设置按钮 */
+.sync-settings-btn {
+  display: block;
+  margin: 8px auto 0;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 1px solid #ddd;
+  background: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  color: #999;
+  transition: all 0.3s;
+  line-height: 34px;
+  text-align: center;
+  padding: 0;
+}
+.sync-settings-btn:hover { color: #333; border-color: #aaa; }
+.sync-settings-btn.configured { color: #27ae60; border-color: #27ae60; }
+
+.sync-status {
+  display: block;
+  text-align: center;
+  font-size: 12px;
+  margin-top: 6px;
+  color: #27ae60;
+}
+.sync-status.error { color: #e74c3c; }
+.sync-status.syncing { color: #f39c12; }
+
+/* 同步设置弹窗 */
+.sync-desc {
+  font-size: 14px;
+  color: #666;
+  margin: 0 0 18px;
+  line-height: 1.6;
+}
+.sync-desc code {
+  background: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+.token-label {
+  display: block;
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 8px;
+}
+.token-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+  font-family: monospace;
+}
+.token-input:focus { border-color: #ff6b81; }
+.token-hint {
+  font-size: 12px;
+  color: #999;
+  margin: 8px 0 0;
+}
+.token-hint a { color: #ff6b81; }
+.sync-feedback {
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  text-align: center;
+}
+.sync-feedback.success { background: #eafaf1; color: #27ae60; }
+.sync-feedback.error { background: #fdecea; color: #e74c3c; }
 
 .records-container {
   max-width: 750px;
@@ -628,6 +706,24 @@
   </div>
 </div>
 
+<!-- ========== 同步设置弹窗 ========== -->
+<div class="modal-overlay" id="syncModal">
+  <div class="modal-content sync-modal-content">
+    <h3>GitHub 同步设置</h3>
+    <p class="sync-desc">配置 Token 后，记录将自动同步到仓库的 <code>data/records.json</code> 文件。</p>
+    <label class="token-label" for="githubToken">GitHub Personal Access Token</label>
+    <input type="password" class="token-input" id="githubToken" placeholder="ghp_xxxxxxxxxxxx">
+    <p class="token-hint">
+      <a href="https://github.com/settings/tokens/new?scopes=repo&description=RecordsSync" target="_blank">点此创建 Token</a>，只需勾选 <strong>repo</strong> 权限即可。
+    </p>
+    <div class="modal-buttons">
+      <button class="btn-cancel" id="cancelSync">取消</button>
+      <button class="btn-save" id="saveSync">保存并测试连接</button>
+    </div>
+    <div class="sync-feedback" id="syncFeedback" style="display:none;"></div>
+  </div>
+</div>
+
 <!-- ========== 图片灯箱 ========== -->
 <div class="image-lightbox" id="imageLightbox">
   <img id="lightboxImg" src="" alt="查看大图">
@@ -637,8 +733,110 @@
 // ========== 记录功能 JS ==========
 (function() {
   const STORAGE_KEY = 'suihe_records';
+  const TOKEN_KEY = 'suihe_github_token';
+  const GITHUB_OWNER = 'i-found';
+  const GITHUB_REPO = 'i-found.github.io';
+  const GITHUB_PATH = 'data/records.json';
   var records = [];
   var editingImageData = null;
+  var githubSha = null; // records.json 的 sha，更新时需要
+
+  // ========== Token 管理 ==========
+  function getToken() { return localStorage.getItem(TOKEN_KEY) || ''; }
+  function setToken(t) { localStorage.setItem(TOKEN_KEY, t); }
+  function hasToken() { return !!getToken(); }
+
+  function updateSyncUI() {
+    var btn = document.getElementById('syncSettingsBtn');
+    if (hasToken()) {
+      btn.classList.add('configured');
+      btn.title = '已配置同步';
+    } else {
+      btn.classList.remove('configured');
+      btn.title = '同步设置';
+    }
+  }
+
+  // 显示同步状态
+  function showSyncStatus(msg, type) {
+    var el = document.getElementById('syncStatus');
+    el.textContent = msg;
+    el.style.display = 'block';
+    el.className = 'sync-status ' + (type || '');
+  }
+
+  // ========== GitHub API ==========
+  function githubAPI(method, body) {
+    var token = getToken();
+    var headers = {
+      'Authorization': 'Bearer ' + token,
+      'Accept': 'application/vnd.github.v3+json'
+    };
+    var opts = { method: method, headers: headers };
+    if (body) {
+      opts.body = JSON.stringify(body);
+      headers['Content-Type'] = 'application/json';
+    }
+    var url = 'https://api.github.com/repos/' + GITHUB_OWNER + '/' + GITHUB_REPO + '/contents/' + GITHUB_PATH;
+    return fetch(url, opts).then(function(res) {
+      if (res.status === 404) {
+        var err = new Error('Not Found');
+        err.status = 404;
+        throw err;
+      }
+      if (!res.ok) {
+        return res.json().then(function(j) {
+          throw new Error(j.message || 'HTTP ' + res.status);
+        });
+      }
+      return res.json();
+    });
+  }
+
+  // 从 GitHub 拉取记录
+  function loadFromGitHub() {
+    if (!hasToken()) return Promise.resolve(null);
+    showSyncStatus('同步中…', 'syncing');
+    return githubAPI('GET').then(function(data) {
+      githubSha = data.sha;
+      var content = JSON.parse(atob(data.content));
+      showSyncStatus('已同步 ✓', 'success');
+      setTimeout(function() { showSyncStatus('', ''); }, 2000);
+      return content;
+    }).catch(function(err) {
+      // 文件不存在（404）是正常的首次使用情况
+      if (err.message.indexOf('404') !== -1 || err.message.indexOf('Not Found') !== -1) {
+        githubSha = null;
+        showSyncStatus('云端无数据', '');
+        setTimeout(function() { showSyncStatus('', ''); }, 2000);
+        return null;
+      }
+      showSyncStatus('同步失败: ' + err.message, 'error');
+      return null;
+    });
+  }
+
+  // 推送记录到 GitHub
+  function pushToGitHub() {
+    if (!hasToken()) return Promise.resolve();
+    var content = btoa(unescape(encodeURIComponent(JSON.stringify(records, null, 2))));
+    var body = {
+      message: '更新记录 [' + new Date().toISOString().slice(0, 19).replace('T', ' ') + ']',
+      content: content,
+      branch: 'main'
+    };
+    if (githubSha) body.sha = githubSha;
+    showSyncStatus('同步中…', 'syncing');
+    return githubAPI('PUT', body).then(function(data) {
+      githubSha = data.content.sha;
+      showSyncStatus('已同步 ✓', 'success');
+      setTimeout(function() { showSyncStatus('', ''); }, 2000);
+    }).catch(function(err) {
+      showSyncStatus('同步失败: ' + err.message, 'error');
+    });
+  }
+
+  // ========== 记录管理 ==========
 
   // 加载记录
   function loadRecords() {
@@ -650,9 +848,10 @@
     }
   }
 
-  // 保存到 localStorage
+  // 保存到 localStorage + 触发 GitHub 同步
   function saveRecords() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+    pushToGitHub();
   }
 
   // 格式化时间
@@ -816,9 +1015,95 @@
     }
   });
 
-  // 初始化
-  loadRecords();
-  render();
+  // ========== 同步设置弹窗 ==========
+  document.getElementById('syncSettingsBtn').addEventListener('click', function() {
+    document.getElementById('githubToken').value = getToken();
+    document.getElementById('syncFeedback').style.display = 'none';
+    document.getElementById('syncModal').classList.add('show');
+  });
+  document.getElementById('cancelSync').addEventListener('click', function() {
+    document.getElementById('syncModal').classList.remove('show');
+  });
+  document.getElementById('syncModal').addEventListener('click', function(e) {
+    if (e.target === this) document.getElementById('syncModal').classList.remove('show');
+  });
+  document.getElementById('saveSync').addEventListener('click', function() {
+    var token = document.getElementById('githubToken').value.trim();
+    if (!token) {
+      document.getElementById('syncFeedback').className = 'sync-feedback error';
+      document.getElementById('syncFeedback').textContent = '请输入 Token';
+      document.getElementById('syncFeedback').style.display = 'block';
+      return;
+    }
+    setToken(token);
+    updateSyncUI();
+    // 测试连接并加载云端数据
+    showSyncStatus('测试连接中…', 'syncing');
+    loadFromGitHub().then(function(ghRecords) {
+      if (ghRecords !== null) {
+        // 合并：云端和本地取较新
+        mergeRecords(ghRecords);
+        saveRecordsToLocal();
+        render();
+        document.getElementById('syncFeedback').className = 'sync-feedback success';
+        document.getElementById('syncFeedback').textContent = '连接成功！已同步 ' + records.length + ' 条记录';
+      } else if (ghRecords === null) {
+        // 首次使用，推送本地数据
+        document.getElementById('syncFeedback').className = 'sync-feedback success';
+        document.getElementById('syncFeedback').textContent = '连接成功！首次同步 ' + records.length + ' 条记录';
+        pushToGitHub();
+      }
+      document.getElementById('syncFeedback').style.display = 'block';
+      setTimeout(function() { document.getElementById('syncModal').classList.remove('show'); }, 1500);
+    }).catch(function(err) {
+      document.getElementById('syncFeedback').className = 'sync-feedback error';
+      document.getElementById('syncFeedback').textContent = '连接失败: ' + err.message;
+      document.getElementById('syncFeedback').style.display = 'block';
+      setToken('');
+      updateSyncUI();
+    });
+  });
+
+  // 只写 localStorage 不触发同步（用于初始化合并）
+  function saveRecordsToLocal() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+  }
+
+  // 合并云端和本地记录（以 id 去重，保留最新时间戳的）
+  function mergeRecords(ghRecords) {
+    if (!ghRecords || !ghRecords.length) return;
+    var map = {};
+    var all = records.concat(ghRecords);
+    for (var i = 0; i < all.length; i++) {
+      var r = all[i];
+      if (!map[r.id] || r.id > map[r.id].id) {
+        map[r.id] = r;
+      }
+    }
+    records = Object.values(map).sort(function(a, b) { return a.id - b.id; });
+  }
+
+  // 初始化：先本地加载，再尝试从云端拉取并合并
+  function init() {
+    loadRecords(); // 本地加载
+    updateSyncUI();
+    render();
+
+    if (hasToken()) {
+      loadFromGitHub().then(function(ghRecords) {
+        if (ghRecords && ghRecords.length) {
+          mergeRecords(ghRecords);
+          saveRecordsToLocal();
+          render();
+        } else if (ghRecords === null && githubSha === null) {
+          // 云端没有文件，推送本地数据
+          pushToGitHub();
+        }
+      });
+    }
+  }
+
+  init();
 })();
 </script>
 
