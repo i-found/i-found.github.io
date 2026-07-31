@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8">
     <title>记录 | 随时都要一起</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
     <!-- 音乐点击播放插件，要提上来，不知道为什么会影响到bookmark1的时间展示 -->
     <script type="text/javascript">
     window.onload = function(){
@@ -207,6 +208,10 @@
     <button class="sync-settings-btn" id="syncSettingsBtn" title="同步设置">⚙</button>
     <span class="sync-status" id="syncStatus" style="display:none;"></span>
   </div>
+  <div class="search-bar-wrap">
+    <input type="text" class="search-bar" id="searchBar" placeholder="搜索记录...">
+    <button class="ocr-btn" id="ocrBtn" title="识别图片文字">OCR</button>
+  </div>
   <div class="records-container" id="recordsContainer">
     <div class="records-empty" id="recordsEmpty">还没有记录，点击上方按钮添加第一条吧~</div>
   </div>
@@ -351,6 +356,56 @@
   margin: 0 auto;
   padding: 10px 20px;
 }
+
+/* 搜索栏 */
+.search-bar-wrap {
+  max-width: 750px;
+  margin: 20px auto 0;
+  padding: 0 20px;
+  display: flex;
+  gap: 8px;
+}
+.search-bar {
+  flex: 1;
+  padding: 10px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 24px;
+  font-size: 15px;
+  outline: none;
+  background: #f9f9f9;
+  transition: all 0.3s;
+}
+.search-bar:focus {
+  border-color: #ff6b81;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(255,107,129,0.1);
+}
+.search-bar::placeholder { color: #bbb; }
+
+.ocr-btn {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  border: 1px solid #e0e0e0;
+  background: #f9f9f9;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  color: #666;
+  transition: all 0.3s;
+  flex-shrink: 0;
+  padding: 0;
+}
+.ocr-btn:hover { border-color: #ff6b81; color: #ff6b81; }
+.ocr-btn.running {
+  animation: ocr-spin 1s linear infinite;
+  border-color: #f39c12;
+  color: #f39c12;
+}
+@keyframes ocr-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.ocr-btn.done { border-color: #27ae60; color: #27ae60; }
 .record-card {
   background: #fafafa;
   border-radius: 8px;
@@ -396,6 +451,11 @@
   font-size: 13px;
   color: #999;
   float: right;
+}
+.search-hl {
+  background: #fff176;
+  padding: 1px 2px;
+  border-radius: 2px;
 }
 .record-delete {
   position: absolute;
@@ -893,23 +953,33 @@
   // 渲染所有记录
   function render() {
     var container = document.getElementById('recordsContainer');
-    var empty = document.getElementById('recordsEmpty');
+    var searchTerm = document.getElementById('searchBar').value.trim().toLowerCase();
+    var filtered = records;
 
-    if (records.length === 0) {
-      container.innerHTML = '<div class="records-empty">还没有记录，点击上方按钮添加第一条吧~</div>';
+    if (searchTerm) {
+      filtered = records.filter(function(r) {
+        var inTitle = r.title && r.title.toLowerCase().indexOf(searchTerm) !== -1;
+        var inText = r.text && r.text.toLowerCase().indexOf(searchTerm) !== -1;
+        var inOcr = r.ocrText && r.ocrText.toLowerCase().indexOf(searchTerm) !== -1;
+        return inTitle || inText || inOcr;
+      });
+    }
+
+    if (filtered.length === 0) {
+      container.innerHTML = '<div class="records-empty">' + (searchTerm ? '没有匹配的记录' : '还没有记录，点击上方按钮添加第一条吧~') + '</div>';
       return;
     }
 
     var html = '';
-    for (var i = records.length - 1; i >= 0; i--) {
-      var r = records[i];
+    for (var i = filtered.length - 1; i >= 0; i--) {
+      var r = filtered[i];
       html += '<div class="record-card" data-id="' + r.id + '">';
       html += '<button class="record-edit" data-id="' + r.id + '" title="编辑">✎</button>';
       html += '<button class="record-delete" data-id="' + r.id + '" title="删除">×</button>';
       if (r.title) {
-        html += '<div class="record-title">' + escapeHtml(r.title) + '</div>';
+        html += '<div class="record-title">' + highlightText(r.title, searchTerm) + '</div>';
       }
-      html += '<div class="record-text">' + escapeHtml(r.text) + '</div>';
+      html += '<div class="record-text">' + highlightText(r.text, searchTerm) + '</div>';
       if (r.image) {
         html += '<img class="record-image" src="' + r.image + '" alt="记录图片" data-src="' + r.image + '">';
       }
@@ -918,6 +988,13 @@
       html += '</div>';
     }
     container.innerHTML = html;
+  }
+
+  // 搜索关键词高亮
+  function highlightText(text, keyword) {
+    if (!keyword) return escapeHtml(text);
+    var esc = escapeHtml(text);
+    return esc.replace(new RegExp('(' + keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'), '<mark class="search-hl">$1</mark>');
   }
 
   function escapeHtml(str) {
@@ -1060,6 +1137,54 @@
   });
 
   document.getElementById('saveRecord').addEventListener('click', saveRecord);
+
+  // 搜索输入实时过滤
+  document.getElementById('searchBar').addEventListener('input', function() {
+    render();
+  });
+
+  // OCR 识别图片文字
+  var ocrRunning = false;
+  document.getElementById('ocrBtn').addEventListener('click', function() {
+    if (ocrRunning) return;
+    var imgsToProcess = [];
+    for (var i = 0; i < records.length; i++) {
+      if (records[i].image && !records[i].ocrText) {
+        imgsToProcess.push(i);
+      }
+    }
+    if (imgsToProcess.length === 0) {
+      document.getElementById('ocrBtn').classList.add('done');
+      setTimeout(function() { document.getElementById('ocrBtn').classList.remove('done'); }, 1500);
+      return;
+    }
+    ocrRunning = true;
+    document.getElementById('ocrBtn').classList.add('running');
+    document.getElementById('ocrBtn').textContent = imgsToProcess.length;
+
+    function processNext(idx) {
+      if (idx >= imgsToProcess.length) {
+        ocrRunning = false;
+        document.getElementById('ocrBtn').classList.remove('running');
+        document.getElementById('ocrBtn').classList.add('done');
+        document.getElementById('ocrBtn').textContent = 'OCR';
+        saveRecords(); // 保存 OCR 结果
+        setTimeout(function() { document.getElementById('ocrBtn').classList.remove('done'); }, 2000);
+        return;
+      }
+      var i = imgsToProcess[idx];
+      document.getElementById('ocrBtn').textContent = imgsToProcess.length - idx;
+      Tesseract.recognize(records[i].image, 'chi_sim+eng', { logger: function() {} })
+        .then(function(result) {
+          records[i].ocrText = result.data.text.trim();
+          processNext(idx + 1);
+        })
+        .catch(function() {
+          processNext(idx + 1);
+        });
+    }
+    processNext(0);
+  });
 
   // 键盘快捷键 Ctrl+Enter 保存
   document.getElementById('recordText').addEventListener('keydown', function(e) {
