@@ -280,6 +280,14 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
+.record-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #2c3e50;
+  margin-bottom: 10px;
+  line-height: 1.5;
+  word-break: break-word;
+}
 .record-text {
   font-size: 16px;
   line-height: 1.8;
@@ -352,6 +360,27 @@
   color: #333;
   text-align: center;
 }
+.modal-time {
+  text-align: right;
+  font-size: 14px;
+  color: #999;
+  margin: -10px 0 14px;
+}
+.modal-title-input {
+  width: 100%;
+  font-size: 18px;
+  font-weight: bold;
+  color: #2c3e50;
+  border: none;
+  border-bottom: 2px solid #e0e0e0;
+  padding: 8px 0;
+  margin-bottom: 16px;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+}
+.modal-title-input:focus { border-bottom-color: #ff6b81; }
+.modal-title-input::placeholder { color: #ccc; font-weight: normal; }
 .modal-content textarea {
   width: 100%;
   min-height: 140px;
@@ -581,6 +610,8 @@
 <div class="modal-overlay" id="recordModal">
   <div class="modal-content">
     <h3>添加记录</h3>
+    <div class="modal-time" id="modalTime"></div>
+    <input type="text" class="modal-title-input" id="recordTitle" placeholder="输入笔记标题">
     <textarea id="recordText" placeholder="写下你想记录的..."></textarea>
     <div class="image-preview-area" id="imagePreviewArea" style="display:none;">
       <img id="imagePreview" src="" alt="预览图片">
@@ -628,8 +659,8 @@
   function formatTime(ts) {
     var d = new Date(ts);
     var pad = function(n) { return n < 10 ? '0' + n : n; };
-    return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) +
-           ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+    return d.getFullYear() + '年' + (d.getMonth()+1) + '月' + d.getDate() + '日 ' +
+           pad(d.getHours()) + ':' + pad(d.getMinutes());
   }
 
   // 渲染所有记录
@@ -647,6 +678,9 @@
       var r = records[i];
       html += '<div class="record-card" data-id="' + r.id + '">';
       html += '<button class="record-delete" data-id="' + r.id + '" title="删除">×</button>';
+      if (r.title) {
+        html += '<div class="record-title">' + escapeHtml(r.title) + '</div>';
+      }
       html += '<div class="record-text">' + escapeHtml(r.text) + '</div>';
       if (r.image) {
         html += '<img class="record-image" src="' + r.image + '" alt="记录图片" data-src="' + r.image + '">';
@@ -666,12 +700,15 @@
 
   // 打开弹窗
   function openModal() {
+    var now = Date.now();
     document.getElementById('recordText').value = '';
+    document.getElementById('recordTitle').value = '';
+    document.getElementById('modalTime').textContent = formatTime(now);
     document.getElementById('imagePreviewArea').style.display = 'none';
     document.getElementById('imageInput').value = '';
     editingImageData = null;
     document.getElementById('recordModal').classList.add('show');
-    document.getElementById('recordText').focus();
+    document.getElementById('recordTitle').focus();
   }
 
   // 关闭弹窗
@@ -698,6 +735,7 @@
   // 保存记录
   function saveRecord() {
     var text = document.getElementById('recordText').value.trim();
+    var title = document.getElementById('recordTitle').value.trim();
     if (!text && !editingImageData) {
       alert('请输入文字或添加图片~');
       return;
@@ -705,6 +743,7 @@
     var now = Date.now();
     records.push({
       id: now,
+      title: title || '',
       text: text || '',
       image: editingImageData || '',
       time: formatTime(now)
