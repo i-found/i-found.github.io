@@ -798,7 +798,7 @@ li.search { position: relative; }
     </label>
     <div class="modal-buttons">
       <button class="btn-cancel" id="cancelRecord">取消</button>
-      <button class="btn-save" id="saveRecordBtn" type="button" onclick="window._saveRecord && window._saveRecord()">保存</button>
+      <button class="btn-save" id="saveRecordBtn" type="button" onclick="saveRecord()">保存</button>
     </div>
   </div>
 </div>
@@ -1370,6 +1370,7 @@ li.search { position: relative; }
 
   // 暴露给内联 onclick 调用
   window._saveRecord = saveRecord;
+  window.saveRecord = saveRecord;
   window.openAddRecordModal = function() { openModal(); };
   window.openSyncModalFn = function() {
     document.getElementById('githubToken').value = getToken();
