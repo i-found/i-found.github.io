@@ -284,3 +284,19 @@ mePlayer16({
   target: '.music16',
   autoplay: false
 })
+
+
+mePlayer17({
+  theme: 'mini',
+  music: {
+    src: './Albums/others/菲菲公主-第57次取消发送.mp3',
+    title: '第57次取消发送',
+    author: '菲菲公主',
+    loop: true,
+    cover: './img/covers/菲菲公主-第57次取消发送-cover.jpg',
+    lrc:
+      ''
+  },
+  target: '.music17',
+  autoplay: false
+})
