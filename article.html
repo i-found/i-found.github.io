@@ -789,7 +789,7 @@
     </label>
     <div class="modal-buttons">
       <button class="btn-cancel" id="cancelRecord">取消</button>
-      <button class="btn-save" id="saveRecord">保存</button>
+      <button class="btn-save" id="saveRecordBtn">保存</button>
     </div>
   </div>
 </div>
@@ -819,12 +819,11 @@
 
 <script>
 // ========== 记录功能 JS ==========
-(function() {
-  const STORAGE_KEY = 'suihe_records';
-  const TOKEN_KEY = 'suihe_github_token';
-  const GITHUB_OWNER = 'i-found';
-  const GITHUB_REPO = 'i-found.github.io';
-  const GITHUB_PATH = 'data/records.json';
+  var STORAGE_KEY = 'suihe_records';
+  var TOKEN_KEY = 'suihe_github_token';
+  var GITHUB_OWNER = 'i-found';
+  var GITHUB_REPO = 'i-found.github.io';
+  var GITHUB_PATH = 'data/records.json';
   var records = [];
   var editingImageData = null;
   var editingRecordId = null; // 编辑模式下的记录 ID
@@ -954,6 +953,8 @@
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
       showSyncStatus('已保存 ' + records.length + ' 条记录', 'success');
+      var s = document.getElementById('syncStatus');
+      if (s) { s.style.color = '#4CAF50'; s.style.fontSize = '13px'; s.style.display = 'block'; }
     } catch(e) {
       showSyncStatus('本地存储失败: ' + e.message, 'error');
       return;
@@ -1132,6 +1133,7 @@
         });
       }
       saveRecords();
+      alert('保存成功！共 ' + records.length + ' 条记录');
     } catch(e) {
       alert('保存出错: ' + e.message);
     }
@@ -1156,45 +1158,36 @@
     document.getElementById('imageLightbox').classList.remove('show');
   }
 
-  // ========== 事件绑定 ==========
-  document.getElementById('addRecordBtn').addEventListener('click', openModal);
-  document.getElementById('cancelRecord').addEventListener('click', closeModal);
-  document.getElementById('recordModal').addEventListener('click', function(e) {
-    if (e.target === this) closeModal();
-  });
-
-  document.getElementById('imageInput').addEventListener('change', function() {
-    if (this.files && this.files[0]) handleImage(this.files[0]);
-  });
-
-  document.getElementById('removeImage').addEventListener('click', function() {
-    editingImageData = null;
-    document.getElementById('imagePreview').src = '';
-    document.getElementById('imagePreviewArea').style.display = 'none';
-    document.getElementById('imageInput').value = '';
-  });
-
-  document.getElementById('saveRecord').addEventListener('click', saveRecord);
+  // ========== 事件绑定（附带空值保护）==========
+  var _el;
+  _el = document.getElementById('addRecordBtn');    if (_el) _el.addEventListener('click', openModal);
+  _el = document.getElementById('cancelRecord');     if (_el) _el.addEventListener('click', closeModal);
+  _el = document.getElementById('recordModal');      if (_el) _el.addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+  _el = document.getElementById('imageInput');       if (_el) _el.addEventListener('change', function() { if (this.files && this.files[0]) handleImage(this.files[0]); });
+  _el = document.getElementById('removeImage');      if (_el) _el.addEventListener('click', function() { editingImageData = null; document.getElementById('imagePreview').src = ''; document.getElementById('imagePreviewArea').style.display = 'none'; document.getElementById('imageInput').value = ''; });
+  _el = document.getElementById('saveRecordBtn');    if (_el) _el.addEventListener('click', saveRecord);
 
   // 搜索图标点击展开/关闭
   var searchPopup = document.getElementById('searchPopup');
   var searchIconBtn = document.getElementById('searchIconBtn');
   var searchInput = document.getElementById('searchBar');
-  searchIconBtn.addEventListener('click', function(e) {
-    e.stopPropagation();
-    var isOpen = searchPopup.classList.contains('open');
-    if (isOpen) {
-      searchPopup.classList.remove('open');
-      searchIconBtn.classList.remove('active');
-    } else {
-      searchPopup.classList.add('open');
-      searchIconBtn.classList.add('active');
-      searchInput.focus();
-    }
-  });
+  if (searchIconBtn) {
+    searchIconBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var isOpen = searchPopup.classList.contains('open');
+      if (isOpen) {
+        searchPopup.classList.remove('open');
+        searchIconBtn.classList.remove('active');
+      } else {
+        searchPopup.classList.add('open');
+        searchIconBtn.classList.add('active');
+        searchInput.focus();
+      }
+    });
+  }
   // 点击外部关闭
   document.addEventListener('click', function(e) {
-    if (searchPopup.classList.contains('open') &&
+    if (searchPopup && searchIconBtn && searchPopup.classList.contains('open') &&
         !searchPopup.contains(e.target) &&
         !searchIconBtn.contains(e.target)) {
       searchPopup.classList.remove('open');
@@ -1202,34 +1195,30 @@
     }
   });
   // 输入时实时过滤
-  searchInput.addEventListener('input', function() {
-    render();
-  });
-  // Enter 键搜索（失焦以收起键盘）
-  searchInput.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      render();
-      searchInput.blur();
-    }
-  });
-  // Esc 关闭
-  searchInput.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-      searchPopup.classList.remove('open');
-      searchIconBtn.classList.remove('active');
-      searchInput.value = '';
-      render();
-    }
-  });
+  if (searchInput) {
+    searchInput.addEventListener('input', function() { render(); });
+    // Enter 键搜索
+    searchInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') { e.preventDefault(); render(); searchInput.blur(); }
+    });
+    // Esc 关闭
+    searchInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        searchPopup.classList.remove('open');
+        searchIconBtn.classList.remove('active');
+        searchInput.value = '';
+        render();
+      }
+    });
+  }
 
   // 键盘快捷键 Ctrl+Enter 保存
-  document.getElementById('recordText').addEventListener('keydown', function(e) {
-    if (e.ctrlKey && e.key === 'Enter') saveRecord();
-  });
+  _el = document.getElementById('recordText');
+  if (_el) _el.addEventListener('keydown', function(e) { if (e.ctrlKey && e.key === 'Enter') saveRecord(); });
 
   // 删除/编辑/点击跳转 事件委托
-  document.getElementById('recordsContainer').addEventListener('click', function(e) {
+  _el = document.getElementById('recordsContainer');
+  if (_el) _el.addEventListener('click', function(e) {
     if (e.target.classList.contains('record-delete')) {
       deleteRecord(parseInt(e.target.getAttribute('data-id')));
       return;
@@ -1270,7 +1259,8 @@
   });
 
   // 灯箱关闭
-  document.getElementById('imageLightbox').addEventListener('click', closeLightbox);
+  _el = document.getElementById('imageLightbox');
+  if (_el) _el.addEventListener('click', closeLightbox);
 
   // 支持跨标签同步
   window.addEventListener('storage', function(e) {
@@ -1281,18 +1271,20 @@
   });
 
   // ========== 同步设置弹窗 ==========
-  document.getElementById('syncSettingsBtn').addEventListener('click', function() {
+  _el = document.getElementById('syncSettingsBtn');
+  if (_el) _el.addEventListener('click', function() {
     document.getElementById('githubToken').value = getToken();
     document.getElementById('syncFeedback').style.display = 'none';
     document.getElementById('syncModal').classList.add('show');
   });
-  document.getElementById('cancelSync').addEventListener('click', function() {
+  _el = document.getElementById('cancelSync');
+  if (_el) _el.addEventListener('click', function() {
     document.getElementById('syncModal').classList.remove('show');
   });
-  document.getElementById('syncModal').addEventListener('click', function(e) {
-    if (e.target === this) document.getElementById('syncModal').classList.remove('show');
-  });
-  document.getElementById('saveSync').addEventListener('click', function() {
+  _el = document.getElementById('syncModal');
+  if (_el) _el.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('show'); });
+  _el = document.getElementById('saveSync');
+  if (_el) _el.addEventListener('click', function() {
     var token = document.getElementById('githubToken').value.trim();
     if (!token) {
       document.getElementById('syncFeedback').className = 'sync-feedback error';
@@ -1369,7 +1361,6 @@
   }
 
   init();
-})();
 </script>
 
   </body>
