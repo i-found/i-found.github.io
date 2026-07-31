@@ -951,7 +951,13 @@
 
   // 保存到 localStorage + 触发 GitHub 同步
   function saveRecords() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+      showSyncStatus('已保存 ' + records.length + ' 条记录', 'success');
+    } catch(e) {
+      showSyncStatus('本地存储失败: ' + e.message, 'error');
+      return;
+    }
     pushToGitHub();
   }
 
@@ -1104,27 +1110,31 @@
       return;
     }
     var now = Date.now();
-    if (editingRecordId) {
-      // 编辑模式：更新已有记录
-      var record = findRecord(editingRecordId);
-      if (record) {
-        record.title = title || '';
-        record.text = text || '';
-        record.image = editingImageData || '';
-        record.updatedTime = now;
+    try {
+      if (editingRecordId) {
+        // 编辑模式：更新已有记录
+        var record = findRecord(editingRecordId);
+        if (record) {
+          record.title = title || '';
+          record.text = text || '';
+          record.image = editingImageData || '';
+          record.updatedTime = now;
+        }
+        editingRecordId = null;
+      } else {
+        // 新增模式
+        records.push({
+          id: now,
+          title: title || '',
+          text: text || '',
+          image: editingImageData || '',
+          time: now
+        });
       }
-      editingRecordId = null;
-    } else {
-      // 新增模式
-      records.push({
-        id: now,
-        title: title || '',
-        text: text || '',
-        image: editingImageData || '',
-        time: now
-      });
+      saveRecords();
+    } catch(e) {
+      alert('保存出错: ' + e.message);
     }
-    saveRecords();
     render();
     closeModal();
   }
