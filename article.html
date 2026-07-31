@@ -366,6 +366,7 @@
 }
 
 /* 导航栏搜索 */
+li.search { position: relative; }
 .nav-search-btn {
   background: none; border: none;
   cursor: pointer;
@@ -383,29 +384,34 @@
 .nav-search-btn.active { color: #ff6b81; }
 .nav-search-popup {
   display: none;
-  position: fixed;
-  top: 98px;
-  right: 28px;
-  width: 320px;
+  position: absolute;
+  top: 50%;
+  right: 50px;
+  transform: translateY(-50%);
+  width: 260px;
   background: #fff;
-  border: 1px solid #ff6b81;
-  border-radius: 24px;
-  padding: 6px 16px;
-  box-shadow: 0 4px 16px rgba(255,107,129,0.15);
+  border: 1.5px solid #ff6b81;
+  border-radius: 30px;
+  padding: 0;
+  box-shadow: 0 4px 15px rgba(255,71,87,0.2);
   z-index: 50;
   animation: search-pop 0.2s ease;
 }
-.nav-search-popup.open { display: block; }
+.nav-search-popup.open { display: flex; align-items: center; }
 @keyframes search-pop {
-  from { opacity: 0; transform: translateX(10px); }
-  to { opacity: 1; transform: translateX(0); }
+  from { opacity: 0; transform: translateY(-50%) scale(0.9); }
+  to { opacity: 1; transform: translateY(-50%) scale(1); }
 }
 .search-input {
   width: 100%;
-  padding: 8px 0;
+  height: 44px;
+  padding: 0 20px;
   border: none;
   outline: none;
   font-size: 15px;
+  border-radius: 30px;
+  background: transparent;
+  box-sizing: border-box;
   background: transparent;
   color: #333;
 }
@@ -792,7 +798,7 @@
     </label>
     <div class="modal-buttons">
       <button class="btn-cancel" id="cancelRecord">取消</button>
-      <button class="btn-save" id="saveRecordBtn" type="button" onclick="alert('按钮被点击了'); window._saveRecord && window._saveRecord();">保存</button>
+      <button class="btn-save" id="saveRecordBtn" type="button">保存</button>
     </div>
   </div>
 </div>
@@ -1136,9 +1142,8 @@
         });
       }
       saveRecords();
-      alert('保存成功！共 ' + records.length + ' 条记录');
     } catch(e) {
-      alert('保存出错: ' + e.message);
+      showSyncStatus('保存出错: ' + e.message, 'error');
     }
     render();
     closeModal();
