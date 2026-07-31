@@ -913,7 +913,7 @@ li.search { position: relative; }
     });
   }
 
-  // 推送记录到 GitHub
+  // 推送记录到 GitHub（自动处理 SHA 冲突）
   function pushToGitHub() {
     if (!hasToken()) return Promise.resolve();
     var content = btoa(unescape(encodeURIComponent(JSON.stringify(records, null, 2))));
@@ -930,14 +930,27 @@ li.search { position: relative; }
       setTimeout(function() { showSyncStatus('', ''); }, 2000);
     }).catch(function(err) {
       var msg = err.message || '';
+      // SHA 冲突（409 或 mismatch）：先拉取最新 SHA 再重试一次
+      if (msg.indexOf('409') !== -1 || msg.indexOf('expected') !== -1 || msg.indexOf('but is at') !== -1) {
+        showSyncStatus('检测到冲突，正在合并…', 'syncing');
+        return githubAPI('GET').then(function(data) {
+          githubSha = data.sha;
+          body.sha = githubSha;
+          return githubAPI('PUT', body).then(function(data2) {
+            githubSha = data2.content.sha;
+            showSyncStatus('已同步 ✓', 'success');
+            setTimeout(function() { showSyncStatus('', ''); }, 2000);
+          });
+        }).catch(function(err2) {
+          showSyncStatus('同步失败: ' + (err2.message || ''), 'error');
+        });
+      }
       showSyncStatus('同步失败: ' + msg, 'error');
-      // 如果是认证失败则自动清除无效 token
       if (msg.indexOf('401') !== -1 || msg.indexOf('Bad credentials') !== -1) {
         setToken('');
         updateSyncUI();
         showSyncStatus('Token 已失效，请重新设置（本地数据不受影响）', 'error');
       }
-      // 5 秒后自动消除同步状态
       setTimeout(function() {
         var el = document.getElementById('syncStatus');
         if (el && el.textContent.indexOf('已失效') === -1) { showSyncStatus('', ''); }
