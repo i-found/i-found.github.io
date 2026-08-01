@@ -457,6 +457,55 @@ li.search { position: relative; }
 }
 .record-image:hover { transform: scale(1.02); }
 
+.record-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.record-images .record-image {
+  max-width: 200px;
+  max-height: 200px;
+  width: auto;
+  height: auto;
+  object-fit: cover;
+  margin-bottom: 0;
+}
+
+/* 图片预览网格 */
+.image-preview-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.image-preview-grid .preview-item {
+  position: relative;
+  display: inline-block;
+}
+.image-preview-grid .preview-item img {
+  max-width: 120px; max-height: 120px;
+  border-radius: 6px;
+  display: block;
+  object-fit: cover;
+}
+.image-preview-grid .preview-remove {
+  position: absolute;
+  top: -8px; right: -8px;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: #ff4757;
+  color: #fff;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+/* 弹窗工具栏 */
+.modal-toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
+.clipboard-btn.flash-success { background: #4CAF50 !important; color: #fff !important; }
+
 .record-time {
   font-size: 13px;
   color: #999;
@@ -789,13 +838,15 @@ li.search { position: relative; }
     <input type="text" class="modal-title-input" id="recordTitle" placeholder="输入笔记标题">
     <textarea id="recordText" placeholder="写下你想记录的..."></textarea>
     <div class="image-preview-area" id="imagePreviewArea" style="display:none;">
-      <img id="imagePreview" src="" alt="预览图片">
-      <button class="remove-img" id="removeImage">移除图片</button>
+      <div class="image-preview-grid" id="imagePreviewGrid"></div>
     </div>
-    <label class="img-upload-label">
-      📷 添加图片
-      <input type="file" id="imageInput" accept="image/*">
-    </label>
+    <div class="modal-toolbar">
+      <label class="img-upload-label">
+        📷 添加图片
+        <input type="file" id="imageInput" accept="image/*" multiple>
+      </label>
+      <button class="img-upload-label clipboard-btn" type="button" id="pasteClipboardBtn" title="粘贴剪贴板内容（文字/图片/文件）">📋 粘贴剪贴板</button>
+    </div>
     <div class="modal-buttons">
       <button class="btn-cancel" id="cancelRecord">取消</button>
       <button class="btn-save" id="saveRecordBtn" type="button" onclick="saveRecord()">保存</button>
@@ -834,7 +885,7 @@ li.search { position: relative; }
   var GITHUB_REPO = 'i-found.github.io';
   var GITHUB_PATH = 'data/records.json';
   var records = [];
-  var editingImageData = null;
+  var editingImages = []; // 编辑模式下的图片数组（支持多张）
   var editingRecordId = null; // 编辑模式下的记录 ID
   var githubSha = null; // records.json 的 sha，更新时需要
 
@@ -1029,8 +1080,13 @@ li.search { position: relative; }
         html += '<div class="record-title">' + highlightText(r.title, searchTerm) + '</div>';
       }
       html += '<div class="record-text">' + highlightText(r.text, searchTerm) + '</div>';
-      if (r.image) {
-        html += '<img class="record-image" src="' + r.image + '" alt="记录图片" data-src="' + r.image + '">';
+      var imgs = (r.images && r.images.length) ? r.images : (r.image ? [r.image] : []);
+      if (imgs.length) {
+        html += '<div class="record-images">';
+        for (var ii = 0; ii < imgs.length; ii++) {
+          html += '<img class="record-image" src="' + imgs[ii] + '" alt="记录图片" data-src="' + imgs[ii] + '">';
+        }
+        html += '</div>';
       }
       html += '<span class="record-time">' + (r.updatedTime ? '修改于 ' + formatTime(r.updatedTime) : formatTime(r.time)) + '</span>';
       html += '<div style="clear:both;"></div>';
@@ -1071,14 +1127,17 @@ li.search { position: relative; }
         document.getElementById('recordTitle').value = record.title || '';
         document.getElementById('recordText').value = record.text || '';
         document.getElementById('modalTime').textContent = '修改于 ' + formatTime(now);
-        if (record.image) {
-          document.getElementById('imagePreviewArea').style.display = 'block';
-          document.getElementById('imagePreview').src = record.image;
-          editingImageData = record.image;
+        if (record.images && record.images.length) {
+          editingImages = record.images.slice();
+          renderImagePreview();
+        } else if (record.image) {
+          // 兼容旧单图数据
+          editingImages = [record.image];
+          renderImagePreview();
         } else {
+          editingImages = [];
           document.getElementById('imagePreviewArea').style.display = 'none';
-          document.getElementById('imageInput').value = '';
-          editingImageData = null;
+          document.getElementById('imagePreviewGrid').innerHTML = '';
         }
       }
     } else {
@@ -1086,9 +1145,9 @@ li.search { position: relative; }
       document.getElementById('recordText').value = '';
       document.getElementById('recordTitle').value = '';
       document.getElementById('modalTime').textContent = formatTime(now);
+      editingImages = [];
       document.getElementById('imagePreviewArea').style.display = 'none';
-      document.getElementById('imageInput').value = '';
-      editingImageData = null;
+      document.getElementById('imagePreviewGrid').innerHTML = '';
     }
     document.getElementById('recordModal').classList.add('show');
     document.getElementById('recordTitle').focus();
@@ -1108,7 +1167,92 @@ li.search { position: relative; }
     editingRecordId = null;
   }
 
-  // 处理图片选择
+  // 处理粘贴事件（截图图片/图片文件/普通文件/文字）
+  function handlePaste(e) {
+    var cd = e.clipboardData || (window.clipboardData);
+    if (!cd) return;
+    var items = cd.items;
+    var imageFiles = [];
+    var otherFiles = [];
+    if (items) {
+      for (var i = 0; i < items.length; i++) {
+        var it = items[i];
+        if (it.kind === 'file' && it.type && it.type.indexOf('image/') === 0) {
+          var f0 = it.getAsFile();
+          if (f0) imageFiles.push(f0);
+        }
+      }
+    }
+    var files = cd.files;
+    if (files && files.length && !imageFiles.length) {
+      for (var f = 0; f < files.length; f++) {
+        var file = files[f];
+        if (file.type && file.type.indexOf('image/') === 0) {
+          imageFiles.push(file);
+        } else {
+          otherFiles.push(file);
+        }
+      }
+    }
+    if (imageFiles.length) {
+      e.preventDefault();
+      for (var k = 0; k < imageFiles.length; k++) handleImage(imageFiles[k]);
+      return;
+    }
+  }
+
+  // 读取剪贴板按钮
+  async function readClipboard() {
+    var btn = document.getElementById('pasteClipboardBtn');
+    var ta = document.getElementById('recordText');
+    if (navigator.clipboard && navigator.clipboard.read) {
+      try {
+        var items = await navigator.clipboard.read();
+        for (var i = 0; i < items.length; i++) {
+          var item = items[i];
+          var imgType = item.types.find(function(t) { return t.indexOf('image/') === 0; });
+          if (imgType) {
+            var blob = await item.getType(imgType);
+            handleImage(blob);
+            flashBtn(btn, '已粘贴图片');
+            return;
+          }
+        }
+        var text = await navigator.clipboard.readText();
+        if (text) {
+          insertTextAtCursor(text);
+          flashBtn(btn, '已粘贴文字');
+          return;
+        }
+      } catch(e) {}
+    }
+    ta.focus();
+  }
+
+  function insertTextAtCursor(text) {
+    var ta = document.getElementById('recordText');
+    var start = ta.selectionStart || 0;
+    var end = ta.selectionEnd || 0;
+    var before = ta.value.substring(0, start);
+    var after = ta.value.substring(end);
+    ta.value = before + text + after;
+    var newPos = start + text.length;
+    ta.setSelectionRange(newPos, newPos);
+    ta.focus();
+  }
+
+  function flashBtn(btn, msg) {
+    if (!btn) return;
+    var orig = btn.textContent;
+    btn.textContent = msg;
+    btn.classList.add('flash-success');
+    setTimeout(function() {
+      btn.textContent = orig;
+      btn.classList.remove('flash-success');
+    }, 1200);
+  }
+
+  // 处理图片选择（追加到数组，不覆盖之前的）
   function handleImage(file) {
     if (!file) return;
     if (file.size > 2 * 1024 * 1024) {
@@ -1117,18 +1261,47 @@ li.search { position: relative; }
     }
     var reader = new FileReader();
     reader.onload = function(e) {
-      editingImageData = e.target.result;
-      document.getElementById('imagePreview').src = e.target.result;
-      document.getElementById('imagePreviewArea').style.display = 'block';
+      editingImages.push(e.target.result);
+      renderImagePreview();
     };
     reader.readAsDataURL(file);
+  }
+
+  // 渲染图片预览网格（支持多张，每张可单独移除）
+  function renderImagePreview() {
+    var area = document.getElementById('imagePreviewArea');
+    var grid = document.getElementById('imagePreviewGrid');
+    if (!area || !grid) return;
+    if (!editingImages.length) {
+      area.style.display = 'none';
+      grid.innerHTML = '';
+      return;
+    }
+    area.style.display = 'block';
+    var html = '';
+    for (var i = 0; i < editingImages.length; i++) {
+      html += '<div class="preview-item">';
+      html += '<img src="' + editingImages[i] + '" alt="预览图' + (i + 1) + '">';
+      html += '<button type="button" class="preview-remove" data-idx="' + i + '" title="移除这张">×</button>';
+      html += '</div>';
+    }
+    grid.innerHTML = html;
+    var btns = grid.querySelectorAll('.preview-remove');
+    for (var b = 0; b < btns.length; b++) {
+      btns[b].addEventListener('click', function(ev) {
+        ev.stopPropagation();
+        var idx = parseInt(this.getAttribute('data-idx'));
+        editingImages.splice(idx, 1);
+        renderImagePreview();
+      });
+    }
   }
 
   // 保存记录
   function saveRecord() {
     var text = document.getElementById('recordText').value.trim();
     var title = document.getElementById('recordTitle').value.trim();
-    if (!text && !editingImageData && !title) {
+    if (!text && !editingImages.length && !title) {
       alert('请输入文字或添加图片~');
       return;
     }
@@ -1140,8 +1313,17 @@ li.search { position: relative; }
         if (record) {
           record.title = title || '';
           record.text = text || '';
-          record.image = editingImageData || '';
+          record.images = editingImages.slice();
           record.updatedTime = now;
+        } else {
+          // 记录不存在，降级为新增
+          records.push({
+            id: now,
+            title: title || '',
+            text: text || '',
+            images: editingImages.slice(),
+            time: now
+          });
         }
         editingRecordId = null;
       } else {
@@ -1150,7 +1332,7 @@ li.search { position: relative; }
           id: now,
           title: title || '',
           text: text || '',
-          image: editingImageData || '',
+          images: editingImages.slice(),
           time: now
         });
       }
@@ -1184,9 +1366,25 @@ li.search { position: relative; }
   _el = document.getElementById('addRecordBtn');    if (_el) _el.addEventListener('click', openModal);
   _el = document.getElementById('cancelRecord');     if (_el) _el.addEventListener('click', closeModal);
   _el = document.getElementById('recordModal');      if (_el) _el.addEventListener('click', function(e) { if (e.target === this) closeModal(); });
-  _el = document.getElementById('imageInput');       if (_el) _el.addEventListener('change', function() { if (this.files && this.files[0]) handleImage(this.files[0]); });
-  _el = document.getElementById('removeImage');      if (_el) _el.addEventListener('click', function() { editingImageData = null; document.getElementById('imagePreview').src = ''; document.getElementById('imagePreviewArea').style.display = 'none'; document.getElementById('imageInput').value = ''; });
-  _el = document.getElementById('saveRecordBtn');    if (_el) _el.addEventListener('click', saveRecord);
+  _el = document.getElementById('imageInput');       if (_el) _el.addEventListener('change', function() { if (this.files) { for (var fi = 0; fi < this.files.length; fi++) handleImage(this.files[fi]); } });
+  _el = document.getElementById('pasteClipboardBtn'); if (_el) _el.addEventListener('click', readClipboard);
+  _el = document.getElementById('recordModal');      if (_el) _el.addEventListener('paste', handlePaste);
+  // 保存按钮：带防重入锁
+  _el = document.getElementById('saveRecordBtn');
+  if (_el && !_el._saveBound) {
+    _el._saveBound = true;
+    _el.addEventListener('click', function() {
+      if (this._saving) return;
+      this._saving = true;
+      saveRecord();
+      var btn = this;
+      setTimeout(function() { btn._saving = false; }, 800);
+    });
+  }
+
+  // 键盘快捷键 Ctrl+Enter 保存
+  _el = document.getElementById('recordText');
+  if (_el) _el.addEventListener('keydown', function(e) { if (e.ctrlKey && e.key === 'Enter') saveRecord(); });
 
   // 搜索图标点击展开/关闭
   var searchPopup = document.getElementById('searchPopup');
