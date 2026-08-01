@@ -1024,21 +1024,21 @@ li.search { position: relative; }
     if (!hasToken()) return Promise.resolve();
     showSyncStatus('同步中…', 'syncing');
 
-    // 先拉最新索引，对比后只推送变化的记录
+    // 先拉最新索引
     return fetchFileContent(GITHUB_INDEX_PATH).then(function(idxData) {
       var idx = {};
       try { idx = idxData.text ? JSON.parse(idxData.text) : {}; } catch(e) { idx = {}; }
       indexSha = idxData.sha;
       remoteIndex = idx;
 
-      // 找出本地比云端更新的记录
-      var localIndex = {};
-      records.forEach(function(r) { localIndex[r.id] = r.updatedTime || r.time || 0; });
+      // 找出本地比云端新的记录
+      var localMap = {};
+      records.forEach(function(r) { localMap[String(r.id)] = r.updatedTime || r.time || 0; });
       var toPush = [];
-      Object.keys(localIndex).forEach(function(id) {
-        var localVer = localIndex[id] || 0;
-        var remoteVer = remoteIndex[id] || 0;
-        if (localVer > remoteVer || !remoteIndex[id]) toPush.push(id);
+      Object.keys(localMap).forEach(function(id) {
+        var remoteVer = Number(remoteIndex[id]) || 0;
+        var localVer = Number(localMap[id]) || 0;
+        if (localVer > remoteVer) toPush.push(id);
       });
 
       if (!toPush.length) {
@@ -1047,52 +1047,43 @@ li.search { position: relative; }
         return;
       }
 
-      // 串行推送每条变化的记录（避免 API 限流）
+      // 串行上传每条记录
       var ts = new Date().toISOString().slice(0, 19).replace('T', ' ');
-      showSyncStatus('上传 ' + toPush.length + ' 条记录…', 'syncing');
-      var chain = Promise.resolve();
-      toPush.forEach(function(id) {
-        chain = chain.then(function() {
-          var r = findRecord(id);
-          if (!r) return Promise.resolve();
-          var rpath = GITHUB_RECORDS_DIR + '/' + id + '.json';
-          var content = encodeBase64(JSON.stringify(r));
-          var msg = '更新 ' + id + ' [' + ts + ']';
-          return githubAPI('GET', rpath).then(function(d) {
-            return githubAPI('PUT', rpath, { message: msg, content: content }, d.sha);
-          }).catch(function(e) {
-            if (e.status === 404) {
-              return githubAPI('PUT', rpath, { message: msg, content: content });
-            }
-            throw e;
-          });
-        });
-      });
+      showSyncStatus('上传 ' + toPush.length + ' 条…', 'syncing');
 
-      return chain.then(function() {
-        // 推送索引文件
-        var newIdx = {};
-        records.forEach(function(r) { newIdx[r.id] = r.updatedTime || r.time || 0; });
-        var idxContent = encodeBase64(JSON.stringify(newIdx));
-        var idxMsg = '更新索引 [' + ts + ']';
-        return githubAPI('PUT', GITHUB_INDEX_PATH, { message: idxMsg, content: idxContent }, indexSha).then(function(d) {
-          indexSha = d.content.sha;
-          remoteIndex = newIdx;
-          showSyncStatus('已同步 ✓', 'success');
-          setTimeout(function() { showSyncStatus('', ''); }, 2000);
-        });
-      }).catch(function(err) {
-        var msg = err.message || '';
-        if (msg.indexOf('401') !== -1 || msg.indexOf('Bad credentials') !== -1) {
-          setToken(''); updateSyncUI();
-          showSyncStatus('Token 已失效', 'error');
-          return;
+      function uploadOne(idx) {
+        if (idx >= toPush.length) {
+          // 全部上传完，更新索引
+          var newIdx = {};
+          records.forEach(function(r) { newIdx[String(r.id)] = r.updatedTime || r.time || 0; });
+          var idxContent = encodeBase64(JSON.stringify(newIdx));
+          return githubAPI('PUT', GITHUB_INDEX_PATH, { message: '更新索引 [' + ts + ']', content: idxContent }, indexSha).then(function(d) {
+            indexSha = d.content.sha;
+            remoteIndex = newIdx;
+            showSyncStatus('已同步 ✓', 'success');
+            setTimeout(function() { showSyncStatus('', ''); }, 2000);
+          });
         }
-        showSyncStatus('同步失败: ' + msg, 'error');
-      });
+        var id = toPush[idx];
+        var r = findRecord(id);
+        if (!r) return uploadOne(idx + 1);
+        var rpath = GITHUB_RECORDS_DIR + '/' + id + '.json';
+        var content = encodeBase64(JSON.stringify(r));
+        var msg = '更新 ' + id + ' [' + ts + ']';
+        return githubAPI('GET', rpath).then(function(d) {
+          return githubAPI('PUT', rpath, { message: msg, content: content }, d.sha);
+        }).catch(function(e) {
+          if (e.status === 404) {
+            return githubAPI('PUT', rpath, { message: msg, content: content });
+          }
+          console.error('上传失败 ' + id + ':', e.message);
+        }).then(function() {
+          return uploadOne(idx + 1);
+        });
+      }
+      return uploadOne(0);
     }).catch(function(err) {
       if (err.message.indexOf('404') !== -1 || err.message.indexOf('Not Found') !== -1) {
-        // 索引不存在，首次推送
         return fullPush();
       }
       showSyncStatus('同步失败: ' + err.message, 'error');
