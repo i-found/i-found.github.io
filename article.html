@@ -1039,27 +1039,29 @@ li.search { position: relative; }
         return;
       }
 
-      // 推送每条变化的记录
+      // 串行推送每条变化的记录（避免 API 限流）
       var ts = new Date().toISOString().slice(0, 19).replace('T', ' ');
       showSyncStatus('上传 ' + toPush.length + ' 条记录…', 'syncing');
-      var pushPromises = toPush.map(function(id) {
-        var r = findRecord(id);
-        if (!r) return Promise.resolve();
-        var rpath = GITHUB_RECORDS_DIR + '/' + id + '.json';
-        var content = encodeBase64(JSON.stringify(r));
-        var msg = '更新 ' + id + ' [' + ts + ']';
-        // 获取该文件的当前 sha（如果有的话）
-        return githubAPI('GET', rpath).then(function(d) {
-          return githubAPI('PUT', rpath, { message: msg, content: content }, d.sha);
-        }).catch(function(e) {
-          if (e.status === 404) {
-            return githubAPI('PUT', rpath, { message: msg, content: content });
-          }
-          throw e;
+      var chain = Promise.resolve();
+      toPush.forEach(function(id) {
+        chain = chain.then(function() {
+          var r = findRecord(id);
+          if (!r) return Promise.resolve();
+          var rpath = GITHUB_RECORDS_DIR + '/' + id + '.json';
+          var content = encodeBase64(JSON.stringify(r));
+          var msg = '更新 ' + id + ' [' + ts + ']';
+          return githubAPI('GET', rpath).then(function(d) {
+            return githubAPI('PUT', rpath, { message: msg, content: content }, d.sha);
+          }).catch(function(e) {
+            if (e.status === 404) {
+              return githubAPI('PUT', rpath, { message: msg, content: content });
+            }
+            throw e;
+          });
         });
       });
 
-      return Promise.all(pushPromises).then(function() {
+      return chain.then(function() {
         // 推送索引文件
         var newIdx = {};
         records.forEach(function(r) { newIdx[r.id] = r.updatedTime || r.time || 0; });
@@ -1089,17 +1091,21 @@ li.search { position: relative; }
     });
   }
 
-  // 首次全量推送
+  // 首次全量推送（串行避免 API 限流）
   function fullPush() {
     if (!records.length) return Promise.resolve();
     showSyncStatus('首次上传 ' + records.length + ' 条记录…', 'syncing');
     var ts = new Date().toISOString().slice(0, 19).replace('T', ' ');
-    var promises = records.map(function(r) {
-      var rpath = GITHUB_RECORDS_DIR + '/' + r.id + '.json';
-      var content = encodeBase64(JSON.stringify(r));
-      return githubAPI('PUT', rpath, { message: '创建 ' + r.id + ' [' + ts + ']', content: content }).catch(function() {});
+    // 串行上传，避免 GitHub API 并发限流
+    var chain = Promise.resolve();
+    records.forEach(function(r) {
+      chain = chain.then(function() {
+        var rpath = GITHUB_RECORDS_DIR + '/' + r.id + '.json';
+        var content = encodeBase64(JSON.stringify(r));
+        return githubAPI('PUT', rpath, { message: '创建 ' + r.id + ' [' + ts + ']', content: content }).catch(function() {});
+      });
     });
-    return Promise.all(promises).then(function() {
+    return chain.then(function() {
       var idx = {};
       records.forEach(function(r) { idx[r.id] = r.updatedTime || r.time || 0; });
       var idxContent = encodeBase64(JSON.stringify(idx));
