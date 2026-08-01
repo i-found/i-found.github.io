@@ -798,7 +798,6 @@ li.search { position: relative; }
       <button class="btn-save" id="saveSync">保存</button>
       <button class="btn-cancel" id="exportRecordsBtn">导出</button>
       <button class="btn-cancel" id="importRecordsBtn">导入</button>
-      <button class="btn-cancel" id="cleanupImagesBtn" title="清除所有图片，减小同步文件">清理图片</button>
       <input type="file" id="importRecordsInput" accept="application/json" style="display:none;">
     </div>
     <div class="sync-feedback" id="syncFeedback" style="display:none;"></div>
@@ -1437,8 +1436,6 @@ li.search { position: relative; }
   if (_el) _el.addEventListener('change', function() {
     if (this.files && this.files[0]) importRecords(this.files[0]);
   });
-  _el = document.getElementById('cleanupImagesBtn');
-  if (_el) _el.addEventListener('click', cleanupImages);
 
   // 只写 localStorage 不触发同步（用于初始化合并）
   function saveRecordsToLocal() {
@@ -1519,26 +1516,6 @@ li.search { position: relative; }
       alert('文件读取失败');
     };
     reader.readAsText(file);
-  }
-
-  // 清理所有记录中的图片数据，减小同步文件体积
-  function cleanupImages() {
-    if (!confirm('确定清除所有记录中的图片吗？此操作不可恢复（可先"导出"备份）')) return;
-    var hasImg = false;
-    for (var i = 0; i < records.length; i++) {
-      var r = records[i];
-      if (r.images && r.images.length) { r.images = []; hasImg = true; }
-      if (r.image) { r.image = ''; hasImg = true; }
-    }
-    if (!hasImg) {
-      alert('当前记录中没有图片');
-      return;
-    }
-    saveRecords();
-    render();
-    document.getElementById('syncFeedback').className = 'sync-feedback success';
-    document.getElementById('syncFeedback').textContent = '已清理图片，正在同步…';
-    document.getElementById('syncFeedback').style.display = 'block';
   }
 
   // 初始化：先本地加载，再尝试从云端拉取并合并
