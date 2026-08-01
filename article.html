@@ -798,6 +798,7 @@ li.search { position: relative; }
       <button class="btn-save" id="saveSync">保存</button>
       <button class="btn-cancel" id="exportRecordsBtn">导出</button>
       <button class="btn-cancel" id="importRecordsBtn">导入</button>
+      <button class="btn-cancel" id="fullSyncBtn" title="强制全量同步，修复索引不一致">全量同步</button>
       <input type="file" id="importRecordsInput" accept="application/json" style="display:none;">
     </div>
     <div class="sync-feedback" id="syncFeedback" style="display:none;"></div>
@@ -985,7 +986,7 @@ li.search { position: relative; }
         showSyncStatus('已是最新 ✓', 'success');
         setTimeout(function() { showSyncStatus('', ''); }, 2000);
         // 如果本地有记录但索引里没有，补齐推送
-        var localIds = records.map(function(r) { return r.id; });
+        var localIds = records.map(function(r) { return String(r.id); });
         var remoteIds = Object.keys(remoteIndex);
         var missing = localIds.filter(function(id) { return remoteIds.indexOf(String(id)) === -1; });
         if (missing.length) {
@@ -1076,7 +1077,7 @@ li.search { position: relative; }
           if (e.status === 404) {
             return githubAPI('PUT', rpath, { message: msg, content: content });
           }
-          console.error('上传失败 ' + id + ':', e.message);
+          throw e; // 上传失败时抛出，阻止后续索引更新
         }).then(function() {
           return uploadOne(idx + 1);
         });
@@ -1677,6 +1678,19 @@ li.search { position: relative; }
   _el = document.getElementById('importRecordsInput');
   if (_el) _el.addEventListener('change', function() {
     if (this.files && this.files[0]) importRecords(this.files[0]);
+  });
+  _el = document.getElementById('fullSyncBtn');
+  if (_el) _el.addEventListener('click', function() {
+    showSyncStatus('全量同步中…', 'syncing');
+    fullPush().then(function() {
+      document.getElementById('syncFeedback').className = 'sync-feedback success';
+      document.getElementById('syncFeedback').textContent = '全量同步完成！';
+      document.getElementById('syncFeedback').style.display = 'block';
+    }).catch(function(e) {
+      document.getElementById('syncFeedback').className = 'sync-feedback error';
+      document.getElementById('syncFeedback').textContent = '全量同步失败: ' + (e.message || '');
+      document.getElementById('syncFeedback').style.display = 'block';
+    });
   });
 
   // 只写本地存储不触发同步（用于初始化合并）
