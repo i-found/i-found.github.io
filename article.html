@@ -798,6 +798,7 @@ li.search { position: relative; }
       <button class="btn-save" id="saveSync">保存</button>
       <button class="btn-cancel" id="exportRecordsBtn">导出</button>
       <button class="btn-cancel" id="importRecordsBtn">导入</button>
+      <button class="btn-cancel" id="cleanupImagesBtn" title="清除所有图片，减小同步文件">清理图片</button>
       <input type="file" id="importRecordsInput" accept="application/json" style="display:none;">
     </div>
     <div class="sync-feedback" id="syncFeedback" style="display:none;"></div>
@@ -899,7 +900,8 @@ li.search { position: relative; }
   // 推送记录到 GitHub（自动处理 SHA 冲突）
   function pushToGitHub() {
     if (!hasToken()) return Promise.resolve();
-    var content = btoa(unescape(encodeURIComponent(JSON.stringify(records, null, 2))));
+    // 用紧凑格式（无缩进）减少 base64 图片的体积膨胀
+    var content = btoa(unescape(encodeURIComponent(JSON.stringify(records))));
     var body = {
       message: '更新记录 [' + new Date().toISOString().slice(0, 19).replace('T', ' ') + ']',
       content: content,
@@ -1435,21 +1437,28 @@ li.search { position: relative; }
   if (_el) _el.addEventListener('change', function() {
     if (this.files && this.files[0]) importRecords(this.files[0]);
   });
+  _el = document.getElementById('cleanupImagesBtn');
+  if (_el) _el.addEventListener('click', cleanupImages);
 
   // 只写 localStorage 不触发同步（用于初始化合并）
   function saveRecordsToLocal() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
   }
 
-  // 合并云端和本地记录（以 id 去重，保留最新时间戳的）
+  // 合并云端和本地记录（按 id 去重，保留 updatedTime/time 较新的版本）
   function mergeRecords(ghRecords) {
     if (!ghRecords || !ghRecords.length) return;
     var map = {};
     var all = records.concat(ghRecords);
     for (var i = 0; i < all.length; i++) {
       var r = all[i];
-      if (!map[r.id] || r.id > map[r.id].id) {
+      var ver = r.updatedTime || r.time || r.id || 0;
+      var exist = map[r.id];
+      if (!exist) {
         map[r.id] = r;
+      } else {
+        var existVer = exist.updatedTime || exist.time || exist.id || 0;
+        if (ver > existVer) map[r.id] = r;
       }
     }
     records = Object.values(map).sort(function(a, b) { return a.id - b.id; });
@@ -1510,6 +1519,26 @@ li.search { position: relative; }
       alert('文件读取失败');
     };
     reader.readAsText(file);
+  }
+
+  // 清理所有记录中的图片数据，减小同步文件体积
+  function cleanupImages() {
+    if (!confirm('确定清除所有记录中的图片吗？此操作不可恢复（可先"导出"备份）')) return;
+    var hasImg = false;
+    for (var i = 0; i < records.length; i++) {
+      var r = records[i];
+      if (r.images && r.images.length) { r.images = []; hasImg = true; }
+      if (r.image) { r.image = ''; hasImg = true; }
+    }
+    if (!hasImg) {
+      alert('当前记录中没有图片');
+      return;
+    }
+    saveRecords();
+    render();
+    document.getElementById('syncFeedback').className = 'sync-feedback success';
+    document.getElementById('syncFeedback').textContent = '已清理图片，正在同步…';
+    document.getElementById('syncFeedback').style.display = 'block';
   }
 
   // 初始化：先本地加载，再尝试从云端拉取并合并
