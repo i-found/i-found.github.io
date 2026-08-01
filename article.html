@@ -940,6 +940,8 @@ li.search { position: relative; }
     return githubAPI('GET').then(function(data) {
       githubSha = data.sha;
       var raw = data.content || '';
+      // 调试：打印 API 返回的关键字段
+      console.log('API返回:', JSON.stringify({sha: data.sha, hasContent: !!data.content, dl: data.download_url, size: data.size}));
       // 大文件（>1MB）API 不返回 content，改用 download_url 直接拉取
       if (!raw && data.download_url) {
         showSyncStatus('下载大文件中…', 'syncing');
