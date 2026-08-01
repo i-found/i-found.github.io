@@ -798,7 +798,6 @@ li.search { position: relative; }
       <button class="btn-save" id="saveSync">保存</button>
       <button class="btn-cancel" id="exportRecordsBtn">导出</button>
       <button class="btn-cancel" id="importRecordsBtn">导入</button>
-      <button class="btn-cancel" id="fullSyncBtn" title="强制全量同步，修复索引不一致">全量同步</button>
       <input type="file" id="importRecordsInput" accept="application/json" style="display:none;">
     </div>
     <div class="sync-feedback" id="syncFeedback" style="display:none;"></div>
@@ -816,14 +815,11 @@ li.search { position: relative; }
   var TOKEN_KEY = 'suihe_github_token';
   var GITHUB_OWNER = 'i-found';
   var GITHUB_REPO = 'i-found.github.io';
-  var GITHUB_RECORDS_DIR = 'data/records';        // 每条记录一个 {id}.json
-  var GITHUB_INDEX_PATH = 'data/records_index.json'; // 索引文件
-  var GITHUB_OLD_PATH = 'data/records.json';       // 旧单文件路径（迁移用）
+  var GITHUB_PATH = 'data/records.json';
   var records = [];
   var editingImages = [];
   var editingRecordId = null;
-  var remoteIndex = {}; // 云端索引 { id: updatedTime }
-  var indexSha = null;  // 索引文件的 sha
+  var githubSha = null;
 
   // ========== IndexedDB 存储（解决 5MB localStorage 限制）==========
   var DB_NAME = 'suihe_records_db';
@@ -909,8 +905,8 @@ li.search { position: relative; }
     el.className = 'sync-status ' + (type || '');
   }
 
-  // ========== GitHub API（支持自定义路径和 sha）==========
-  function githubAPI(method, path, body, sha) {
+  // ========== GitHub API（单文件模式）==========
+  function githubAPI(method, body) {
     var token = getToken();
     var headers = {
       'Authorization': 'Bearer ' + token,
@@ -919,11 +915,9 @@ li.search { position: relative; }
     var opts = { method: method, headers: headers };
     if (body) {
       headers['Content-Type'] = 'application/json';
-      var payload = { message: body.message, content: body.content, branch: 'main' };
-      if (sha) payload.sha = sha;
-      opts.body = JSON.stringify(payload);
+      opts.body = JSON.stringify(body);
     }
-    var url = 'https://api.github.com/repos/' + GITHUB_OWNER + '/' + GITHUB_REPO + '/contents/' + path;
+    var url = 'https://api.github.com/repos/' + GITHUB_OWNER + '/' + GITHUB_REPO + '/contents/' + GITHUB_PATH;
     return fetch(url, opts).then(function(res) {
       if (res.status === 404) { var e2 = new Error('Not Found'); e2.status = 404; throw e2; }
       if (!res.ok) { return res.json().then(function(j) { throw new Error(j.message || 'HTTP ' + res.status); }); }
@@ -931,7 +925,7 @@ li.search { position: relative; }
     });
   }
 
-  // 解码 base64 为 UTF-8 字符串
+  // 解码 base64 → UTF-8
   function decodeBase64(raw) {
     if (!raw) return '';
     try {
@@ -942,228 +936,88 @@ li.search { position: relative; }
     }
   }
 
-  // 编码 UTF-8 为 base64
-  function encodeBase64(str) {
-    return btoa(unescape(encodeURIComponent(str)));
-  }
-
-  // 获取/更新文件 sha（无 content 的大文件走 download_url）
-  function fetchFileContent(path) {
-    return githubAPI('GET', path).then(function(data) {
-      if (data.content) return { sha: data.sha, text: decodeBase64(data.content) };
-      if (data.download_url) {
-        return fetch(data.download_url).then(function(r) { return r.text(); }).then(function(t) {
-          return { sha: data.sha, text: t };
-        });
-      }
-      return { sha: data.sha, text: '' };
-    });
-  }
-
-  // ========== 增量同步：拉取 ==========
+  // 从 GitHub 拉取
   function loadFromGitHub() {
     if (!hasToken()) return Promise.resolve(null);
     showSyncStatus('同步中…', 'syncing');
-
-    // 1. 拉取索引
-    return fetchFileContent(GITHUB_INDEX_PATH).then(function(idxData) {
-      var idx = {};
-      try { idx = idxData.text ? JSON.parse(idxData.text) : {}; } catch(e) { idx = {}; }
-      indexSha = idxData.sha;
-      remoteIndex = idx;
-
-      // 2. 对比本地记录，找出需要下载的 id
-      var localMap = {};
-      records.forEach(function(r) { localMap[r.id] = r.updatedTime || r.time || 0; });
-      var toDownload = [];
-      Object.keys(remoteIndex).forEach(function(id) {
-        var remoteVer = remoteIndex[id] || 0;
-        var localVer = localMap[id] || 0;
-        if (!localMap[id] || remoteVer > localVer) toDownload.push(id);
-      });
-
-      if (!toDownload.length) {
-        showSyncStatus('已是最新 ✓', 'success');
-        setTimeout(function() { showSyncStatus('', ''); }, 2000);
-        // 如果本地有记录但索引里没有，补齐推送
-        var localIds = records.map(function(r) { return String(r.id); });
-        var remoteIds = Object.keys(remoteIndex);
-        var missing = localIds.filter(function(id) { return remoteIds.indexOf(String(id)) === -1; });
-        if (missing.length) {
-          showSyncStatus('补齐 ' + missing.length + ' 条记录…', 'syncing');
-          pushToGitHub();
-        }
-        return records;
+    return githubAPI('GET').then(function(data) {
+      githubSha = data.sha;
+      var raw = data.content || '';
+      if (!raw && data.download_url) {
+        return fetch(data.download_url).then(function(r) { return r.text(); }).then(function(t) {
+          var c = JSON.parse(t);
+          if (!Array.isArray(c)) throw new Error('格式异常');
+          showSyncStatus('已同步 ✓', 'success');
+          setTimeout(function() { showSyncStatus('', ''); }, 2000);
+          return c;
+        });
       }
-
-      // 3. 下载变化的记录（失败的跳过，并清理无效索引）
-      showSyncStatus('下载 ' + toDownload.length + ' 条记录…', 'syncing');
-      var failedIds = [];
-      var promises = toDownload.map(function(id) {
-        return fetchFileContent(GITHUB_RECORDS_DIR + '/' + id + '.json').then(function(fd) {
-          try { return JSON.parse(fd.text); } catch(e) { failedIds.push(id); return null; }
-        }).catch(function() { failedIds.push(id); return null; });
-      });
-      return Promise.all(promises).then(function(results) {
-        var downloaded = results.filter(function(r) { return r && r.id; });
-        if (downloaded.length) mergeRecords(downloaded);
-        // 清理无效索引
-        if (failedIds.length) {
-          failedIds.forEach(function(id) { delete remoteIndex[id]; });
-          var cleanIdx = encodeBase64(JSON.stringify(remoteIndex));
-          githubAPI('PUT', GITHUB_INDEX_PATH, { message: '清理无效索引', content: cleanIdx }, indexSha).then(function(d) {
-            indexSha = d.content.sha;
-          }).catch(function() {});
-        }
-        showSyncStatus('已同步 ' + downloaded.length + ' 条 ✓', 'success');
+      if (!raw) {
+        showSyncStatus('云端为空', '');
         setTimeout(function() { showSyncStatus('', ''); }, 2000);
-        return records;
-      });
+        return [];
+      }
+      var decoded = decodeBase64(raw);
+      var content;
+      try { content = JSON.parse(decoded); } catch(e) {
+        showSyncStatus('云端数据损坏', 'error'); return null;
+      }
+      if (!Array.isArray(content)) {
+        showSyncStatus('云端格式异常', 'error'); return null;
+      }
+      showSyncStatus('已同步 ✓', 'success');
+      setTimeout(function() { showSyncStatus('', ''); }, 2000);
+      return content;
     }).catch(function(err) {
       if (err.message.indexOf('404') !== -1 || err.message.indexOf('Not Found') !== -1) {
-        // 索引文件不存在，尝试迁移旧数据
-        return migrateOldData();
+        githubSha = null;
+        showSyncStatus('云端无数据', '');
+        setTimeout(function() { showSyncStatus('', ''); }, 2000);
+        return null;
       }
       showSyncStatus('同步失败: ' + err.message, 'error');
       return null;
     });
   }
 
-  // ========== 增量同步：推送 ==========
+  // 推送到 GitHub
   function pushToGitHub() {
     if (!hasToken()) return Promise.resolve();
+    var content = btoa(unescape(encodeURIComponent(JSON.stringify(records))));
+    var body = {
+      message: '更新 [' + new Date().toISOString().slice(0, 19).replace('T', ' ') + ']',
+      content: content,
+      branch: 'main'
+    };
+    if (githubSha) body.sha = githubSha;
     showSyncStatus('同步中…', 'syncing');
-
-    // 先拉最新索引
-    return fetchFileContent(GITHUB_INDEX_PATH).then(function(idxData) {
-      var idx = {};
-      try { idx = idxData.text ? JSON.parse(idxData.text) : {}; } catch(e) { idx = {}; }
-      indexSha = idxData.sha;
-      remoteIndex = idx;
-
-      // 找出本地比云端新的记录
-      var localMap = {};
-      records.forEach(function(r) { localMap[String(r.id)] = r.updatedTime || r.time || 0; });
-      var toPush = [];
-      Object.keys(localMap).forEach(function(id) {
-        var remoteVer = Number(remoteIndex[id]) || 0;
-        var localVer = Number(localMap[id]) || 0;
-        if (localVer > remoteVer) toPush.push(id);
-      });
-
-      if (!toPush.length) {
-        showSyncStatus('已是最新 ✓', 'success');
-        setTimeout(function() { showSyncStatus('', ''); }, 2000);
-        return;
-      }
-
-      // 串行上传每条记录
-      var ts = new Date().toISOString().slice(0, 19).replace('T', ' ');
-      showSyncStatus('上传 ' + toPush.length + ' 条…', 'syncing');
-
-      function uploadOne(idx) {
-        if (idx >= toPush.length) {
-          // 全部上传完，更新索引
-          var newIdx = {};
-          records.forEach(function(r) { newIdx[String(r.id)] = r.updatedTime || r.time || 0; });
-          var idxContent = encodeBase64(JSON.stringify(newIdx));
-          return githubAPI('PUT', GITHUB_INDEX_PATH, { message: '更新索引 [' + ts + ']', content: idxContent }, indexSha).then(function(d) {
-            indexSha = d.content.sha;
-            remoteIndex = newIdx;
+    return githubAPI('PUT', body).then(function(data) {
+      githubSha = data.content.sha;
+      showSyncStatus('已同步 ✓', 'success');
+      setTimeout(function() { showSyncStatus('', ''); }, 2000);
+    }).catch(function(err) {
+      var msg = err.message || '';
+      if (msg.indexOf('409') !== -1 || msg.indexOf('expected') !== -1 || msg.indexOf('but is at') !== -1) {
+        showSyncStatus('冲突，重试中…', 'syncing');
+        return githubAPI('GET').then(function(data) {
+          githubSha = data.sha;
+          body.sha = githubSha;
+          return githubAPI('PUT', body).then(function(d) {
+            githubSha = d.content.sha;
             showSyncStatus('已同步 ✓', 'success');
             setTimeout(function() { showSyncStatus('', ''); }, 2000);
           });
-        }
-        var id = toPush[idx];
-        var r = findRecord(id);
-        if (!r) return uploadOne(idx + 1);
-        var rpath = GITHUB_RECORDS_DIR + '/' + id + '.json';
-        var content = encodeBase64(JSON.stringify(r));
-        var msg = '更新 ' + id + ' [' + ts + ']';
-        return githubAPI('GET', rpath).then(function(d) {
-          return githubAPI('PUT', rpath, { message: msg, content: content }, d.sha);
-        }).catch(function(e) {
-          if (e.status === 404) {
-            return githubAPI('PUT', rpath, { message: msg, content: content });
-          }
-          throw e; // 上传失败时抛出，阻止后续索引更新
-        }).then(function() {
-          return uploadOne(idx + 1);
+        }).catch(function(e2) {
+          showSyncStatus('同步失败: ' + (e2.message || ''), 'error');
         });
       }
-      return uploadOne(0);
-    }).catch(function(err) {
-      if (err.message.indexOf('404') !== -1 || err.message.indexOf('Not Found') !== -1) {
-        return fullPush();
+      if (msg.indexOf('401') !== -1 || msg.indexOf('Bad credentials') !== -1) {
+        setToken(''); updateSyncUI();
+        showSyncStatus('Token 已失效', 'error');
+        return;
       }
-      showSyncStatus('同步失败: ' + err.message, 'error');
-    });
-  }
-
-  // 首次全量推送（串行避免 API 限流）
-  function fullPush() {
-    if (!records.length) return Promise.resolve();
-    showSyncStatus('首次上传 ' + records.length + ' 条记录…', 'syncing');
-    var ts = new Date().toISOString().slice(0, 19).replace('T', ' ');
-    // 串行上传，避免 GitHub API 并发限流
-    var chain = Promise.resolve();
-    records.forEach(function(r) {
-      chain = chain.then(function() {
-        var rpath = GITHUB_RECORDS_DIR + '/' + r.id + '.json';
-        var content = encodeBase64(JSON.stringify(r));
-        return githubAPI('PUT', rpath, { message: '创建 ' + r.id + ' [' + ts + ']', content: content }).catch(function() {});
-      });
-    });
-    return chain.then(function() {
-      var idx = {};
-      records.forEach(function(r) { idx[r.id] = r.updatedTime || r.time || 0; });
-      var idxContent = encodeBase64(JSON.stringify(idx));
-      return githubAPI('PUT', GITHUB_INDEX_PATH, { message: '初始化索引 [' + ts + ']', content: idxContent }).then(function(d) {
-        indexSha = d.content.sha;
-        showSyncStatus('已同步 ✓', 'success');
-        setTimeout(function() { showSyncStatus('', ''); }, 2000);
-      });
-    }).catch(function(e) {
-      showSyncStatus('同步失败: ' + e.message, 'error');
-    });
-  }
-
-  // 迁移旧的 data/records.json 到新结构
-  function migrateOldData() {
-    showSyncStatus('迁移旧数据…', 'syncing');
-    return fetchFileContent(GITHUB_OLD_PATH).then(function(fd) {
-      if (!fd.text) {
-        showSyncStatus('云端无数据', '');
-        setTimeout(function() { showSyncStatus('', ''); }, 2000);
-        return null;
-      }
-      var oldRecords;
-      try { oldRecords = JSON.parse(fd.text); } catch(e) { return null; }
-      if (!Array.isArray(oldRecords)) return null;
-      records = oldRecords;
-      return fullPush().then(function() { return records; });
-    }).catch(function(err) {
-      if (err.message.indexOf('404') !== -1 || err.message.indexOf('Not Found') !== -1) {
-        showSyncStatus('云端无数据', '');
-        setTimeout(function() { showSyncStatus('', ''); }, 2000);
-        return null;
-      }
-      showSyncStatus('迁移失败: ' + err.message, 'error');
-      return null;
-    });
-  }
-
-  // 删除 GitHub 上的一条记录文件
-  function deleteRemoteRecord(id) {
-    if (!hasToken()) return Promise.resolve();
-    var rpath = GITHUB_RECORDS_DIR + '/' + id + '.json';
-    return githubAPI('GET', rpath).then(function(d) {
-      var content = d.content || '';
-      var sha = d.sha;
-      return githubAPI('DELETE', rpath, { message: '删除记录 ' + id, content: content }, sha);
-    }).catch(function(e) {
-      if (e.status === 404) return;
-      throw e;
+      showSyncStatus('同步失败: ' + msg, 'error');
+      setTimeout(function() { showSyncStatus('', ''); }, 5000);
     });
   }
 
@@ -1687,19 +1541,6 @@ li.search { position: relative; }
   _el = document.getElementById('importRecordsInput');
   if (_el) _el.addEventListener('change', function() {
     if (this.files && this.files[0]) importRecords(this.files[0]);
-  });
-  _el = document.getElementById('fullSyncBtn');
-  if (_el) _el.addEventListener('click', function() {
-    showSyncStatus('全量同步中…', 'syncing');
-    fullPush().then(function() {
-      document.getElementById('syncFeedback').className = 'sync-feedback success';
-      document.getElementById('syncFeedback').textContent = '全量同步完成！';
-      document.getElementById('syncFeedback').style.display = 'block';
-    }).catch(function(e) {
-      document.getElementById('syncFeedback').className = 'sync-feedback error';
-      document.getElementById('syncFeedback').textContent = '全量同步失败: ' + (e.message || '');
-      document.getElementById('syncFeedback').style.display = 'block';
-    });
   });
 
   // 只写本地存储不触发同步（用于初始化合并）
