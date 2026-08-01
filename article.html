@@ -796,6 +796,9 @@ li.search { position: relative; }
     <div class="modal-buttons">
       <button class="btn-cancel" id="cancelSync">取消</button>
       <button class="btn-save" id="saveSync">保存并测试连接</button>
+      <button class="btn-cancel" id="exportRecordsBtn">导出</button>
+      <button class="btn-cancel" id="importRecordsBtn">导入</button>
+      <input type="file" id="importRecordsInput" accept="application/json" style="display:none;">
     </div>
     <div class="sync-feedback" id="syncFeedback" style="display:none;"></div>
   </div>
@@ -1417,6 +1420,22 @@ li.search { position: relative; }
     });
   });
 
+  // 导出按钮
+  _el = document.getElementById('exportRecordsBtn');
+  if (_el) _el.addEventListener('click', exportRecords);
+
+  // 导入按钮：点击导出按钮后弹出文件选择器
+  _el = document.getElementById('importRecordsBtn');
+  if (_el) _el.addEventListener('click', function() {
+    var input = document.getElementById('importRecordsInput');
+    input.value = '';
+    input.click();
+  });
+  _el = document.getElementById('importRecordsInput');
+  if (_el) _el.addEventListener('change', function() {
+    if (this.files && this.files[0]) importRecords(this.files[0]);
+  });
+
   // 只写 localStorage 不触发同步（用于初始化合并）
   function saveRecordsToLocal() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
@@ -1434,6 +1453,63 @@ li.search { position: relative; }
       }
     }
     records = Object.values(map).sort(function(a, b) { return a.id - b.id; });
+  }
+
+  // ========== 导入导出 ==========
+  // 导出本地所有记录为 JSON 文件
+  function exportRecords() {
+    var data = JSON.stringify(records, null, 2);
+    var blob = new Blob([data], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    var ts = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = 'records-' + ts + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+  }
+
+  // 导入 JSON 文件，与现有记录按 id 去重合并，按时间排序后同步到云端
+  function importRecords(file) {
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        var imported = JSON.parse(e.target.result);
+        if (!Array.isArray(imported)) {
+          alert('文件格式错误：应为记录数组');
+          return;
+        }
+        // 过滤无效记录
+        var valid = imported.filter(function(r) { return r && r.id; });
+        if (!valid.length) {
+          alert('文件中没有有效记录');
+          return;
+        }
+        // 合并前记录数量
+        var beforeCount = records.length;
+        mergeRecords(valid);
+        saveRecords();
+        render();
+        var added = records.length - beforeCount;
+        var msg = '导入成功！新增 ' + added + ' 条，共 ' + records.length + ' 条记录';
+        if (added > 0) {
+          msg += '，正在同步到云端…';
+        }
+        document.getElementById('syncFeedback').className = 'sync-feedback success';
+        document.getElementById('syncFeedback').textContent = msg;
+        document.getElementById('syncFeedback').style.display = 'block';
+        setTimeout(function() { document.getElementById('syncModal').classList.remove('show'); }, 1500);
+      } catch(err) {
+        alert('文件解析失败: ' + err.message);
+      }
+    };
+    reader.onerror = function() {
+      alert('文件读取失败');
+    };
+    reader.readAsText(file);
   }
 
   // 初始化：先本地加载，再尝试从云端拉取并合并
