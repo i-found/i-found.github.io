@@ -984,6 +984,14 @@ li.search { position: relative; }
       if (!toDownload.length) {
         showSyncStatus('已是最新 ✓', 'success');
         setTimeout(function() { showSyncStatus('', ''); }, 2000);
+        // 如果本地有记录但索引里没有，补齐推送
+        var localIds = records.map(function(r) { return r.id; });
+        var remoteIds = Object.keys(remoteIndex);
+        var missing = localIds.filter(function(id) { return remoteIds.indexOf(String(id)) === -1; });
+        if (missing.length) {
+          showSyncStatus('补齐 ' + missing.length + ' 条记录…', 'syncing');
+          pushToGitHub();
+        }
         return records;
       }
 
