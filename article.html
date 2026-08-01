@@ -1229,10 +1229,14 @@ li.search { position: relative; }
           flashBtn(btn, '已粘贴文字');
           return;
         }
-      } catch(e) {
-        // 复制了文件（API 不支持文件类型），聚焦文本框让用户 Ctrl+V
+        // 剪贴板为空或不可识别
         ta.focus();
-        flashBtn(btn, '文件请 Ctrl+V');
+        return;
+      } catch(e) {
+        // NotAllowedError: 权限未授予 → 提示用户先做一次 Ctrl+V 授权
+        // 其他错误（如文件类型不支持）→ 也降级
+        ta.focus();
+        flashBtn(btn, '请先 Ctrl+V 授权');
         return;
       }
     }
