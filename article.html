@@ -821,6 +821,66 @@ li.search { position: relative; }
   var editingRecordId = null; // 编辑模式下的记录 ID
   var githubSha = null; // records.json 的 sha，更新时需要
 
+  // ========== IndexedDB 存储（解决 5MB localStorage 限制）==========
+  var DB_NAME = 'suihe_records_db';
+  var DB_VERSION = 1;
+  var DB_STORE = 'records';
+  var dbInstance = null;
+
+  function openDB() {
+    if (dbInstance) return Promise.resolve(dbInstance);
+    return new Promise(function(resolve, reject) {
+      var req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onupgradeneeded = function(e) {
+        var db = e.target.result;
+        if (!db.objectStoreNames.contains(DB_STORE)) {
+          db.createObjectStore(DB_STORE);
+        }
+      };
+      req.onsuccess = function(e) { dbInstance = e.target.result; resolve(dbInstance); };
+      req.onerror = function(e) { reject(e.target.error); };
+    });
+  }
+
+  function idbGet(key) {
+    return openDB().then(function(db) {
+      return new Promise(function(resolve, reject) {
+        var tx = db.transaction(DB_STORE, 'readonly');
+        var req = tx.objectStore(DB_STORE).get(key);
+        req.onsuccess = function() { resolve(req.result); };
+        req.onerror = function() { reject(req.error); };
+      });
+    });
+  }
+
+  function idbSet(key, value) {
+    return openDB().then(function(db) {
+      return new Promise(function(resolve, reject) {
+        var tx = db.transaction(DB_STORE, 'readwrite');
+        tx.objectStore(DB_STORE).put(value, key);
+        tx.oncomplete = function() { resolve(); };
+        tx.onerror = function() { reject(tx.error); };
+      });
+    });
+  }
+
+  // 保存到存储：优先 IndexedDB，失败时回退 localStorage（仅小数据）
+  function saveToStorage() {
+    var data = JSON.stringify(records);
+    return idbSet(STORAGE_KEY, records).catch(function(e) {
+      // 回退到 localStorage（但仅当数据较小时）
+      try {
+        if (data.length < 2 * 1024 * 1024) {
+          localStorage.setItem(STORAGE_KEY, data);
+        } else {
+          throw e;
+        }
+      } catch(e2) {
+        throw e2;
+      }
+    });
+  }
+
   // ========== Token 管理 ==========
   function getToken() { return localStorage.getItem(TOKEN_KEY) || ''; }
   function setToken(t) { localStorage.setItem(TOKEN_KEY, t); }
@@ -879,7 +939,29 @@ li.search { position: relative; }
     showSyncStatus('同步中…', 'syncing');
     return githubAPI('GET').then(function(data) {
       githubSha = data.sha;
-      var content = JSON.parse(decodeURIComponent(escape(atob(data.content))));
+      var raw = data.content || '';
+      if (!raw) {
+        showSyncStatus('云端为空', '');
+        setTimeout(function() { showSyncStatus('', ''); }, 2000);
+        return [];
+      }
+      var decoded;
+      try {
+        decoded = decodeURIComponent(escape(atob(raw)));
+      } catch(e) {
+        decoded = atob(raw);
+      }
+      var content;
+      try {
+        content = JSON.parse(decoded);
+      } catch(e) {
+        showSyncStatus('云端数据已损坏', 'error');
+        return null;
+      }
+      if (!Array.isArray(content)) {
+        showSyncStatus('云端数据格式异常', 'error');
+        return null;
+      }
       showSyncStatus('已同步 ✓', 'success');
       setTimeout(function() { showSyncStatus('', ''); }, 2000);
       return content;
@@ -945,27 +1027,53 @@ li.search { position: relative; }
 
   // ========== 记录管理 ==========
 
-  // 加载记录
+  // 加载记录（IndexedDB 优先，localStorage 兜底）
   function loadRecords() {
+    // 尝试 IndexedDB
+    if (window.indexedDB) {
+      idbGet(STORAGE_KEY).then(function(data) {
+        if (Array.isArray(data)) {
+          records = data;
+          render();
+        }
+      }).catch(function() {
+        // 失败回退 localStorage
+        tryLoadFromLocalStorage();
+      });
+    } else {
+      tryLoadFromLocalStorage();
+    }
+    // 同步尝试 localStorage（首次迁移）
+    tryLoadFromLocalStorage();
+  }
+
+  function tryLoadFromLocalStorage() {
     try {
       var raw = localStorage.getItem(STORAGE_KEY);
-      records = raw ? JSON.parse(raw) : [];
+      if (raw) {
+        var parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length && records.length === 0) {
+          records = parsed;
+          render();
+          // 迁移到 IndexedDB
+          saveToStorage().catch(function() {});
+        }
+      }
     } catch(e) {
-      records = [];
+      // 旧数据坏了，清掉
+      try { localStorage.removeItem(STORAGE_KEY); } catch(e2) {}
     }
   }
 
-  // 保存到 localStorage + 触发 GitHub 同步
+  // 保存到本地存储 + 触发 GitHub 同步（异步）
   function saveRecords() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+    saveToStorage().then(function() {
       showSyncStatus('已保存 ' + records.length + ' 条记录', 'success');
       var s = document.getElementById('syncStatus');
       if (s) { s.style.color = '#4CAF50'; s.style.fontSize = '13px'; s.style.display = 'block'; }
-    } catch(e) {
+    }).catch(function(e) {
       showSyncStatus('本地存储失败: ' + e.message, 'error');
-      return;
-    }
+    });
     pushToGitHub();
   }
 
@@ -1362,11 +1470,14 @@ li.search { position: relative; }
   _el = document.getElementById('imageLightbox');
   if (_el) _el.addEventListener('click', closeLightbox);
 
-  // 支持跨标签同步
+  // 跨标签同步（其他标签页修改了 records 时重新加载）
   window.addEventListener('storage', function(e) {
     if (e.key === STORAGE_KEY) {
       loadRecords();
       render();
+    }
+    if (e.key === TOKEN_KEY) {
+      updateSyncUI();
     }
   });
 
@@ -1437,9 +1548,9 @@ li.search { position: relative; }
     if (this.files && this.files[0]) importRecords(this.files[0]);
   });
 
-  // 只写 localStorage 不触发同步（用于初始化合并）
+  // 只写本地存储不触发同步（用于初始化合并）
   function saveRecordsToLocal() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+    saveToStorage().catch(function() {});
   }
 
   // 合并云端和本地记录（按 id 去重，保留 updatedTime/time 较新的版本）
@@ -1520,8 +1631,8 @@ li.search { position: relative; }
 
   // 初始化：先本地加载，再尝试从云端拉取并合并
   function init() {
-    loadRecords(); // 本地加载
     updateSyncUI();
+    loadRecords(); // 异步加载（IndexedDB）
     render();
 
     if (hasToken()) {
