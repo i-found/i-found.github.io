@@ -940,19 +940,31 @@ li.search { position: relative; }
     return githubAPI('GET').then(function(data) {
       githubSha = data.sha;
       var raw = data.content || '';
+      // 大文件（>1MB）API 不返回 content，改用 download_url 直接拉取
+      if (!raw && data.download_url && data.size > 0) {
+        showSyncStatus('下载大文件中…', 'syncing');
+        return fetch(data.download_url).then(function(r) { return r.text(); }).then(function(text) {
+          var content = JSON.parse(text);
+          if (!Array.isArray(content)) throw new Error('格式异常');
+          showSyncStatus('已同步 ✓', 'success');
+          setTimeout(function() { showSyncStatus('', ''); }, 2000);
+          return content;
+        }).catch(function(e) {
+          showSyncStatus('下载失败: ' + e.message, 'error');
+          return null;
+        });
+      }
       if (!raw) {
         showSyncStatus('云端为空', '');
         setTimeout(function() { showSyncStatus('', ''); }, 2000);
         return [];
       }
-      // 解码 base64 → UTF-8 字符串（兼容大文件）
+      // 解码 base64 → UTF-8 字符串
       var decoded;
       try {
-        // 方法1：TextDecoder（现代浏览器，处理大文件最稳定）
         var bytes = Uint8Array.from(atob(raw), function(c) { return c.charCodeAt(0); });
         decoded = new TextDecoder('utf-8').decode(bytes);
       } catch(e) {
-        // 方法2：经典方案（可能在大文件时抛 URIError）
         try {
           decoded = decodeURIComponent(escape(atob(raw)));
         } catch(e2) {
@@ -974,7 +986,6 @@ li.search { position: relative; }
       setTimeout(function() { showSyncStatus('', ''); }, 2000);
       return content;
     }).catch(function(err) {
-      // 文件不存在（404）是正常的首次使用情况
       if (err.message.indexOf('404') !== -1 || err.message.indexOf('Not Found') !== -1) {
         githubSha = null;
         showSyncStatus('云端无数据', '');
