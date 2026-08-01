@@ -996,17 +996,26 @@ li.search { position: relative; }
         return records;
       }
 
-      // 3. 下载变化的记录
+      // 3. 下载变化的记录（失败的跳过，并清理无效索引）
       showSyncStatus('下载 ' + toDownload.length + ' 条记录…', 'syncing');
+      var failedIds = [];
       var promises = toDownload.map(function(id) {
         return fetchFileContent(GITHUB_RECORDS_DIR + '/' + id + '.json').then(function(fd) {
-          try { return JSON.parse(fd.text); } catch(e) { return null; }
-        }).catch(function() { return null; });
+          try { return JSON.parse(fd.text); } catch(e) { failedIds.push(id); return null; }
+        }).catch(function() { failedIds.push(id); return null; });
       });
       return Promise.all(promises).then(function(results) {
         var downloaded = results.filter(function(r) { return r && r.id; });
         if (downloaded.length) mergeRecords(downloaded);
-        showSyncStatus('已同步 ✓', 'success');
+        // 清理无效索引
+        if (failedIds.length) {
+          failedIds.forEach(function(id) { delete remoteIndex[id]; });
+          var cleanIdx = encodeBase64(JSON.stringify(remoteIndex));
+          githubAPI('PUT', GITHUB_INDEX_PATH, { message: '清理无效索引', content: cleanIdx }, indexSha).then(function(d) {
+            indexSha = d.content.sha;
+          }).catch(function() {});
+        }
+        showSyncStatus('已同步 ' + downloaded.length + ' 条 ✓', 'success');
         setTimeout(function() { showSyncStatus('', ''); }, 2000);
         return records;
       });
