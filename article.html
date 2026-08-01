@@ -941,7 +941,7 @@ li.search { position: relative; }
       githubSha = data.sha;
       var raw = data.content || '';
       // 大文件（>1MB）API 不返回 content，改用 download_url 直接拉取
-      if (!raw && data.download_url && data.size > 0) {
+      if (!raw && data.download_url) {
         showSyncStatus('下载大文件中…', 'syncing');
         return fetch(data.download_url).then(function(r) { return r.text(); }).then(function(text) {
           var content = JSON.parse(text);
@@ -951,6 +951,7 @@ li.search { position: relative; }
           return content;
         }).catch(function(e) {
           showSyncStatus('下载失败: ' + e.message, 'error');
+          githubSha = null;
           return null;
         });
       }
