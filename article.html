@@ -210,7 +210,7 @@
   <!-- ========== 记录区域 ========== -->
   <!-- 添加记录 - 右上角浮动 -->
   <div class="add-record-fixed" id="addRecordWrap">
-    <button class="add-record-btn" id="addRecordBtn" onclick="openAddRecordModal()">＋ 添加记录</button>
+    <button class="add-record-btn" id="addRecordBtn" onclick="openAddRecordModal()" title="添加记录">＋</button>
   </div>
   <!-- 同步设置 - 左下角 -->
   <div class="sync-settings-fixed">
@@ -259,16 +259,20 @@
   line-height: 0;
 }
 .add-record-btn {
-  display: inline-block;
-  margin: 0 auto 20px;
-  padding: 12px 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
   background: linear-gradient(135deg, #ff6b81, #ff4757);
   color: #fff;
   border: none;
-  border-radius: 30px;
-  font-size: 16px;
+  border-radius: 50%;
+  font-size: 28px;
+  font-weight: 300;
+  line-height: 1;
   cursor: pointer;
-  letter-spacing: 2px;
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(255,71,87,0.3);
 }
