@@ -504,7 +504,6 @@ li.search { position: relative; }
 
 /* 弹窗工具栏 */
 .modal-toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
-.clipboard-btn.flash-success { background: #4CAF50 !important; color: #fff !important; }
 
 .record-time {
   font-size: 13px;
@@ -845,7 +844,6 @@ li.search { position: relative; }
         📷 添加图片
         <input type="file" id="imageInput" accept="image/*" multiple>
       </label>
-      <button class="img-upload-label clipboard-btn" type="button" id="pasteClipboardBtn" title="粘贴剪贴板内容（文字/图片/文件）">📋 粘贴剪贴板</button>
     </div>
     <div class="modal-buttons">
       <button class="btn-cancel" id="cancelRecord">取消</button>
@@ -1205,67 +1203,6 @@ li.search { position: relative; }
     }
   }
 
-  // 读取剪贴板按钮（截图/文字直接粘贴，图片文件降级 Ctrl+V）
-  async function readClipboard() {
-    var btn = document.getElementById('pasteClipboardBtn');
-    var ta = document.getElementById('recordText');
-
-    if (navigator.clipboard && navigator.clipboard.read) {
-      try {
-        var items = await navigator.clipboard.read();
-        for (var i = 0; i < items.length; i++) {
-          var item = items[i];
-          var imgType = item.types.find(function(t) { return t.indexOf('image/') === 0; });
-          if (imgType) {
-            var blob = await item.getType(imgType);
-            handleImage(blob);
-            flashBtn(btn, '已粘贴图片');
-            return;
-          }
-        }
-        var text = await navigator.clipboard.readText();
-        if (text) {
-          insertTextAtCursor(text);
-          flashBtn(btn, '已粘贴文字');
-          return;
-        }
-        // 剪贴板为空或不可识别
-        ta.focus();
-        return;
-      } catch(e) {
-        // NotAllowedError: 权限未授予 → 提示用户先做一次 Ctrl+V 授权
-        // 其他错误（如文件类型不支持）→ 也降级
-        ta.focus();
-        flashBtn(btn, '请先 Ctrl+V 授权');
-        return;
-      }
-    }
-    ta.focus();
-  }
-
-  function insertTextAtCursor(text) {
-    var ta = document.getElementById('recordText');
-    var start = ta.selectionStart || 0;
-    var end = ta.selectionEnd || 0;
-    var before = ta.value.substring(0, start);
-    var after = ta.value.substring(end);
-    ta.value = before + text + after;
-    var newPos = start + text.length;
-    ta.setSelectionRange(newPos, newPos);
-    ta.focus();
-  }
-
-  function flashBtn(btn, msg) {
-    if (!btn) return;
-    var orig = btn.textContent;
-    btn.textContent = msg;
-    btn.classList.add('flash-success');
-    setTimeout(function() {
-      btn.textContent = orig;
-      btn.classList.remove('flash-success');
-    }, 1200);
-  }
-
   // 处理图片选择（追加到数组，不覆盖之前的）
   function handleImage(file) {
     if (!file) return;
@@ -1381,7 +1318,6 @@ li.search { position: relative; }
   _el = document.getElementById('cancelRecord');     if (_el) _el.addEventListener('click', closeModal);
   _el = document.getElementById('recordModal');      if (_el) _el.addEventListener('click', function(e) { if (e.target === this) closeModal(); });
   _el = document.getElementById('imageInput');       if (_el) _el.addEventListener('change', function() { if (this.files) { for (var fi = 0; fi < this.files.length; fi++) handleImage(this.files[fi]); } });
-  _el = document.getElementById('pasteClipboardBtn'); if (_el) _el.addEventListener('click', readClipboard);
   _el = document.getElementById('recordModal');      if (_el) _el.addEventListener('paste', handlePaste);
   // 保存按钮：带防重入锁
   _el = document.getElementById('saveRecordBtn');
@@ -1592,6 +1528,7 @@ li.search { position: relative; }
   // 暴露给内联 onclick 调用
   window._saveRecord = saveRecord;
   window.saveRecord = saveRecord;
+  window.readClipboard = function() {};
   window.openAddRecordModal = function() { openModal(); };
   window.openSyncModalFn = function() {
     document.getElementById('githubToken').value = getToken();
