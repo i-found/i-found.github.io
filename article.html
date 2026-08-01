@@ -1205,10 +1205,11 @@ li.search { position: relative; }
     }
   }
 
-  // 读取剪贴板按钮（支持截图/文字；复制文件时降级提示 Ctrl+V）
+  // 读取剪贴板按钮（截图/文字直接粘贴，图片文件降级 Ctrl+V）
   async function readClipboard() {
     var btn = document.getElementById('pasteClipboardBtn');
     var ta = document.getElementById('recordText');
+
     if (navigator.clipboard && navigator.clipboard.read) {
       try {
         var items = await navigator.clipboard.read();
@@ -1229,9 +1230,9 @@ li.search { position: relative; }
           return;
         }
       } catch(e) {
-        // 复制文件时 API 会抛异常，降级提示 Ctrl+V
+        // 复制了文件（API 不支持文件类型），聚焦文本框让用户 Ctrl+V
         ta.focus();
-        flashBtn(btn, '请按 Ctrl+V 粘贴');
+        flashBtn(btn, '文件请 Ctrl+V');
         return;
       }
     }
