@@ -1206,16 +1206,15 @@ li.search { position: relative; }
     }
   }
 
-  // 保存到本地存储 + 触发 GitHub 同步（异步）
+  // 保存到本地存储 + 触发 GitHub 同步
   function saveRecords() {
     saveToStorage().then(function() {
-      showSyncStatus('已保存 ' + records.length + ' 条记录', 'success');
       var s = document.getElementById('syncStatus');
       if (s) { s.style.color = '#4CAF50'; s.style.fontSize = '13px'; s.style.display = 'block'; }
+      return pushToGitHub();
     }).catch(function(e) {
       showSyncStatus('本地存储失败: ' + e.message, 'error');
     });
-    pushToGitHub();
   }
 
   // 格式化时间（兼容多种格式：数字时间戳 / ISO字符串 / 已格式化的中文串）
