@@ -1172,29 +1172,32 @@ li.search { position: relative; }
   function handlePaste(e) {
     var cd = e.clipboardData || (window.clipboardData);
     if (!cd) return;
-    var items = cd.items;
     var imageFiles = [];
-    var otherFiles = [];
+    var seenImage = false;
+
+    // 1. 从 items 取（截图生成的图片在这里）
+    var items = cd.items;
     if (items) {
       for (var i = 0; i < items.length; i++) {
         var it = items[i];
         if (it.kind === 'file' && it.type && it.type.indexOf('image/') === 0) {
           var f0 = it.getAsFile();
-          if (f0) imageFiles.push(f0);
+          if (f0) { imageFiles.push(f0); seenImage = true; }
         }
       }
     }
+
+    // 2. 从 files 取（Ctrl+C 复制图片文件后粘贴走这里）—— 和 items 去重
     var files = cd.files;
-    if (files && files.length && !imageFiles.length) {
+    if (files && files.length && !seenImage) {
       for (var f = 0; f < files.length; f++) {
         var file = files[f];
         if (file.type && file.type.indexOf('image/') === 0) {
           imageFiles.push(file);
-        } else {
-          otherFiles.push(file);
         }
       }
     }
+
     if (imageFiles.length) {
       e.preventDefault();
       for (var k = 0; k < imageFiles.length; k++) handleImage(imageFiles[k]);
