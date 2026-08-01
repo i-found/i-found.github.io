@@ -945,11 +945,19 @@ li.search { position: relative; }
         setTimeout(function() { showSyncStatus('', ''); }, 2000);
         return [];
       }
+      // 解码 base64 → UTF-8 字符串（兼容大文件）
       var decoded;
       try {
-        decoded = decodeURIComponent(escape(atob(raw)));
+        // 方法1：TextDecoder（现代浏览器，处理大文件最稳定）
+        var bytes = Uint8Array.from(atob(raw), function(c) { return c.charCodeAt(0); });
+        decoded = new TextDecoder('utf-8').decode(bytes);
       } catch(e) {
-        decoded = atob(raw);
+        // 方法2：经典方案（可能在大文件时抛 URIError）
+        try {
+          decoded = decodeURIComponent(escape(atob(raw)));
+        } catch(e2) {
+          decoded = atob(raw);
+        }
       }
       var content;
       try {
