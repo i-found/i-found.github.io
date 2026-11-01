@@ -1,0 +1,1754 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>记录 | 随时都要一起</title>
+    <!-- 音乐点击播放插件，要提上来，不知道为什么会影响到bookmark1的时间展示 -->
+    <script type="text/javascript">
+    window.onload = function(){
+         var audio = document.getElementById('music');
+             audio.pause();//打开页面时无音乐
+    }
+    function play() {
+        var audio = document.getElementById('music');
+        if (audio.paused) {
+            audio.play();
+            document.getElementById('musicImg').src="./Albums/TreasureHunting/css/img/play_rdi_btn_pause-touch.png";
+            document.getElementById('musicImg').title="暂停";
+        }else{
+            audio.pause();
+            // audio.currentTime = 0;//音乐从头播放
+            document.getElementById('musicImg').src="./Albums/TreasureHunting/css/img/play_rdi_btn_play-touch.png";
+              document.getElementById('musicImg').title="播放";
+        }
+    }
+    </script>
+    <!-- 鼠标点击产生爱心 -->
+    <script type="text/javascript">
+    (function(window,document,undefined){
+        var hearts = [];
+
+        window.requestAnimationFrame = (function(){
+            return window.requestAnimationFrame ||
+            window.webkitRequestAnimationFrame ||
+            window.mozRequestAnimationFrame ||
+             window.oRequestAnimationFrame ||
+             window.msRequestAnimationFrame ||
+             function (callback){
+                 setTimeout(callback,1000/60);
+             }
+        })();
+
+        init();
+
+        function init(){
+            css(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: absolute;}.heart:after{top: -5px;}.heart:before{left: -5px;}");
+            attachEvent();
+            gameloop();
+        }
+
+        function gameloop(){
+            for(var i=0;i<hearts.length;i++){
+                if(hearts[i].alpha <=0){
+                    document.body.removeChild(hearts[i].el);
+                    hearts.splice(i,1);
+                    continue;
+                 }
+
+                 hearts[i].y--;
+                 hearts[i].scale += 0.004;
+                 hearts[i].alpha -= 0.013;
+                 hearts[i].el.style.cssText = "left:"+hearts[i].x+"px;top:"+hearts[i].y+"px;opacity:"+hearts[i].alpha+";transform:scale("+hearts[i].scale+","+hearts[i].scale+") rotate(45deg);background:"+hearts[i].color;
+            }
+
+            requestAnimationFrame(gameloop);
+        }
+
+        function attachEvent(){
+            var old = typeof window.onclick==="function" && window.onclick;
+            window.onclick = function(event){
+                old && old();
+                createHeart(event);
+            }
+        }
+
+        function createHeart(event){
+            var d = document.createElement("div");
+            d.className = "heart";
+            hearts.push({
+                el : d,
+                x : event.clientX - 5,
+                y : event.clientY - 5,
+                scale : 1,
+                alpha : 1,
+                color : randomColor()
+            });
+
+            document.body.appendChild(d);
+        }
+
+        function css(css){
+            var style = document.createElement("style");
+            style.type="text/css";
+            try{
+                style.appendChild(document.createTextNode(css));
+            }
+            catch(ex){
+                style.styleSheet.cssText = css;
+            }
+
+            document.getElementsByTagName('head')[0].appendChild(style);
+        }
+
+        function randomColor(){
+            return "rgb("+(~~(Math.random()*255))+","+(~~(Math.random()*255))+","+(~~(Math.random()*255))+")";
+        }
+
+    })(window,document);
+
+    </script>
+    <!-- 时钟挂件的js -->
+    <!-- <script type="text/javascript">
+      function time(){var h=new Date().getHours();h=h<10?("0"+h):h;var m=new Date().getMinutes();m=m<10?("0"+m):m;var s=new Date().getSeconds();s=s<10?("0"+s):s;document.getElementById("time").innerHTML=h+":"+m+":"+s}
+      function date(){var m=new Date().getMonth();m=m+1;var d=new Date().getDate();d=d<10?("0"+d):d;document.getElementById("date").innerHTML=m+"月"+d+"日"}
+      function day(){var x;var day=new Date().getDay();switch(day){case 0:x="日";break;case 1:x="一";break;case 2:x="二";break;case 3:x="三";break;case 4:x="四";break;case 5:x="五";break;case 6:x="六";break}document.getElementById("day").innerHTML=" 星期"+x}setInterval(time,500);setInterval(date,700);setInterval(day,1000);
+    </script> -->
+    <script type="text/javascript">
+    var days=new  Array ("日", "一", "二", "三", "四", "五", "六");
+    function showDT() {
+      var currentDT = new Date();
+      var y,m,date,day,hs,ms,ss,theDateStr;
+      y = currentDT.getFullYear(); //四位整数表示的年份
+      m = (currentDT.getMonth()+1); //月
+      date = currentDT.getDate(); //日
+      day = currentDT.getDay(); //星期
+      hs = currentDT.getHours(); //时
+      ms = currentDT.getMinutes(); //分
+      ss = currentDT.getSeconds(); //秒
+      theDateStr = y+"年"+m+"月"+date+"日 星期"+days[day]+" "+hs+":"+ms+":"+ss;
+      theYearStr = y;
+      theDayStr = date;
+      document.getElementById("theYear"). innerHTML =theYearStr;
+      document.getElementById("theDate"). innerHTML =theDayStr;
+      document.getElementById("theClock"). innerHTML =theDateStr;
+      // setTimeout 在执行时,是在载入后延迟指定时间后,去执行一次表达式,仅执行一次
+      window.setTimeout( showDT, 1000);
+    }
+    </script>
+    <script type="text/javascript" src="js/SmoothScroll.js"></script>
+    <link rel="stylesheet" href="./dist/meplayer.css">
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" type="text/css"media="screen and (max-width:1080px)"href="tinyScreen.css" />
+    <link rel="icon" href="./img/ico.png" type="image/x-icon">
+  </head>
+  <body onload="showDT()">
+
+    <!-- 网页背景 -->
+<div class="bodybox">
+
+<!-- 在这里测试字体样式 -->
+  <div class="test-font1">默认字体-多少岁月你好呀doyoudo123456</div>
+  <div class="test-font2">'PingFang-SC-Regular'字体-多少岁月你好呀doyoudo123456</div>
+  <div class="test-font3">'传奇南安体'字体-想象之中 我在哪里doyoudo123456</div>
+  <div class="test-font4">'Avenir-Book'英文字体-1234567890</div>
+  <div class="test-font5">'鸿雷板书简体'字体-庐州月你好呀doyoudo123456</div>
+
+
+<!-- 导航栏 -->
+  <div class="Navi-Bar">
+    <div class="Navi-Bar-content">
+
+
+      <!-- logo企鹅 -->
+        <a href="https://i-found.github.io/">
+          <img class="img1" src="./img/企鹅.png">
+        </a>
+
+    <!-- 二级logo i-found -->
+      <a href="https://i-found.github.io/">
+        <img class="img2" src="./img/i-found.png">
+      </a>
+
+      <div class="nav-title">记录你的孤独</div>
+
+      <ul>
+                                        <li class="search" id="navSearchItem">
+          <button class="nav-search-btn" id="searchIconBtn" title="搜索">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </button>
+          <div class="nav-search-popup" id="searchPopup">
+            <input type="text" class="search-input" id="searchBar" placeholder="搜索记录...">
+          </div>
+        </li>
+      </ul>
+
+
+      <!-- <div class="TEST">测试块级元素看不到浮动元素（浮动元素产生浮动流），即忽视它们占据自己的位置，如果位置重叠，浮动元素内容会呈现在更上方；产生了BFC的元素和文本类属性的元素（inline、inline-block）都能看到浮动元素，即让出位置，让它们浮动</div> -->
+
+
+
+
+
+
+    </div>
+
+  </div>
+
+
+<style>
+@font-face{font-family:"RecordsTitlePen";src:url(data:font/woff2;base64,d09GMgABAAAAAA5AAA0AAAAAFvAAAA3vAAIAQQAAAAAAAAAAAAAAAAAAAAAAAAAAGyAcCgZgAIEEEQgKpEiaSwE2AiQDHAsaAAQgBYNeByAb9BBRVK5iFF8V2MaSsSMdRUWlipVX2Pmt+ZuX9/cW7Ihr1hA0L9vHBmnOcldRw6y0iLeIeRUv5r914jydKmOiwFQNJkoA3PL6tQDThOPiX6QBjj7w4fi1T2QDHg5sP87ZNzaxLy9tBpQU7wOCu251drOrHfKx+wAkB0J+kOjmD2oLN+16yzSQou7VWZ+0m9awyTFUn6BErIpfNJs2aWdGtpSwZDn2Lid8ACBbn+H1l4AA1Fa/3ypiSSwkT5HSKUV0v2g68PiGSKSJxkijk8STaEkVIqFjmw3cw2eLcYiJiYxRq0efPT5tBSAA4AmJQXV0YibAQv4IqAPVCVmMjDohG0AB8AbOBQAkQAw0A+/AmQMHChSHtVV+FxUBDiaD2cOIun+TAMQXGhXfhH7w+9KSgoHGiACTeYg8SHXERZWXxTYguUopLTCWZOn/a3jbMq6jY+rA7OF++9KXPAWDNwf6Vi5bNrB4Uo9g8rjxvU35lZyEfmqSgtD/H4qZaOQa7FV0vkmf6yh4GAwFQTLMb0OXQk9GLoWNryMSA/Bkj2TK/0ZCYgWLiiHNwLvHMJg8KlXs/uV2lFZoIShpkMxZeauKnwE1r+zo0VeTt2z0N0ds1/ut5ErhYtaD4XZko35LclH3vq97AyfYBDiCpTJWxrEJULPz81FEjeyIAJYD82+JdOzh/8zXJT1gPTYAmGezxvbDof9d83f/5CZGd1+yFF8z4fHQLHcXfnJDEoFMStufB2DTdifRzqkGwAkqVESI1EYbArmLR1RwctUsy6u9+AwTzZijn1ryVaFcALkasGzmFySPatlOkzVzJh8t2j7ljTCjmnMaovD/y/LdoAnGjZeDFY6TK3bDGgB8/vnew9Pn0R25iEK/mmqWfv3bQnBjqYYUXKzQ0QggXn11SCV5Vn3bNU1pXuG5YNbRAnmFizu28fTet/Njj3xW6m70MA4yGH4eBxz1jacJM3toPnlr9oyw+LeHrlozCHYqxa3TobFrS1ft8oXIjZdMJGeCMeTbgj1kc0SFSSjtN99MD7bJG80MR6w2ZkgOrHwyAflIZ76fa1UQrk7oEoEby7vXAIr71fQpgZR0IElzcWLDEjwi8d3qPXy0wynA+fJeGSAwsO46Wuv6oBwOjRqai/eoiWA2soIJpMO3bjCG5MhIkr6ySCVFANdeECbRV7+KiAYA8pOTEYk81hhazYJ7ylWrZ1/KjcvlxEGFMz3o3IyDVFZsLpmnWz2kt42s3r3B/JR1O2ny8oULknrWcw9NaADIJi5bkTsdSy4cfeqrhYj6dDGWdnSSfPbe3Y1gB4sazxv0KLwowWyUy8GO5qiD9w5O1iUx8f9cqzKio32mv9c5mlcWAsSPDMv62+daCZ+oIVhmDUIFkq7YW0scF3kGFxZsB+kOwHiN1Gat8VA5OpVESkY4L/WqZgSOiZ8BHIZZn+VA/HUMA7MRnGwEqa6hhsGGA6eDRmh6ABFhnQo/MeTtILWE2qersUSqXrloCQTSILGm0LbOEid2dj0babWV7ZzedPGU1ix3kLlQ8E7J557z/bPPKEiF5FU1LXABMIrOSkKeD8nNJeeNJiuzwvqVVGvFgo2vLMtFMwo3DcdFYsdmRFXyo0QN8e1CSQMw80KEAPnMFtq5/GV31wDgos82kC6i6ZixX/d/Wlndt+W0Elw9zv1nGc9CUzPBaSBH1QYw6rCz86rWWiFH+XAIFja24oL6hUlm4fTb+ehaeKvqEwmRbhxtE4waMzW99ayBJLoc7XbKkFcTaRGmUTsPkYwavvaaVw+ThtrLMFFpUB8oaGQ7AXUvt5m2i25Yb8ZXbJQvkZ5Wmp9b8P1bFlrNghPMT0uz0jMbxo0dkJj0EswivWSoHvnMRXvj95ijMdRZI47Ti59PA+mExwpmE0JZ4SB3wJ2Z8NqPhVw/xI7SB3Ub9vSEVXBYEiZ+3VVW/HYJ3cFlwy7VVIOrhG3y38afZGNETY5znunb9O/nVLeYjZR8aRhJyguCqNX4IA5u11wJVohCl2IEL6sqCeZuZ4chHUGB3zU51j1U4pjZCpR8LZ4fb5XGnb03OUot/P27RgRTbDbNxhfZEiA5vu4Rc45FdrKm53LjKF0gHEEm0qrw131fLt36fYfKm+e7Iwvpm7eS3NXqSXDeaFDgSVVayle5eYbHh9s9vDw6WPHR+8fqp1x7ZwYGiW0AyaL2XzA+oJg+LSxm6U40LrcB9kGZmRxpNL1nXnKKyGPwOYWyvR9sHeXEtZECozU4I2g4JHn52rcvvlVUGnMk5uyaemwsExz24o4+jcK2Y3A/TpYpXpKGdYRt278/X1kQ6xisTnKYGudi31g+s2Bhis9hqB4qJk+1G2d90r21ZutQ/wNRxCZSWdI7h68Bgwv/gNICrY+yZyx6Or+Qw2k497ayzyU1b0rcsoHRQovLw72u6V6p2Ej8WvrYUcsno2QT7szNOmz3eBbWypuSWAKvHVuxCEfSZj/Nu3xKjhcz1uyGKZRT6oWxzsvBO2S+WqMqm4cmxlX6R926vbUI5L7tb6m66PjktkrErRm4ua/ZZnPgogQG54VHkDbAoj/J0VUbpvu9W7vsW16YYQpVsD9+VXq8RS6r+HJ5Kxyjc9pp9/l3ZV/VJAbx3BHGF9bjc7GbmlNjRkYS8S7x8aEbu8YvtSUyL8SpU7Jo2qVBCW3ZhzREflSsy1PC8PMbw9z88K0zDlQkzjn++V53nmes2+KQbfnySecYWWowd/ElqVI4l0Ip1TWuzuizAku4dQCGLwunLZthXo/GpsRkkdvacBVbUoiCWOql+1Pm2cLQqYcHnf0nIyYNRCgR2HgU+rXvoOSUUtVKtno5x4zlSHKveGjX3ydQA1vjcNR49+5eXzTrwZIPR48gMMhLe/GYFfDRM28j0+JNzXvskyjkbU1IQ21TBHaw881D788CgYy5g3KzKY3jgMYOxeddPUz7zrMxDDGyHd3LszZNwuASeC6ZntVqg9esfveZfRbPtg8JmStnvP3Z6hSie/bOjnj9+w1WFBYdnWxX7ArcF4dY5c9eMvvVm6cZU/rDnCZswTErrj9teU5ht439LQ5P0Uk1u9cPI9io53kfWZqi2kayljq2RkF3iHXx+9ZorSlVAvTxvp0R2huaMMeDQ9agyu87UVwGPrjVkzRoA6Zjao4N+3yk5XXAEwX7/alUO7ut0eqeUmSk2+v3Q630w5FmpTQ/NicgJBHlE/y9GI+b1eKWuuhC73o6s5nEevxp5yFicoi+pZjUCt5GIXb/ubjIFrP73FwF+7mLpzBW4uNe/ar0DxojD2+9cXfIauZFV2OofYluj9kQ6eSwMum8f77gWZKYlmfPiZqyPp+PSsvIcHZIdCMtQuMe1c7ec2MOU+M2Q6dVrPMUkWnV+2jU0W909qtKbTbcrTPBcMmCQGlUQL6iZdvtjMclXkXoUhwGzTwYIpz2swURC0Uaxu/wJ5PWYwmnfl0pmWitOB/TI+ATsnbuCRp3He05t6iHS9JfnpMI24Osi/VEgouCSR7idfoD6l3lOF/hlZ6/Q6t5uOQ7237eVtzw1GwCcYNfrtGwZ9+6qWaovbrvNrVT40XGbn55Wbc/ve9pxzKJ7ogPbDlpsxL0OEqUJsKLIMqIk4bfFrbZpzhlICGqXKjdI46dSEn9v0r14nPwhAW9rNFr/MKbFNBq+23TsAWJjg5BuCNCSx//mTbc6eBypG5HO298NRLXdiYRVoYXIpFWNbInZifJhupRibXq6IPSl1p0snzUChWYfzyJzSdSojkVCkUVDV4tHpE5Ttnen5KAJ6oipAvD5zSdwotwBtfIRxeiGGQy7gnjcQZXJVENtW7Pq5AM0OV7UyTRF+OhQIw6IZovvNQScxmW7QvjdR4MN+Zox83pLtovuUVhUTLgx3N6++PkxewzxOZZYKFcik4Us15tTVaS5CisAvnEVhu9lCTsjrNPW7O7QepJ5y3ijD2pSyX08ArxdG+beMFQFwQ+H1wyZV7ZIE26HAaOmUxk0cxQFkbvc3O+vFN/9XCna6eKhkz0Ugp77A1GtTk94HbPd78sGi+eTsrGUz2cnH0FWhUGw0+kEsbRDi4Rv6PhMwWcUsf4BQ6oKxYtqZPIGVt8PGLYHTO7msiyPX1CgEWapmNPtE8r0DaUDqHTvkybnz7OePg1jbSRiG2Rks9/cST2w2DqZxGGGRmYISObOjupFFbev4StIjA5UuWzMPIIlAOX7m7NfmhZMdMCulduzmSakNdJGcIPDVi6aDHqEQcaMZYlCYDbqKujK3mKvqa77fuU2rOO88fb6Y8Qmu6iVthtPzmGMfKhVeP2mJC6ioVMCYwwlWijTZgXHURsCsNsgjLr4DT8W9DeXq7wyvnxg/KcEX2Ivr24GYiLZx++20ogYgwXv93PZYxZlQB4Oe2rqvxsCSV4BItAvAQAOLdjOBO2uPk9Pe0f9a8ViUbYAAAYsDe/MiYtjn+l7qsbB4fNRaxBvjgepP6DzjRWMBd4muaZjRh0AYoqqAADIpOHfCQoxnFgOwBhCN/2MIzsYhgh2P0wkkvAD6Pwg8jD0RyCYhChVp12DSqUKddEypsXJX9Epmw0IR+SJpZEx2It56qgJCHVTbUqjbzBT1rNgHIlqaJR5J1ik4w6iQJ57kkvX2FLmknPg8q1arQkoLZl1UzMCIsRjSrfkW6tsbaJzl3JUpalTOlMLTWr1tsbePPgNRKCnCxPlAjsg6a4B/SbNE3K5WymofmK/sek2cPI0xFqon8j3gAA) format("woff2");font-weight:normal;font-style:normal;font-display:swap;}
+.Navi-Bar .Navi-Bar-content .nav-title{position:absolute;left:50%;top:0;transform:translateX(-50%);height:60px;line-height:60px;white-space:nowrap;z-index:7;pointer-events:none;font-family:"RecordsTitlePen","HanziPen SC","STXingkai","Kaiti SC",serif;font-size:34px;font-weight:normal;letter-spacing:0.06em;color:#424242;}
+.Navi-Bar .Navi-Bar-content ul{float:right;margin-left:0;}
+@media (max-width:1080px){.Navi-Bar .Navi-Bar-content .nav-title{font-size:26px;}}
+</style>
+
+<!-- 内容布局 -->
+<div class="content-layout">
+
+<div class="bookmark-detail">
+
+
+  <!-- ========== 记录区域 ========== -->
+  <!-- 添加记录 - 右上角浮动 -->
+  <div class="add-record-fixed" id="addRecordWrap">
+    <button class="add-record-btn" id="addRecordBtn" onclick="openAddRecordModal()" title="添加记录">＋</button>
+  </div>
+  <!-- 同步设置 - 左下角 -->
+  <div class="sync-settings-fixed">
+    <button class="sync-settings-btn" id="syncSettingsBtn" title="同步设置" onclick="openSyncModalFn()">⚙</button>
+    <span class="sync-status" id="syncStatus" style="display:none;"></span>
+  </div>
+  <div class="records-container" id="recordsContainer">
+    <div class="records-empty" id="recordsEmpty">
+      <p>还没有记录~</p>
+      <button class="add-record-btn-inline" onclick="openAddRecordModal()">＋ 点这里添加第一条记录</button>
+    </div>
+  </div>
+
+</div>
+
+
+<style media="screen">
+
+
+.bookmark-detail{
+    width: 875px;
+    min-height: 1000px;
+    background: transparent;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+    border-radius: 2px;
+    margin: 5px auto 15px auto;
+    padding-bottom: 40px;
+    position: relative;}
+
+    .date2{
+      float: left;
+      font-size:14px;
+      line-height:17px;
+      font-family: Helvetica;
+      margin-left: 5px;
+      color:#f40;
+    }
+
+/* ========== 记录功能样式 ========== */
+.add-record-fixed {
+  position: fixed;
+  top: 12px;
+  right: 25px;
+  z-index: 100;
+  line-height: 0;
+}
+.add-record-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: linear-gradient(135deg, #ff6b81, #ff4757);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  font-size: 21px;
+  font-weight: 300;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 11px rgba(255,71,87,0.3);
+}
+.add-record-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(255,71,87,0.45);
+}
+
+/* 同步设置按钮 */
+.sync-settings-fixed {
+  position: fixed;
+  left: 25px;
+  bottom: 28px;
+  z-index: 5;
+}
+.sync-settings-btn {
+  display: block;
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,0.55);
+  font-size: 20px;
+  cursor: pointer;
+  color: #fff;
+  transition: all 0.3s;
+  line-height: 46px;
+  text-align: center;
+  padding: 0;
+}
+.sync-settings-btn:hover { background: rgba(0,0,0,0.75); }
+.sync-settings-btn.configured { background: rgba(39,174,96,0.7); }
+.sync-settings-btn.configured:hover { background: rgba(39,174,96,0.9); }
+
+.sync-status {
+  display: block;
+  text-align: center;
+  font-size: 11px;
+  margin-top: 2px;
+  color: #27ae60;
+}
+.sync-status.error { color: #e74c3c; }
+.sync-status.syncing { color: #f39c12; }
+
+/* 同步设置弹窗 */
+.sync-desc {
+  font-size: 14px;
+  color: #666;
+  margin: 0 0 18px;
+  line-height: 1.6;
+}
+.sync-desc code {
+  background: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+.token-label {
+  display: block;
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 8px;
+}
+.token-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+  font-family: monospace;
+}
+.token-input:focus { border-color: #ff6b81; }
+.token-hint {
+  font-size: 12px;
+  color: #999;
+  margin: 8px 0 0;
+}
+.token-hint a { color: #ff6b81; }
+.sync-feedback {
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  text-align: center;
+}
+.sync-feedback.success { background: #eafaf1; color: #27ae60; }
+.sync-feedback.error { background: #fdecea; color: #e74c3c; }
+
+.records-container {
+  max-width: 750px;
+  margin: 0 auto;
+  padding: 10px 20px;
+}
+
+/* 导航栏搜索 */
+li.search { position: relative; }
+.nav-search-btn {
+  background: none; border: none;
+  cursor: pointer;
+  color: #828282;
+  padding: 0;
+  position: relative;
+  top: 7px;
+  width: 50px; height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.3s;
+}
+.nav-search-btn:hover,
+.nav-search-btn.active { color: #ff6b81; }
+.nav-search-popup {
+  display: none;
+  position: absolute;
+  top: 50%;
+  right: 50px;
+  transform: translateY(-50%);
+  width: 260px;
+  background: #fff;
+  border: 1.5px solid #ff6b81;
+  border-radius: 30px;
+  padding: 0;
+  box-shadow: 0 4px 15px rgba(255,71,87,0.2);
+  z-index: 50;
+  animation: search-pop 0.2s ease;
+}
+.nav-search-popup.open { display: flex; align-items: center; }
+@keyframes search-pop {
+  from { opacity: 0; transform: translateY(-50%) scale(0.9); }
+  to { opacity: 1; transform: translateY(-50%) scale(1); }
+}
+.search-input {
+  width: 100%;
+  height: 44px;
+  padding: 0 20px;
+  border: none;
+  outline: none;
+  font-size: 15px;
+  border-radius: 30px;
+  background: transparent;
+  box-sizing: border-box;
+  background: transparent;
+  color: #333;
+}
+.search-input::placeholder { color: #bbb; }
+.record-card {
+  background: #fafafa;
+  border-radius: 8px;
+  padding: 20px 24px;
+  margin-bottom: 16px;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transition: all 0.3s ease;
+  animation: fadeInUp 0.4s ease;
+}
+.record-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.record-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #2c3e50;
+  margin-bottom: 10px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+.record-text {
+  font-size: 16px;
+  line-height: 1.8;
+  color: #333;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin-bottom: 12px;
+}
+.record-image {
+  max-width: 100%;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.record-image:hover { transform: scale(1.02); }
+
+.record-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.record-images .record-image {
+  max-width: 200px;
+  max-height: 200px;
+  width: auto;
+  height: auto;
+  object-fit: cover;
+  margin-bottom: 0;
+}
+
+/* 图片预览网格 */
+.image-preview-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.image-preview-grid .preview-item {
+  position: relative;
+  display: inline-block;
+}
+.image-preview-grid .preview-item img {
+  max-width: 120px; max-height: 120px;
+  border-radius: 6px;
+  display: block;
+  object-fit: cover;
+}
+.image-preview-grid .preview-remove {
+  position: absolute;
+  top: -8px; right: -8px;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: #ff4757;
+  color: #fff;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+/* 弹窗工具栏 */
+.modal-toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
+
+.record-time {
+  font-size: 13px;
+  color: #999;
+  float: right;
+}
+.search-hl {
+  background: #fff176;
+  padding: 1px 2px;
+  border-radius: 2px;
+}
+.record-delete {
+  position: absolute;
+  top: 10px;
+  right: 48px;
+  width: 26px; height: 26px;
+  line-height: 26px;
+  text-align: center;
+  border-radius: 50%;
+  background: #eee;
+  color: #999;
+  font-size: 14px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+.record-delete:hover { background: #ff4757; color: #fff; }
+
+.record-edit {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  width: 26px; height: 26px;
+  line-height: 26px;
+  text-align: center;
+  border-radius: 50%;
+  background: #eee;
+  color: #999;
+  font-size: 14px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+.record-edit:hover { background: #ff6b81; color: #fff; }
+.record-edit { transform: scaleX(-1); }
+
+.records-empty {
+  text-align: center;
+  color: #bbb;
+  font-size: 15px;
+  padding: 30px 0;
+}
+
+/* 弹窗遮罩 */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 999;
+  justify-content: center;
+  align-items: center;
+}
+.modal-overlay.show { display: flex; }
+
+.modal-content {
+  background: #fff;
+  border-radius: 10px;
+  padding: 30px;
+  width: 90%;
+  max-width: 560px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+.modal-content h3 {
+  margin: 0 0 18px;
+  font-size: 20px;
+  color: #333;
+  text-align: center;
+}
+.modal-time {
+  text-align: right;
+  font-size: 14px;
+  color: #999;
+  margin: -10px 0 14px;
+}
+.modal-title-input {
+  width: 100%;
+  font-size: 18px;
+  font-weight: bold;
+  color: #2c3e50;
+  border: none;
+  border-bottom: 2px solid #e0e0e0;
+  padding: 8px 0;
+  margin-bottom: 16px;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+}
+.modal-title-input:focus { border-bottom-color: #ff6b81; }
+.modal-title-input::placeholder { color: #ccc; font-weight: normal; }
+.modal-content textarea {
+  width: 100%;
+  min-height: 140px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 15px;
+  line-height: 1.7;
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+.modal-content textarea:focus { border-color: #ff6b81; }
+
+/* 图片预览 */
+.image-preview-area { margin-top: 12px; }
+.image-preview-area img {
+  max-width: 100%; max-height: 200px;
+  border-radius: 6px;
+  display: block;
+  margin: 0 auto;
+}
+.image-preview-area .remove-img {
+  display: block;
+  margin: 8px auto 0;
+  background: none;
+  border: none;
+  color: #ff4757;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+/* 图片上传按钮 */
+.img-upload-label {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 8px 20px;
+  background: #f0f0f0;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #666;
+  transition: all 0.2s;
+}
+.img-upload-label:hover { background: #e0e0e0; }
+.img-upload-label input { display: none; }
+
+/* 弹窗按钮 */
+.modal-buttons {
+  margin-top: 20px;
+  text-align: center;
+}
+.modal-buttons button {
+  padding: 10px 30px;
+  border: none;
+  border-radius: 25px;
+  font-size: 15px;
+  cursor: pointer;
+  margin: 0 8px;
+  transition: all 0.2s;
+}
+.btn-save {
+  background: linear-gradient(135deg, #ff6b81, #ff4757);
+  color: #fff;
+}
+.btn-save:hover { opacity: 0.85; }
+.btn-cancel {
+  background: #e0e0e0;
+  color: #666;
+}
+.btn-cancel:hover { background: #d0d0d0; }
+
+/* 图片灯箱 */
+.image-lightbox {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 1001;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+.image-lightbox.show { display: flex; }
+.image-lightbox img {
+  max-width: 90%;
+  max-height: 90%;
+  border-radius: 4px;
+}
+</style>
+
+
+
+
+
+</div>
+
+
+
+
+
+  <!-- 背景音乐 -->
+
+  <!-- <div class="musicbox">
+    <audio  controls="controls" loop="loop" preload="none">
+      <source src="西柚 - 红色高跟鞋 (片段).ogg" type="audio/ogg" />
+    Your browser does not support the audio element.
+    </audio>
+   </div> -->
+
+<!-- 时间展示 -->
+
+
+<!-- <div class="TIME">
+
+<div class="timebox">
+  <p id="time"class="time"></p>
+</div>
+<div class="date-dayBox">
+  <span id="date"class="date-day"></span>
+  <span id="day"class="date-day"></span>
+</div>
+
+</div> -->
+
+<!-- 回顶部标签 -->
+<div class="to-top">
+  <a href="#top" target="_self">
+    <img src="./img/向上.png">
+  </a>
+
+</div>
+
+
+
+<!-- footer 已删除 -->
+
+
+
+
+
+
+</div>
+<!-- 这个js要放在引用时间的后面才有作用 -->
+<script src="./js/lately.min.js"></script>
+<script>
+  Lately({
+      'target' : '.lately-a,.lately-b,.lately-c'
+  })
+</script>
+
+<!-- 音乐播放插件的js,要放在内容的后面才能生效 -->
+    <script src="./dist/meplayer.min.js"></script>
+    <script src="main.js"></script>
+
+<!-- ========== 添加记录弹窗 ========== -->
+<div class="modal-overlay" id="recordModal">
+  <div class="modal-content">
+    <h3>添加记录</h3>
+    <div class="modal-time" id="modalTime"></div>
+    <input type="text" class="modal-title-input" id="recordTitle" placeholder="输入笔记标题">
+    <textarea id="recordText" placeholder="写下你想记录的..."></textarea>
+    <div class="image-preview-area" id="imagePreviewArea" style="display:none;">
+      <div class="image-preview-grid" id="imagePreviewGrid"></div>
+    </div>
+    <div class="modal-toolbar">
+      <label class="img-upload-label">
+        📷 添加图片
+        <input type="file" id="imageInput" accept="image/*" multiple>
+      </label>
+    </div>
+    <div class="modal-buttons">
+      <button class="btn-cancel" id="cancelRecord">取消</button>
+      <button class="btn-save" id="saveRecordBtn" type="button">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 同步设置弹窗 ========== -->
+<div class="modal-overlay" id="syncModal">
+  <div class="modal-content sync-modal-content">
+    <h3>云端同步设置</h3>
+    <p class="sync-desc">配置同步密钥后，记录将自动同步到云端数据库（D1），不再整文件覆盖，不会丢数据。</p>
+    <label class="token-label" for="githubToken">记录同步密钥</label>
+    <input type="password" class="token-input" id="githubToken" placeholder="ghp_xxxxxxxxxxxx">
+    <p class="token-hint">密钥只存在本机浏览器，不会写进仓库。密钥丢失或泄露时，让若汐重新换一个即可。</p>
+    <div class="modal-buttons">
+      <button class="btn-cancel" id="cancelSync">取消</button>
+      <button class="btn-save" id="saveSync">保存</button>
+      <button class="btn-cancel" id="exportRecordsBtn">导出</button>
+      <button class="btn-cancel" id="importRecordsBtn">导入</button>
+      <input type="file" id="importRecordsInput" accept="application/json" style="display:none;">
+    </div>
+    <div class="sync-feedback" id="syncFeedback" style="display:none;"></div>
+  </div>
+</div>
+
+<!-- ========== 图片灯箱 ========== -->
+<div class="image-lightbox" id="imageLightbox">
+  <img id="lightboxImg" src="" alt="查看大图">
+</div>
+
+<script>
+// ========== 记录功能 JS ==========
+  var STORAGE_KEY = 'suihe_records';
+  var TOKEN_KEY = 'suihe_records_key';
+  var API_BASE = 'https://meimei.qzz.io';
+  var PENDING_DELETES_KEY = 'suihe_pending_deletes';
+  var records = [];
+  var editingImages = []; // 编辑模式下的图片数组（支持多张）
+  var editingRecordId = null; // 编辑模式下的记录 ID
+
+  // ========== IndexedDB 存储（解决 5MB localStorage 限制）==========
+  var DB_NAME = 'suihe_records_db';
+  var DB_VERSION = 1;
+  var DB_STORE = 'records';
+  var dbInstance = null;
+
+  function openDB() {
+    if (dbInstance) return Promise.resolve(dbInstance);
+    return new Promise(function(resolve, reject) {
+      var req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onupgradeneeded = function(e) {
+        var db = e.target.result;
+        if (!db.objectStoreNames.contains(DB_STORE)) {
+          db.createObjectStore(DB_STORE);
+        }
+      };
+      req.onsuccess = function(e) { dbInstance = e.target.result; resolve(dbInstance); };
+      req.onerror = function(e) { reject(e.target.error); };
+    });
+  }
+
+  function idbGet(key) {
+    return openDB().then(function(db) {
+      return new Promise(function(resolve, reject) {
+        var tx = db.transaction(DB_STORE, 'readonly');
+        var req = tx.objectStore(DB_STORE).get(key);
+        req.onsuccess = function() { resolve(req.result); };
+        req.onerror = function() { reject(req.error); };
+      });
+    });
+  }
+
+  function idbSet(key, value) {
+    return openDB().then(function(db) {
+      return new Promise(function(resolve, reject) {
+        var tx = db.transaction(DB_STORE, 'readwrite');
+        tx.objectStore(DB_STORE).put(value, key);
+        tx.oncomplete = function() { resolve(); };
+        tx.onerror = function() { reject(tx.error); };
+      });
+    });
+  }
+
+  // 保存到存储：优先 IndexedDB，失败时回退 localStorage（仅小数据）
+  function saveToStorage() {
+    var data = JSON.stringify(records);
+    return idbSet(STORAGE_KEY, records).catch(function(e) {
+      // 回退到 localStorage（但仅当数据较小时）
+      try {
+        if (data.length < 2 * 1024 * 1024) {
+          localStorage.setItem(STORAGE_KEY, data);
+        } else {
+          throw e;
+        }
+      } catch(e2) {
+        throw e2;
+      }
+    });
+  }
+
+  // ========== Token 管理 ==========
+  function getToken() { return localStorage.getItem(TOKEN_KEY) || ''; }
+  function setToken(t) { localStorage.setItem(TOKEN_KEY, t); }
+  function hasToken() { return !!getToken(); }
+
+  function updateSyncUI() {
+    var btn = document.getElementById('syncSettingsBtn');
+    if (hasToken()) {
+      btn.classList.add('configured');
+      btn.title = '已配置同步';
+    } else {
+      btn.classList.remove('configured');
+      btn.title = '同步设置';
+    }
+  }
+
+  // 显示同步状态
+  function showSyncStatus(msg, type) {
+    var el = document.getElementById('syncStatus');
+    el.textContent = msg;
+    el.style.display = 'block';
+    el.className = 'sync-status ' + (type || '');
+  }
+
+  // ========== D1 云端 API（每条记录单独读写，不再整文件覆盖）==========
+  function d1API(method, path, body) {
+    var token = getToken();
+    var headers = { 'X-Records-Key': token };
+    var opts = { method: method, headers: headers };
+    if (body) {
+      opts.body = JSON.stringify(body);
+      headers['Content-Type'] = 'application/json';
+    }
+    return fetch(API_BASE + path, opts).then(function(res) {
+      if (res.status === 401) {
+        var err = new Error('密钥不正确');
+        err.status = 401;
+        throw err;
+      }
+      if (!res.ok) {
+        return res.text().then(function(t) { throw new Error('HTTP ' + res.status); });
+      }
+      return res.json();
+    });
+  }
+
+  // 从云端拉取记录，并换算成页面内部格式（id 为数字，time/updatedTime 为毫秒时间戳）
+  function loadFromD1() {
+    if (!hasToken()) return Promise.resolve(null);
+    showSyncStatus('同步中…', 'syncing');
+    return d1API('GET', '/api/records').then(function(data) {
+      var list = (data && data.records) || [];
+      var out = list.map(function(r) {
+        var idNum = /^-?\d+$/.test(String(r.id)) ? parseInt(r.id, 10) : r.id;
+        var rec = {
+          id: idNum,
+          title: r.title || '',
+          text: r.text || '',
+          images: r.images || [],
+          time: r.created_at || idNum
+        };
+        if (r.updated_at && r.updated_at !== r.created_at) rec.updatedTime = r.updated_at;
+        return rec;
+      });
+      showSyncStatus('云端已拉取 ✓', 'success');
+      setTimeout(function() { showSyncStatus('', ''); }, 2000);
+      return out;
+    }).catch(function(err) {
+      if (err.status === 401) {
+        setToken('');
+        updateSyncUI();
+        showSyncStatus('密钥不正确，请重新设置（本地数据不受影响）', 'error');
+        return null;
+      }
+      showSyncStatus('同步失败: ' + err.message, 'error');
+      return null;
+    });
+  }
+
+  // 推送一条记录到云端（新增和编辑都走 POST，云端按 id 覆盖，不会整文件重写）
+  function pushRecordToD1(record) {
+    if (!hasToken()) return Promise.resolve();
+    showSyncStatus('同步中…', 'syncing');
+    return d1API('POST', '/api/records', {
+      id: String(record.id),
+      title: record.title || '',
+      text: record.text || '',
+      images: record.images || [],
+      created_at: record.time || record.id
+    }).then(function() {
+      showSyncStatus('已同步 ✓', 'success');
+      setTimeout(function() { showSyncStatus('', ''); }, 2000);
+    }).catch(function(err) {
+      if (err.status === 401) {
+        setToken('');
+        updateSyncUI();
+        showSyncStatus('密钥不正确，请重新设置（本地数据不受影响）', 'error');
+        return;
+      }
+      showSyncStatus('同步失败: ' + err.message, 'error');
+    });
+  }
+
+  // 待重试删除：离线删记录时记下来，联网后初始化时重试，避免云端记录复活
+  function getPendingDeletes() {
+    try {
+      var raw = localStorage.getItem(PENDING_DELETES_KEY);
+      var arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    } catch(e) { return []; }
+  }
+  function setPendingDeletes(list) {
+    try { localStorage.setItem(PENDING_DELETES_KEY, JSON.stringify(list)); } catch(e) {}
+  }
+  function addPendingDelete(id) {
+    var list = getPendingDeletes();
+    var key = String(id);
+    if (list.indexOf(key) === -1 && list.indexOf(id) === -1) list.push(key);
+    setPendingDeletes(list);
+  }
+  function removePendingDelete(id) {
+    var list = getPendingDeletes().filter(function(x) { return String(x) !== String(id); });
+    setPendingDeletes(list);
+  }
+  function isPendingDelete(id) {
+    var list = getPendingDeletes();
+    return list.indexOf(String(id)) !== -1 || list.indexOf(id) !== -1;
+  }
+
+  // 补推本地记录：把本地独有、本地更新的记录推到云端，离线删除的重试删除
+  // 返回 {pushed, failed, deletedRetried, lastError}
+  function pushLocalChanges(localBefore, cloudBefore) {
+    var cloudMap = {};
+    (cloudBefore || []).forEach(function(r) { cloudMap[r.id] = r; });
+    var localMap = {};
+    (localBefore || []).forEach(function(r) { localMap[r.id] = r; });
+    var toPush = [];
+    records.forEach(function(r) {
+      var cloud = cloudMap[r.id];
+      if (!cloud) {
+        toPush.push(r);
+      } else {
+        var local = localMap[r.id];
+        if (local) {
+          var localVer = local.updatedTime || local.time || local.id || 0;
+          var cloudVer = cloud.updatedTime || cloud.time || cloud.id || 0;
+          if (localVer > cloudVer) toPush.push(r);
+        }
+      }
+    });
+    var pending = getPendingDeletes();
+    var chain = Promise.resolve();
+    var result = { pushed: 0, failed: 0, deletedRetried: 0, lastError: '' };
+    toPush.forEach(function(r) {
+      chain = chain.then(function() {
+        if (!hasToken()) return;
+        showSyncStatus('正在补同步本地记录…', 'syncing');
+        return d1API('POST', '/api/records', {
+          id: String(r.id),
+          title: r.title || '',
+          text: r.text || '',
+          images: r.images || [],
+          created_at: r.time || r.id
+        }).then(function() { result.pushed++; }).catch(function(err) {
+          result.failed++;
+          result.lastError = err.message || '网络错误';
+          if (err.status === 401) {
+            setToken('');
+            updateSyncUI();
+          }
+        });
+      });
+    });
+    pending.forEach(function(delId) {
+      chain = chain.then(function() {
+        if (!hasToken()) return;
+        return d1API('DELETE', '/api/records/' + encodeURIComponent(String(delId))).then(function() {
+          removePendingDelete(delId);
+          result.deletedRetried++;
+        }).catch(function(err) {
+          result.lastError = err.message || '网络错误';
+          if (err.status === 401) {
+            setToken('');
+            updateSyncUI();
+          }
+        });
+      });
+    });
+    return chain.then(function() { return result; });
+  }
+
+  // 从云端删除一条记录（软删除，云端不再返回它），调用方负责处理成功/失败
+  function deleteRecordFromD1(id) {
+    if (!hasToken()) return Promise.resolve();
+    return d1API('DELETE', '/api/records/' + encodeURIComponent(String(id)));
+  }
+
+  // ========== 记录管理 ==========
+
+  // 加载记录（IndexedDB 优先，localStorage 兜底）
+  function loadRecords() {
+    // 尝试 IndexedDB
+    if (window.indexedDB) {
+      idbGet(STORAGE_KEY).then(function(data) {
+        if (Array.isArray(data)) {
+          records = data;
+          render();
+        }
+      }).catch(function() {
+        // 失败回退 localStorage
+        tryLoadFromLocalStorage();
+      });
+    } else {
+      tryLoadFromLocalStorage();
+    }
+    // 同步尝试 localStorage（首次迁移）
+    tryLoadFromLocalStorage();
+  }
+
+  function tryLoadFromLocalStorage() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        var parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length && records.length === 0) {
+          records = parsed;
+          render();
+          // 迁移到 IndexedDB
+          saveToStorage().catch(function() {});
+        }
+      }
+    } catch(e) {
+      // 旧数据坏了，清掉
+      try { localStorage.removeItem(STORAGE_KEY); } catch(e2) {}
+    }
+  }
+
+  // 保存到本地存储 + 把变动的记录推到云端（异步，只推变动的那几条）
+  function saveRecords(changed) {
+    saveToStorage().then(function() {
+      showSyncStatus('已保存 ' + records.length + ' 条记录', 'success');
+      var s = document.getElementById('syncStatus');
+      if (s) { s.style.color = '#4CAF50'; s.style.fontSize = '13px'; s.style.display = 'block'; }
+    }).catch(function(e) {
+      showSyncStatus('本地存储失败: ' + e.message, 'error');
+    });
+    if (changed && changed.length) {
+      var chain = Promise.resolve();
+      changed.forEach(function(r) {
+        chain = chain.then(function() { return pushRecordToD1(r); });
+      });
+    }
+  }
+
+  // 格式化时间（兼容多种格式：数字时间戳 / ISO字符串 / 已格式化的中文串）
+  function formatTime(ts) {
+    if (!ts) return '';
+    // 如果已经是 "2026年7月31日 19:11" 这种格式，直接返回
+    if (typeof ts === 'string' && ts.indexOf('年') !== -1) {
+      return ts;
+    }
+    var d = new Date(ts);
+    if (isNaN(d.getTime())) return '';
+    var pad = function(n) { return n < 10 ? '0' + n : n; };
+    return d.getFullYear() + '年' + (d.getMonth()+1) + '月' + d.getDate() + '日 ' +
+           pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+
+  // 渲染所有记录
+  function render() {
+    var container = document.getElementById('recordsContainer');
+    var searchBar = document.getElementById('searchBar');
+    var searchTerm = searchBar ? searchBar.value.trim().toLowerCase() : '';
+    var filtered = records;
+
+    if (searchTerm) {
+      filtered = records.filter(function(r) {
+        var inTitle = r.title && r.title.toLowerCase().indexOf(searchTerm) !== -1;
+        var inText = r.text && r.text.toLowerCase().indexOf(searchTerm) !== -1;
+        var inOcr = r.ocrText && r.ocrText.toLowerCase().indexOf(searchTerm) !== -1;
+        return inTitle || inText || inOcr;
+      });
+    }
+
+    if (filtered.length === 0) {
+      container.innerHTML = '<div class="records-empty">' + (searchTerm ? '没有匹配的记录' : '还没有记录，点击上方按钮添加第一条吧~') + '</div>';
+      return;
+    }
+
+    var html = '';
+    for (var i = filtered.length - 1; i >= 0; i--) {
+      var r = filtered[i];
+      html += '<div class="record-card" data-id="' + r.id + '" id="record-' + r.id + '">';
+      html += '<button class="record-edit" data-id="' + r.id + '" title="编辑">✎</button>';
+      html += '<button class="record-delete" data-id="' + r.id + '" title="删除">×</button>';
+      if (r.title) {
+        html += '<div class="record-title">' + highlightText(r.title, searchTerm) + '</div>';
+      }
+      html += '<div class="record-text">' + highlightText(r.text, searchTerm) + '</div>';
+      var imgs = (r.images && r.images.length) ? r.images : (r.image ? [r.image] : []);
+      if (imgs.length) {
+        html += '<div class="record-images">';
+        for (var ii = 0; ii < imgs.length; ii++) {
+          html += '<img class="record-image" src="' + imgs[ii] + '" alt="记录图片" data-src="' + imgs[ii] + '">';
+        }
+        html += '</div>';
+      }
+      html += '<span class="record-time">' + (r.updatedTime ? '修改于 ' + formatTime(r.updatedTime) : formatTime(r.time)) + '</span>';
+      html += '<div style="clear:both;"></div>';
+      html += '</div>';
+    }
+    container.innerHTML = html;
+  }
+
+  // 搜索关键词高亮
+  function highlightText(text, keyword) {
+    if (!keyword) return escapeHtml(text);
+    var esc = escapeHtml(text);
+    return esc.replace(new RegExp('(' + keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'), '<mark class="search-hl">$1</mark>');
+  }
+
+  function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+  }
+
+  // 打开弹窗
+  function openModal(recordId) {
+    // 关闭搜索弹窗并清空搜索词，避免保存后记录被过滤
+    var searchPopup = document.getElementById('searchPopup');
+    var searchIconBtn = document.getElementById('searchIconBtn');
+    var searchInput = document.getElementById('searchBar');
+    if (searchPopup) searchPopup.classList.remove('open');
+    if (searchIconBtn) searchIconBtn.classList.remove('active');
+    if (searchInput) searchInput.value = '';
+
+    editingRecordId = recordId || null;
+    var now = Date.now();
+    if (editingRecordId) {
+      // 编辑模式：填充已有数据
+      var record = findRecord(editingRecordId);
+      if (record) {
+        document.getElementById('recordTitle').value = record.title || '';
+        document.getElementById('recordText').value = record.text || '';
+        document.getElementById('modalTime').textContent = '修改于 ' + formatTime(now);
+        if (record.images && record.images.length) {
+          editingImages = record.images.slice();
+          renderImagePreview();
+        } else if (record.image) {
+          // 兼容旧单图数据
+          editingImages = [record.image];
+          renderImagePreview();
+        } else {
+          editingImages = [];
+          document.getElementById('imagePreviewArea').style.display = 'none';
+          document.getElementById('imagePreviewGrid').innerHTML = '';
+        }
+      }
+    } else {
+      // 新增模式
+      document.getElementById('recordText').value = '';
+      document.getElementById('recordTitle').value = '';
+      document.getElementById('modalTime').textContent = formatTime(now);
+      editingImages = [];
+      document.getElementById('imagePreviewArea').style.display = 'none';
+      document.getElementById('imagePreviewGrid').innerHTML = '';
+    }
+    document.getElementById('recordModal').classList.add('show');
+    document.getElementById('recordTitle').focus();
+  }
+
+  // 查找记录
+  function findRecord(id) {
+    for (var i = 0; i < records.length; i++) {
+      if (records[i].id === id) return records[i];
+    }
+    return null;
+  }
+
+  // 关闭弹窗
+  function closeModal() {
+    document.getElementById('recordModal').classList.remove('show');
+    editingRecordId = null;
+  }
+
+  // 处理粘贴事件（截图图片/图片文件/普通文件/文字）
+  function handlePaste(e) {
+    var cd = e.clipboardData || (window.clipboardData);
+    if (!cd) return;
+    var imageFiles = [];
+    var seenImage = false;
+
+    // 1. 从 items 取（截图生成的图片在这里）
+    var items = cd.items;
+    if (items) {
+      for (var i = 0; i < items.length; i++) {
+        var it = items[i];
+        if (it.kind === 'file' && it.type && it.type.indexOf('image/') === 0) {
+          var f0 = it.getAsFile();
+          if (f0) { imageFiles.push(f0); seenImage = true; }
+        }
+      }
+    }
+
+    // 2. 从 files 取（Ctrl+C 复制图片文件后粘贴走这里）—— 和 items 去重
+    var files = cd.files;
+    if (files && files.length && !seenImage) {
+      for (var f = 0; f < files.length; f++) {
+        var file = files[f];
+        if (file.type && file.type.indexOf('image/') === 0) {
+          imageFiles.push(file);
+        }
+      }
+    }
+
+    if (imageFiles.length) {
+      e.preventDefault();
+      for (var k = 0; k < imageFiles.length; k++) handleImage(imageFiles[k]);
+      return;
+    }
+  }
+
+  // 处理图片选择（追加到数组，不覆盖之前的）
+  function handleImage(file) {
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      editingImages.push(e.target.result);
+      renderImagePreview();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // 渲染图片预览网格（支持多张，每张可单独移除）
+  function renderImagePreview() {
+    var area = document.getElementById('imagePreviewArea');
+    var grid = document.getElementById('imagePreviewGrid');
+    if (!area || !grid) return;
+    if (!editingImages.length) {
+      area.style.display = 'none';
+      grid.innerHTML = '';
+      return;
+    }
+    area.style.display = 'block';
+    var html = '';
+    for (var i = 0; i < editingImages.length; i++) {
+      html += '<div class="preview-item">';
+      html += '<img src="' + editingImages[i] + '" alt="预览图' + (i + 1) + '">';
+      html += '<button type="button" class="preview-remove" data-idx="' + i + '" title="移除这张">×</button>';
+      html += '</div>';
+    }
+    grid.innerHTML = html;
+    var btns = grid.querySelectorAll('.preview-remove');
+    for (var b = 0; b < btns.length; b++) {
+      btns[b].addEventListener('click', function(ev) {
+        ev.stopPropagation();
+        var idx = parseInt(this.getAttribute('data-idx'));
+        editingImages.splice(idx, 1);
+        renderImagePreview();
+      });
+    }
+  }
+
+  // 保存记录
+  function saveRecord() {
+    var text = document.getElementById('recordText').value.trim();
+    var title = document.getElementById('recordTitle').value.trim();
+    if (!text && !editingImages.length && !title) {
+      alert('请输入文字或添加图片~');
+      return;
+    }
+    var now = Date.now();
+    var savedRecord = null;
+    try {
+      if (editingRecordId) {
+        // 编辑模式：更新已有记录
+        var record = findRecord(editingRecordId);
+        if (record) {
+          record.title = title || '';
+          record.text = text || '';
+          record.images = editingImages.slice();
+          record.updatedTime = now;
+          savedRecord = record;
+        } else {
+          // 记录不存在，降级为新增
+          records.push({
+            id: now,
+            title: title || '',
+            text: text || '',
+            images: editingImages.slice(),
+            time: now
+          });
+          savedRecord = records[records.length - 1];
+        }
+        editingRecordId = null;
+      } else {
+        // 新增模式
+        records.push({
+          id: now,
+          title: title || '',
+          text: text || '',
+          images: editingImages.slice(),
+          time: now
+        });
+        savedRecord = records[records.length - 1];
+      }
+      saveRecords(savedRecord ? [savedRecord] : []);
+    } catch(e) {
+      showSyncStatus('保存出错: ' + e.message, 'error');
+    }
+    render();
+    closeModal();
+  }
+
+  // 删除记录
+  function deleteRecord(id) {
+    if (!confirm('确定删除这条记录吗？')) return;
+    records = records.filter(function(r) { return r.id !== id; });
+    addPendingDelete(id);
+    saveRecords();
+    deleteRecordFromD1(id).then(function() {
+      removePendingDelete(id);
+      showSyncStatus('删除已同步 ✓', 'success');
+      setTimeout(function() { showSyncStatus('', ''); }, 2000);
+    }).catch(function(err) {
+      showSyncStatus('删除未同步：' + (err.message || '网络错误') + '，联网后刷新会自动重试', 'error');
+    });
+    render();
+  }
+
+  // 图片灯箱
+  function openLightbox(src) {
+    document.getElementById('lightboxImg').src = src;
+    document.getElementById('imageLightbox').classList.add('show');
+  }
+  function closeLightbox() {
+    document.getElementById('imageLightbox').classList.remove('show');
+  }
+
+  // ========== 事件绑定（附带空值保护）==========
+  var _el;
+  _el = document.getElementById('addRecordBtn');    if (_el) _el.addEventListener('click', openModal);
+  _el = document.getElementById('cancelRecord');     if (_el) _el.addEventListener('click', closeModal);
+  _el = document.getElementById('recordModal');      if (_el) _el.addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+  _el = document.getElementById('imageInput');       if (_el) _el.addEventListener('change', function() { if (this.files) { for (var fi = 0; fi < this.files.length; fi++) handleImage(this.files[fi]); } });
+  _el = document.getElementById('recordModal');      if (_el) _el.addEventListener('paste', handlePaste);
+  // 保存按钮：带防重入锁
+  _el = document.getElementById('saveRecordBtn');
+  if (_el && !_el._saveBound) {
+    _el._saveBound = true;
+    _el.addEventListener('click', function() {
+      if (this._saving) return;
+      this._saving = true;
+      saveRecord();
+      var btn = this;
+      setTimeout(function() { btn._saving = false; }, 800);
+    });
+  }
+
+  // 搜索图标点击展开/关闭
+  var searchPopup = document.getElementById('searchPopup');
+  var searchIconBtn = document.getElementById('searchIconBtn');
+  var searchInput = document.getElementById('searchBar');
+  if (searchIconBtn) {
+    searchIconBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var isOpen = searchPopup.classList.contains('open');
+      if (isOpen) {
+        searchPopup.classList.remove('open');
+        searchIconBtn.classList.remove('active');
+      } else {
+        searchPopup.classList.add('open');
+        searchIconBtn.classList.add('active');
+        searchInput.focus();
+      }
+    });
+  }
+  // 点击外部关闭
+  document.addEventListener('click', function(e) {
+    if (searchPopup && searchIconBtn && searchPopup.classList.contains('open') &&
+        !searchPopup.contains(e.target) &&
+        !searchIconBtn.contains(e.target)) {
+      searchPopup.classList.remove('open');
+      searchIconBtn.classList.remove('active');
+    }
+  });
+  // 输入时实时过滤
+  if (searchInput) {
+    searchInput.addEventListener('input', function() { render(); });
+    // Enter 键搜索
+    searchInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') { e.preventDefault(); render(); searchInput.blur(); }
+    });
+    // Esc 关闭
+    searchInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        searchPopup.classList.remove('open');
+        searchIconBtn.classList.remove('active');
+        searchInput.value = '';
+        render();
+      }
+    });
+  }
+
+  // 键盘快捷键 Ctrl+Enter 保存
+  _el = document.getElementById('recordText');
+  if (_el) _el.addEventListener('keydown', function(e) { if (e.ctrlKey && e.key === 'Enter') saveRecord(); });
+
+  // 删除/编辑/点击跳转 事件委托
+  _el = document.getElementById('recordsContainer');
+  if (_el) _el.addEventListener('click', function(e) {
+    if (e.target.classList.contains('record-delete')) {
+      deleteRecord(parseInt(e.target.getAttribute('data-id')));
+      return;
+    }
+    if (e.target.classList.contains('record-edit')) {
+      openModal(parseInt(e.target.getAttribute('data-id')));
+      return;
+    }
+    if (e.target.classList.contains('record-image')) {
+      openLightbox(e.target.getAttribute('data-src'));
+      return;
+    }
+    // 搜索模式下点击卡片内容 → 跳转到该记录
+    var searchTerm = searchInput.value.trim();
+    if (searchTerm) {
+      var card = e.target.closest('.record-card');
+      if (card) {
+        var targetId = card.getAttribute('data-id');
+        // 清空搜索、收起搜索框、重新渲染全部
+        searchPopup.classList.remove('open');
+        searchIconBtn.classList.remove('active');
+        searchInput.value = '';
+        render();
+        // 滚动到目标记录
+        var targetEl = document.getElementById('record-' + targetId);
+        if (targetEl) {
+          targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // 高亮闪烁
+          targetEl.style.transition = 'box-shadow 0.15s ease';
+          targetEl.style.boxShadow = '0 0 0 3px #ff6b81';
+          setTimeout(function() {
+            targetEl.style.boxShadow = '';
+            setTimeout(function() { targetEl.style.transition = ''; }, 150);
+          }, 600);
+        }
+      }
+    }
+  });
+
+  // 灯箱关闭
+  _el = document.getElementById('imageLightbox');
+  if (_el) _el.addEventListener('click', closeLightbox);
+
+  // 跨标签同步（其他标签页修改了 records 时重新加载）
+  window.addEventListener('storage', function(e) {
+    if (e.key === STORAGE_KEY) {
+      loadRecords();
+      render();
+    }
+    if (e.key === TOKEN_KEY) {
+      updateSyncUI();
+    }
+  });
+
+  // ========== 同步设置弹窗 ==========
+  _el = document.getElementById('syncSettingsBtn');
+  if (_el) _el.addEventListener('click', function() {
+    document.getElementById('githubToken').value = getToken();
+    document.getElementById('syncFeedback').style.display = 'none';
+    document.getElementById('syncModal').classList.add('show');
+  });
+  _el = document.getElementById('cancelSync');
+  if (_el) _el.addEventListener('click', function() {
+    document.getElementById('syncModal').classList.remove('show');
+  });
+  _el = document.getElementById('syncModal');
+  if (_el) _el.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('show'); });
+  _el = document.getElementById('saveSync');
+  if (_el) _el.addEventListener('click', function() {
+    var token = document.getElementById('githubToken').value.trim();
+    if (!token) {
+      document.getElementById('syncFeedback').className = 'sync-feedback error';
+      document.getElementById('syncFeedback').textContent = '请输入同步密钥';
+      document.getElementById('syncFeedback').style.display = 'block';
+      return;
+    }
+    setToken(token);
+    updateSyncUI();
+    // 测试连接并加载云端数据
+    showSyncStatus('测试连接中…', 'syncing');
+    loadFromD1().then(function(d1Records) {
+      if (d1Records !== null) {
+        var localBefore = records.slice();
+        var pending = getPendingDeletes();
+        var filteredCloud = d1Records.filter(function(r) { return !isPendingDelete(r.id); });
+        mergeRecords(filteredCloud);
+        saveRecordsToLocal();
+        render();
+        return pushLocalChanges(localBefore, d1Records).then(function(res) {
+          document.getElementById('syncFeedback').className = 'sync-feedback success';
+          if (res.failed > 0) {
+            document.getElementById('syncFeedback').textContent = '连接成功，但有 ' + res.failed + ' 条本地记录未同步：' + res.lastError + '，请刷新重试';
+          } else {
+            document.getElementById('syncFeedback').textContent = '连接成功！已同步 ' + records.length + ' 条记录，补推 ' + res.pushed + ' 条';
+          }
+        });
+      } else if (d1Records === null) {
+        document.getElementById('syncFeedback').className = 'sync-feedback error';
+        document.getElementById('syncFeedback').textContent = hasToken() ? '连接失败，请稍后重试' : '密钥不正确，请重新输入';
+      }
+      document.getElementById('syncFeedback').style.display = 'block';
+      setTimeout(function() { document.getElementById('syncModal').classList.remove('show'); }, 1500);
+    }).catch(function(err) {
+      document.getElementById('syncFeedback').className = 'sync-feedback error';
+      document.getElementById('syncFeedback').textContent = '连接失败: ' + err.message;
+      document.getElementById('syncFeedback').style.display = 'block';
+      setToken('');
+      updateSyncUI();
+    });
+  });
+
+  // 导出按钮
+  _el = document.getElementById('exportRecordsBtn');
+  if (_el) _el.addEventListener('click', exportRecords);
+
+  // 导入按钮：点击导出按钮后弹出文件选择器
+  _el = document.getElementById('importRecordsBtn');
+  if (_el) _el.addEventListener('click', function() {
+    var input = document.getElementById('importRecordsInput');
+    input.value = '';
+    input.click();
+  });
+  _el = document.getElementById('importRecordsInput');
+  if (_el) _el.addEventListener('change', function() {
+    if (this.files && this.files[0]) importRecords(this.files[0]);
+  });
+
+  // 只写本地存储不触发同步（用于初始化合并）
+  function saveRecordsToLocal() {
+    saveToStorage().catch(function() {});
+  }
+
+  // 合并云端和本地记录（按 id 去重，保留 updatedTime/time 较新的版本）
+  function mergeRecords(ghRecords) {
+    if (!ghRecords || !ghRecords.length) return;
+    var map = {};
+    var all = records.concat(ghRecords);
+    for (var i = 0; i < all.length; i++) {
+      var r = all[i];
+      var ver = r.updatedTime || r.time || r.id || 0;
+      var exist = map[r.id];
+      if (!exist) {
+        map[r.id] = r;
+      } else {
+        var existVer = exist.updatedTime || exist.time || exist.id || 0;
+        if (ver > existVer) map[r.id] = r;
+      }
+    }
+    records = Object.values(map).sort(function(a, b) { return a.id - b.id; });
+  }
+
+  // ========== 导入导出 ==========
+  // 导出本地所有记录为 JSON 文件
+  function exportRecords() {
+    var data = JSON.stringify(records, null, 2);
+    var blob = new Blob([data], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    var ts = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = 'records-' + ts + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+  }
+
+  // 导入 JSON 文件，与现有记录按 id 去重合并，按时间排序后同步到云端
+  function importRecords(file) {
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        var imported = JSON.parse(e.target.result);
+        if (!Array.isArray(imported)) {
+          alert('文件格式错误：应为记录数组');
+          return;
+        }
+        // 过滤无效记录
+        var valid = imported.filter(function(r) { return r && r.id; });
+        if (!valid.length) {
+          alert('文件中没有有效记录');
+          return;
+        }
+        // 合并前记录数量
+        var beforeCount = records.length;
+        mergeRecords(valid);
+        saveRecords(valid);
+        render();
+        var added = records.length - beforeCount;
+        var msg = '导入成功！新增 ' + added + ' 条，共 ' + records.length + ' 条记录';
+        if (added > 0) {
+          msg += '，正在同步到云端…';
+        }
+        document.getElementById('syncFeedback').className = 'sync-feedback success';
+        document.getElementById('syncFeedback').textContent = msg;
+        document.getElementById('syncFeedback').style.display = 'block';
+        setTimeout(function() { document.getElementById('syncModal').classList.remove('show'); }, 1500);
+      } catch(err) {
+        alert('文件解析失败: ' + err.message);
+      }
+    };
+    reader.onerror = function() {
+      alert('文件读取失败');
+    };
+    reader.readAsText(file);
+  }
+
+  // 初始化：先本地加载，再从云端拉取合并，然后把本地独有/更新的记录补推回云端
+  function init() {
+    updateSyncUI();
+    loadRecords(); // 异步加载（IndexedDB）
+    render();
+
+    if (hasToken()) {
+      loadFromD1().then(function(d1Records) {
+        if (d1Records === null) return;
+        var localBefore = records.slice();
+        var pending = getPendingDeletes();
+        var filteredCloud = d1Records.filter(function(r) { return !isPendingDelete(r.id); });
+        mergeRecords(filteredCloud);
+        saveRecordsToLocal();
+        render();
+        return pushLocalChanges(localBefore, d1Records).then(function(res) {
+          if (res.failed > 0) {
+            showSyncStatus('本地有 ' + res.failed + ' 条未同步：' + res.lastError + '，联网后刷新会自动重试', 'error');
+          } else if (res.pushed > 0 || res.deletedRetried > 0) {
+            showSyncStatus('补同步完成：上传 ' + res.pushed + ' 条，删除重试 ' + res.deletedRetried + ' 条 ✓', 'success');
+            setTimeout(function() { showSyncStatus('', ''); }, 3000);
+          } else {
+            showSyncStatus('已同步 ✓', 'success');
+            setTimeout(function() { showSyncStatus('', ''); }, 2000);
+          }
+        });
+      });
+    }
+  }
+
+  // 暴露给内联 onclick 调用
+  window._saveRecord = saveRecord;
+  window.saveRecord = saveRecord;
+  window.readClipboard = function() {};
+  window.openAddRecordModal = function() { openModal(); };
+  window.openSyncModalFn = function() {
+    document.getElementById('githubToken').value = getToken();
+    document.getElementById('syncFeedback').style.display = 'none';
+    document.getElementById('syncModal').classList.add('show');
+  };
+
+  init();
+</script>
+
+  </body>
+</html>

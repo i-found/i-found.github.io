@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>i-found | 幻想尽头</title>
+    <!-- 音乐点击播放插件，要提上来，不知道为什么会影响到bookmark1的时间展示 -->
+    <script type="text/javascript">
+    window.onload = function(){
+         var audio = document.getElementById('music');
+             if(audio) audio.pause();//打开页面时无音乐
+    }
+    function play() {
+        var audio = document.getElementById('music');
+        if (audio.paused) {
+            audio.play();
+            document.getElementById('musicImg').src="./Albums/TreasureHunting/css/img/play_rdi_btn_pause-touch.png";
+            document.getElementById('musicImg').title="暂停";
+        }else{
+            audio.pause();
+            // audio.currentTime = 0;//音乐从头播放
+            document.getElementById('musicImg').src="./Albums/TreasureHunting/css/img/play_rdi_btn_play-touch.png";
+              document.getElementById('musicImg').title="播放";
+        }
+    }
+    </script>
+    <!-- 鼠标点击产生爱心 -->
+    <script type="text/javascript">
+    (function(window,document,undefined){
+        var hearts = [];
+
+        window.requestAnimationFrame = (function(){
+            return window.requestAnimationFrame ||
+            window.webkitRequestAnimationFrame ||
+            window.mozRequestAnimationFrame ||
+             window.oRequestAnimationFrame ||
+             window.msRequestAnimationFrame ||
+             function (callback){
+                 setTimeout(callback,1000/60);
+             }
+        })();
+
+        init();
+
+        function init(){
+            css(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: absolute;}.heart:after{top: -5px;}.heart:before{left: -5px;}");
+            attachEvent();
+            gameloop();
+        }
+
+        function gameloop(){
+            for(var i=0;i<hearts.length;i++){
+                if(hearts[i].alpha <=0){
+                    document.body.removeChild(hearts[i].el);
+                    hearts.splice(i,1);
+                    continue;
+                 }
+
+                 hearts[i].y--;
+                 hearts[i].scale += 0.004;
+                 hearts[i].alpha -= 0.013;
+                 hearts[i].el.style.cssText = "left:"+hearts[i].x+"px;top:"+hearts[i].y+"px;opacity:"+hearts[i].alpha+";transform:scale("+hearts[i].scale+","+hearts[i].scale+") rotate(45deg);background:"+hearts[i].color;
+            }
+
+            requestAnimationFrame(gameloop);
+        }
+
+        function attachEvent(){
+            var old = typeof window.onclick==="function" && window.onclick;
+            window.onclick = function(event){
+                old && old();
+                createHeart(event);
+            }
+        }
+
+        function createHeart(event){
+            var d = document.createElement("div");
+            d.className = "heart";
+            hearts.push({
+                el : d,
+                x : event.clientX - 5,
+                y : event.clientY - 5,
+                scale : 1,
+                alpha : 1,
+                color : randomColor()
+            });
+
+            document.body.appendChild(d);
+        }
+
+        function css(css){
+            var style = document.createElement("style");
+            style.type="text/css";
+            try{
+                style.appendChild(document.createTextNode(css));
+            }
+            catch(ex){
+                style.styleSheet.cssText = css;
+            }
+
+            document.getElementsByTagName('head')[0].appendChild(style);
+        }
+
+        function randomColor(){
+            return "rgb("+(~~(Math.random()*255))+","+(~~(Math.random()*255))+","+(~~(Math.random()*255))+")";
+        }
+
+    })(window,document);
+
+    </script>
+    <!-- 时钟挂件的js -->
+    
+    <script type="text/javascript">
+    var days=new  Array ("日", "一", "二", "三", "四", "五", "六");
+    function showDT() {
+      var currentDT = new Date();
+      var y,m,date,day,hs,ms,ss,theDateStr;
+      y = currentDT.getFullYear(); //四位整数表示的年份
+      m = (currentDT.getMonth()+1); //月
+      date = currentDT.getDate(); //日
+      day = currentDT.getDay(); //星期
+      hs = currentDT.getHours(); //时
+      ms = currentDT.getMinutes(); //分
+      ss = currentDT.getSeconds(); //秒
+      theDateStr = y+"年"+m+"月"+date+"日 星期"+days[day]+" "+hs+":"+ms+":"+ss;
+      theYearStr = y;
+      theDayStr = date;
+      document.getElementById("theYear"). innerHTML =theYearStr;
+      document.getElementById("theDate"). innerHTML =theDayStr;
+      document.getElementById("theClock"). innerHTML =theDateStr;
+      // setTimeout 在执行时,是在载入后延迟指定时间后,去执行一次表达式,仅执行一次
+      window.setTimeout( showDT, 1000);
+    }
+    </script>
+    <script type="text/javascript" src="js/SmoothScroll.js"></script>
+    <link rel="stylesheet" href="./dist/meplayer.css">
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="index.css?v=39">
+    <link rel="stylesheet" type="text/css"media="screen and (max-width:1080px)"href="tinyScreen.css?v=24" />
+    <link rel="icon" href="./img/ico.png" type="image/x-icon">
+  </head>
+  <body onload="showDT()">
+
+    <!-- 网页背景 -->
+<div class="bodybox">
+
+<!-- 在这里测试字体样式 -->
+  <div class="test-font1">默认字体-多少岁月你好呀doyoudo123456</div>
+
+<section class="home-detail" id="homeDetail" hidden>
+			<button type="button" class="home-close" id="homeClose" aria-label="关闭介绍">✕</button>
+			<div class="home-detail-cover-wrap">
+				<img class="home-detail-cover" id="homeDetailCover" src="" alt="">
+				<div class="container1 detail-player-wrap" data-detail-index="0" hidden><div class="detailMusic0"></div></div><div class="container1 detail-player-wrap" data-detail-index="1" hidden><div class="detailMusic1"></div></div><div class="container1 detail-player-wrap" data-detail-index="2" hidden><div class="detailMusic2"></div></div><div class="container1 detail-player-wrap" data-detail-index="3" hidden><div class="detailMusic3"></div></div><div class="container1 detail-player-wrap" data-detail-index="4" hidden><div class="detailMusic4"></div></div><div class="container1 detail-player-wrap" data-detail-index="5" hidden><div class="detailMusic5"></div></div><div class="container1 detail-player-wrap" data-detail-index="6" hidden><div class="detailMusic6"></div></div><div class="container1 detail-player-wrap" data-detail-index="7" hidden><div class="detailMusic7"></div></div><div class="container1 detail-player-wrap" data-detail-index="8" hidden><div class="detailMusic8"></div></div><div class="container1 detail-player-wrap" data-detail-index="9" hidden><div class="detailMusic9"></div></div><div class="container1 detail-player-wrap" data-detail-index="10" hidden><div class="detailMusic10"></div></div><div class="container1 detail-player-wrap" data-detail-index="11" hidden><div class="detailMusic11"></div></div><div class="container1 detail-player-wrap" data-detail-index="12" hidden><div class="detailMusic12"></div></div><div class="container1 detail-player-wrap" data-detail-index="13" hidden><div class="detailMusic13"></div></div><div class="container1 detail-player-wrap" data-detail-index="14" hidden><div class="detailMusic14"></div></div><div class="container1 detail-player-wrap" data-detail-index="15" hidden><div class="detailMusic15"></div></div><div class="container1 detail-player-wrap" data-detail-index="16" hidden><div class="detailMusic16"></div></div><div class="container1 detail-player-wrap" data-detail-index="17" hidden><div class="detailMusic17"></div></div>
+			</div>
+			<div class="home-detail-text">
+				<h3 id="homeDetailTitle"></h3>
+				<p class="home-meta" id="homeDetailMeta"></p>
+				<p class="home-detail-intro" id="homeDetailIntro"></p>
+				<a class="home-play" id="homeDetailPlay" href="#">回到卡片 →</a>
+			</div>
+		</section>
+
+
+  <div class="test-font2">'PingFang-SC-Regular'字体-多少岁月你好呀doyoudo123456</div>
+  <div class="test-font3">'传奇南安体'字体-想象之中 我在哪里doyoudo123456</div>
+  <div class="test-font4">'Avenir-Book'英文字体-1234567890</div>
+  <div class="test-font5">'鸿雷板书简体'字体-庐州月你好呀doyoudo123456</div>
+
+
+<!-- 导航栏 -->
+  <div class="Navi-Bar">
+    <div class="Navi-Bar-content">
+
+
+      <!-- logo企鹅 -->
+        <a href="https://i-found.github.io/">
+          <img class="img1" src="./img/企鹅.png">
+        </a>
+
+    <!-- 二级logo i-found -->
+      <a href="https://i-found.github.io/">
+        <img class="img2" src="./img/i-found.png">
+      </a>
+
+      <ul>
+        <li><a class="buttom first" href="https://i-found.github.io/">首页</a></li>
+        <li><a class="buttom" href="/music" target="_blank">音乐</a></li>
+        <li><a class="buttom" href="/interest" target="_blank">兴趣</a></li>
+        <li><a class="buttom" href="/record" target="_blank">记录</a></li>
+        <li><a class="buttom" href="/tools" target="_blank">工具</a></li>
+        
+      </ul>
+
+<div class="nav-search" id="navSearch">
+	<button type="button" class="nav-search-toggle" id="navSearchToggle" aria-label="搜索"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></button>
+	<input id="homeSearchInput" type="search" placeholder="搜索歌曲、歌手、日期…" autocomplete="off">
+	<section class="nav-search-results" id="homeSearchResults" hidden></section>
+</div>
+
+
+      
+
+
+
+
+
+
+    </div>
+
+  </div>
+
+
+<!-- 内容布局 -->
+<div class="content-layout">
+
+  <div class="bookmark1">
+                <div class="DATE">
+                  <div id="theDate"></div>
+                  <div class="date2">
+<!-- 定义英文月份 -->
+                    <div id="Month"></div>
+                    <script type="text/javascript">
+                    var allmonths = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+                    var date = new Date();//可以在date中指定日期转换
+                    console.log(
+                       date.getDate() +
+                       ' ' +
+                       allmonths[date.getMonth()] +
+                       ' ' +
+                       date.getFullYear()
+                    );
+                    document.getElementById("Month").innerText = allmonths[date.getMonth()];
+                    </script>
+<!-- 定义年份 -->
+                    <div id="theYear"></div>
+
+                  </div>
+                </div>
+
+
+
+<div class="content">
+  我们这一生做什么都是已经注定了的，他心想。你生存的方式都是你的才能所在。
+</div>
+<div class="author">---海明威《乞力马扎罗的雪》</div>
+</div>
+
+
+
+
+<!-- 音乐播放插件 -->
+  <div class="container">
+    <div class="music"></div>
+  </div>
+
+
+<div class="bookmark2">
+
+  <!-- 音乐播放插件 -->
+  <!-- 备注：此处js中"music"要被执行调用，否则music1不会被执行 -->
+    
+
+  <div class="bookmark2-left">
+<img src="./img/infinity-7227661.jpg" alt="">
+  </div>
+  <div class="bookmark2-right">
+
+<ul>
+<li class="fit1">宜</li>
+<li class="fit2">自</li>
+<li class="fit3">律</li>
+</ul>
+
+
+
+  </div>
+
+</div>
+
+
+
+
+
+<div class="bookmark3">
+  <!-- 音乐播放插件 -->
+    <div class="container1">
+      <div class="music1"></div>
+    </div>
+
+  <a  class="bookmark-content" href="#">
+    <div class="in-img">
+      <img src="./img/covers/气象站台-cover.jpg" alt="">
+    </div>
+
+    <div class="in-text">
+      <p>气象站台</p>
+      <span>Uu（刘梦妤） · <time datetime="2021-02-14">2021/02/14</time></span>
+    </div>
+  </a>
+
+
+
+</div>
+
+
+
+<div class="bookmark3 new1">
+
+  <!-- 音乐播放插件 -->
+    <div class="container1">
+      <div class="music19"></div>
+    </div>
+
+
+  <a  class="bookmark-content" href="#">
+
+    <div class="in-img">
+      <img src="./img/covers/十年-cover.jpg" alt="">
+    </div>
+
+    <div class="in-text">
+      <p>十年</p>
+      <span>南妮 · <time datetime="2021-12-20">2021/12/20</time></span>
+
+    </div>
+  </a>
+
+
+</div>
+
+
+
+
+<div class="bookmark3">
+<!-- 音乐播放插件 -->
+  <div class="container1">
+    <div class="music2"></div>
+  </div>
+
+  <a  class="bookmark-content" href="#">
+    <div class="in-img">
+      <img src="./img/covers/红色高跟鞋-cover.jpg" alt="">
+    </div>
+
+    <div class="in-text">
+      <p>红色高跟鞋</p>
+      <span>西柚 · <time datetime="2020-05-14">2020/05/14</time></span>
+
+    </div>
+  </a>
+
+
+
+</div>
+
+
+
+
+<div class="bookmark4">
+
+  <!-- 音乐播放插件 -->
+    <div class="container1">
+      <div class="music3"></div>
+    </div>
+
+
+  <a  class="bookmark-content" href="#">
+    <div class="in-img">
+      <img src="./img/covers/潮汐-cover.jpg" alt="">
+    </div>
+
+    <div class="in-text">
+      <p>潮汐(DJ版)</p>
+      <span>傅梦彤 · <time datetime="2020-12-11">2020/12/11</time></span>
+
+    </div>
+  </a>
+
+
+
+</div>
+
+<!-- 到这里第一行 -->
+
+
+<div class="bookmark5">
+<div class="youtube" style="position:absolute;width:100%;">
+<img src="./img/infinity-1897165.jpg" alt="乌鸦" style="width:100%;height:392px;object-fit:cover;object-position:top;display:block;">
+</div>
+<a class="bookmark5-img"href="#">
+
+  
+
+
+
+
+</a>
+
+<div class="bookmark5-content">
+
+  <a href="#">乌鸦</a>
+  <p>飞上枝头的都风趣</p>
+  <p>占了巢的都在窃喜</p>
+
+
+
+
+</div>
+
+<div class="icon-footer">
+  <div class="icon-footer-autor">
+    <span>陈筱筱 · <time class="lately-a" datetime="2021-05-21T17:40:40+08:00"></time></span>
+  </div>
+
+
+</div>
+
+
+
+
+</div>
+
+
+
+
+
+
+
+<div class="bookmark3 new1">
+  <!-- 音乐播放插件 -->
+    <div class="container1">
+      <div class="music4"></div>
+    </div>
+
+
+  <a  class="bookmark-content" href="#">
+    <div class="in-img">
+      <img src="./img/covers/一直很安静-cover.jpg" alt="">
+    </div>
+
+    <div class="in-text">
+      <p>一直很安静</p>
+      <span>阿桑 · <time datetime="2005-02-25">2005/02/25</time></span>
+
+    </div>
+  </a>
+
+
+</div>
+
+
+
+
+
+<div class="bookmark4 new2">
+  <!-- 音乐播放插件 -->
+    <div class="container1">
+      <div class="music5"></div>
+    </div>
+  <a  class="bookmark-content" href="#">
+    <div class="in-img">
+      <img src="./img/covers/爱你-陈芳语cover.jpg" alt="">
+    </div>
+
+    <div class="in-text">
+      <p>爱你</p>
+      <span>陈芳语 · <time datetime="2012-04-27">2012/04/27</time></span>
+
+    </div>
+  </a>
+
+
+
+
+
+</div>
+
+
+
+
+
+
+<div class="bookmark3 new1">
+  <!-- 音乐播放插件 -->
+    <div class="container1">
+      <div class="music6"></div>
+    </div>
+
+
+  <a  class="bookmark-content" href="#">
+    <div class="in-img">
+      <img src="./img/covers/白月光与朱砂痣.jpg" alt="">
+    </div>
+
+    <div class="in-text">
+      <p>白月光与朱砂痣</p>
+      <span>大籽 · <time datetime="2021-01-07">2021/01/07</time></span>
+
+    </div>
+  </a>
+
+
+
+</div>
+
+
+
+
+<div class="bookmark4 new2">
+  <!-- 音乐播放插件 -->
+    <div class="container1">
+      <div class="music7"></div>
+    </div>
+
+  <a  class="bookmark-content" href="#">
+    <div class="in-img">
+      <img src="./img/covers/下一站天后.jpg" alt="">
+    </div>
+
+    <div class="in-text">
+      <p>下一站天后</p>
+      <span>Twins · <time datetime="2003-04-29">2003/04/29</time></span>
+
+    </div>
+  </a>
+
+
+
+
+
+</div>
+
+<!-- 到这里第二大行 -->
+
+<div class="bookmark3 new1">
+  <!-- 音乐播放插件 -->
+    <div class="container1 colorbox-orange">
+      <div class="music8"></div>
+    </div>
+
+  <a  class="bookmark-content" href="https://www.btnull.re/tv/Jgen.html">
+    <div class="in-img">
+      <img src="./img/covers/tokyo-love-story-2020-poster.jpg" alt="">
+    </div>
+
+    <div class="in-text">
+      <p class="Tokyo-color">I Found Myself</p>
+      <span>ZEFEAR,Teya Flow · <time datetime="2020-06-01">2020/06/01</time></span>
+
+    </div>
+  </a>
+
+
+</div>
+
+
+
+
+<div class="bookmark3">
+  <!-- 音乐播放插件 -->
+    <div class="container1">
+      <div class="music9"></div>
+    </div>
+
+  <a  class="bookmark-content" href="#">
+    <div class="in-img">
+      <img src="./img/covers/爱你(Live).jpg" alt="">
+    </div>
+
+    <div class="in-text">
+      <p>爱你(Live)</p>
+      <span>董又霖,陆定昊,黄新淳,林彦俊 · <time datetime="2018-04-06">2018/04/06</time></span>
+
+    </div>
+  </a>
+
+
+
+
+</div>
+
+
+
+
+
+<div class="bookmark3 new1">
+
+  <!-- 音乐播放插件 -->
+
+  <!-- colorbox标签可以定义播放按钮的颜色 -->
+    <div class="container1 colorbox-green">
+      <div class="music10"></div>
+    </div>
+
+  <a  class="bookmark-content" href="#">
+    <div class="in-img">
+      <img src="./img/covers/forya-cover.jpg" alt="">
+    </div>
+
+    <div class="in-text">
+      <p>for ya</p>
+      <span>蒋小呢 · <time datetime="2020-11-24">2020/11/24</time></span>
+    </div>
+  </a>
+
+
+</div>
+
+
+
+<div class="bookmark4 new2">
+  <!-- 音乐播放插件 -->
+    <div class="container1">
+      <div class="music11"></div>
+    </div>
+
+  <a  class="bookmark-content" href="#">
+    <div class="in-img">
+      <img src="./img/covers/xinghua-xianwaiyu.jpg" alt="">
+    </div>
+
+    <div class="in-text">
+      <p>杏花弦外雨</p>
+      <span>CRITTY,司夏 · <time datetime="2013-05-03">2013/05/03</time></span>
+
+    </div>
+  </a>
+
+</div>
+
+
+<div class="bookmark3 new1">
+  <!-- 音乐播放插件 -->
+    <div class="container1">
+      <div class="music13"></div>
+    </div>
+
+  <a  class="bookmark-content" href="#">
+    <div class="in-img">
+      <img src="./img/covers/kiss and cry-cover.jpg" alt="">
+    </div>
+
+    <div class="in-text">
+      <p>Kiss and Cry</p>
+      <span>《失恋巧克力恋人》插曲 · <time datetime="2014-02-26">2014/02/26</time></span>
+
+    </div>
+  </a>
+
+</div>
+
+<div class="bookmark3 new2">
+  <!-- 音乐播放插件 -->
+    <div class="container1">
+      <div class="music14"></div>
+    </div>
+
+  <a  class="bookmark-content" href="#">
+    <div class="in-img">
+      <img class="Fruit" src="./img/covers/shengxia-de-guoshi-cover.jpg" alt="">
+    </div>
+
+    <div class="in-text">
+      <p class="Fruit-Color">盛夏的果实</p>
+      <span>莫文蔚 · <time datetime="2000-06-16">2000/06/16</time></span>
+
+    </div>
+  </a>
+
+
+</div>
+<div class="bookmark3 new1">
+  <!-- 音乐播放插件 -->
+    <div class="container1 colorbox-green">
+      <div class="music15"></div>
+    </div>
+
+  <a  class="bookmark-content" href="#">
+    <div class="in-img">
+      <img src="./img/covers/zhifouzhifou-cover.jpg" alt="">
+    </div>
+
+    <div class="in-text">
+      <p>知否知否</p>
+      <span>胡夏,郁可唯 · <time datetime="2018-12-27">2018/12/27</time></span>
+
+    </div>
+  </a>
+
+
+</div>
+
+<div class="bookmark4 new2">
+  <!-- 音乐播放插件 -->
+    <div class="container1">
+      <div class="music16"></div>
+    </div>
+
+  <a  class="bookmark-content" href="#">
+    <div class="in-img">
+      <img class="rain" src="./img/covers/雨水-cover.jpg" alt="">
+    </div>
+
+    <div class="in-text">
+      <p class="Rain-Color">雨水</p>
+      <span>音阙诗听,李佳思 · <time datetime="2020-07-06">2020/07/06</time></span>
+
+    </div>
+  </a>
+
+
+</div>
+
+
+
+
+
+
+
+
+<div class="bookmark3 new1">
+  <!-- 音乐播放插件 -->
+    <div class="container1">
+      <div class="music17"></div>
+    </div>
+
+  <a  class="bookmark-content" href="#">
+    <div class="in-img">
+      <img src="./img/covers/feifei-57th-unsent-cover.jpg" alt="">
+    </div>
+
+    <div class="in-text">
+      <p>第57次取消发送</p>
+      <span>菲菲公主 · <time datetime="2025-02-10">2025/02/10</time></span>
+
+    </div>
+  </a>
+
+
+</div>
+
+
+<div class="bookmark3 new2">
+  <!-- 音乐播放插件 -->
+    <div class="container1">
+      <div class="music18"></div>
+    </div>
+
+  <a  class="bookmark-content" href="#">
+    <div class="in-img">
+      <img src="./img/covers/TheStar-cover.jpg" alt="">
+    </div>
+
+    <div class="in-text">
+      <p>TheStar</p>
+      <span>音阙诗听,李佳思 · <time datetime="2017-06-29">2017/06/29</time></span>
+
+    </div>
+  </a>
+
+
+</div>
+
+
+<!-- 到这里第三行 -->
+
+<div class="only-bookmark">
+
+  <!-- 音乐播放插件 -->
+    <div class="container1 foxbox">
+      <div class="music12"></div>
+    </div>
+
+
+
+<a href="#"></a>
+<span>doyoudo</span>
+
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+
+
+  <!-- 背景音乐 -->
+
+  
+
+<!-- 时间展示 -->
+
+
+
+
+<!-- 回顶部标签 -->
+<div class="to-top">
+  <a href="#top" target="_self">
+    <img src="./img/向上.png">
+  </a>
+
+</div>
+
+
+
+<!-- 底部链接栏 -->
+<div class="footer-Bar">
+
+  <!-- 这里放置wave背景特效 ，此处script只能放在section后面，否则不行哦-->
+  <section class="doc doc--bg2">
+    
+    <canvas id="canvas" style="position:absolute;top:0px;left:0px;z-index:1;"></canvas>
+  </section>
+
+
+
+  <script type="text/javascript">
+    var canvas = document.getElementById('canvas');
+    var ctx = canvas.getContext('2d');
+    canvas.width = canvas.parentNode.offsetWidth;
+    canvas.height = canvas.parentNode.offsetHeight;
+
+
+    //如果浏览器支持requestAnimFrame则使用requestAnimFrame否则使用setTimeout
+    window.requestAnimFrame = (function(){
+    return  window.requestAnimationFrame       ||
+            window.webkitRequestAnimationFrame ||
+            window.mozRequestAnimationFrame    ||
+            function( callback ){
+              window.setTimeout(callback, 1000 / 60);
+            };
+    })();
+    //初始角度为0
+    var step = 0;
+    //定义三条不同波浪的颜色
+    var lines = ["rgba(97,191,173,1)","rgba(255,117,140,1)","rgba(254,225,64,1)"];
+
+    function loop(){
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        step++;
+        //画3个不同颜色的矩形
+        for(var j = lines.length - 1; j >= 0; j--) {
+            ctx.fillStyle = lines[j];
+            //每个矩形的角度都不同，每个之间相差45度
+            var angle = (step+j*45)*Math.PI/180;
+            var deltaHeight   = Math.sin(angle) * 50;
+            var deltaHeightRight   = Math.cos(angle) * 50;
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height/2+deltaHeight);
+            ctx.bezierCurveTo(canvas.width /2, canvas.height/2+deltaHeight-50, canvas.width / 2, canvas.height/2+deltaHeightRight-50, canvas.width, canvas.height/2+deltaHeightRight);
+            ctx.lineTo(canvas.width, canvas.height);
+            ctx.lineTo(0, canvas.height);
+            ctx.lineTo(0, canvas.height/2+deltaHeight);
+            ctx.closePath();
+            ctx.fill();
+        }
+        requestAnimFrame(loop);
+    }
+    loop();
+  </script>
+
+
+
+
+  
+  <!-- 这里如果注释掉会影响theYear、theDate的显示，因为JavaScript中theClock在theYear、TheYear的上方。可以在JavaScript中调整顺序。 -->
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+</div>
+<!-- 这个js要放在引用时间的后面才有作用 -->
+<script src="./js/lately.min.js"></script>
+<script>
+  Lately({
+      'target' : '.lately-a,.lately-b,.lately-c'
+  })
+</script>
+
+<!-- 音乐播放插件的js,要放在内容的后面才能生效 -->
+    <script src="./dist/meplayer.min.js?v=18"></script>
+    <script src="main.js?v=21"></script>
+
+<script type="text/javascript">
+(function(){
+var detail=document.getElementById("homeDetail");
+var homeIntros=[
+"以雨后站台为意象，写一段单向奔赴最后无疾而终的感情，嗓音温柔克制，是 Uu 早期受到关注的作品之一。",
+"翻唱自陈奕迅的经典，十年时间让感情从熟悉变成陌生，南妮的女声版本唱得更柔和，收录在专辑《唱醉你》中。",
+"翻唱自蔡健雅的代表作，借一双红色高跟鞋写都市女性在爱情里的态度与底气，西柚的版本在短视频平台传唱很广。",
+"以潮汐涨落比喻感情的忽近忽远，DJ 版节奏更明快，是傅梦彤传唱度较高的一首歌。",
+"阿桑为《仙剑奇侠传》演唱的插曲，方文山作词，写一份安静到不打扰的守护，后来收录在专辑《寂寞在唱歌》中。",
+"陈芳语出道专辑《Kimberley》的主打歌，也是偶像剧《翻糖花园》的片尾曲，旋律甜美直接，是她最广为人知的作品。",
+"借“白月光”和“朱砂痣”两个意象，写爱而不得的两种遗憾，大籽的原唱版本在 2021 年初走红。",
+"Twins 的粤语代表作，写一个普通女孩一路坚持、最终站上舞台成为天后的故事，励志又朗朗上口。",
+"ZEFEAR 与 Teya Flow 合作的英文电子流行曲，作为《东京爱情故事 2020》的插曲，讲在感情与城市中寻找真正的自己。",
+"《偶像练习生》表演曲目合集中的现场版，由董又霖、陆定昊、黄新淳、林彦俊四人合唱，舞台感比录音室版更直接。",
+"蒋小呢的原唱，又名《给你呀》，把喜欢的心意写成一首轻快的歌，2020 年底在网易云音乐走红。",
+"CRITTY 与司夏合唱的古风歌，收录在 EP《弦上春雪》中，杏花、弦乐与江南意象交织，讲一段才子佳人的相思。",
+"日剧《失恋巧克力恋人》的插曲，由 Ken Arai 创作，旋律轻快中带着失恋后的苦笑与释然。",
+"莫文蔚的代表作之一，改编自日语歌《水色》，写盛夏爱情里“也许放弃才能靠近你”的矛盾心情。",
+"电视剧《知否知否应是绿肥红瘦》的主题曲，胡夏与郁可唯对唱，歌名取意李清照的词，写明兰式的含蓄深情。",
+"音阙诗听“二十四节气”系列中的雨水一曲，由李佳思演唱，以春雨写思念与时节流转。",
+"菲菲公主演唱的网络流行歌，写把想说的话反复编辑、最后还是取消发送的暗恋心事，2025 年初发行。",
+"音阙诗听出品、李佳思演唱的中英双语歌，歌里一面是仰望星空，一面是“只能是我出现在你眼中”的陪伴约定，2017 年发行。"
+];
+var homeCards=[];
+document.querySelectorAll(".in-text").forEach(function(t,idx){
+var wrap=t.closest(".bookmark3, .bookmark4");
+if(!wrap) return;
+var titleEl=t.querySelector("p");
+var spanEl=t.querySelector("span");
+var timeEl=t.querySelector("time");
+var imgEl=wrap.querySelector(".in-img img");
+var singer="";
+if(spanEl){ singer=spanEl.textContent.split("·")[0].trim(); }
+homeCards.push({el:wrap, link:t.closest("a.bookmark-content"), title:titleEl?titleEl.textContent.trim():"", singer:singer, date:timeEl?timeEl.textContent.trim():"", cover:imgEl?imgEl.getAttribute("src"):"", intro:homeIntros[idx]||""});
+});
+function scrollBelowNav(el){ var nav=document.querySelector(".Navi-Bar"); var navH=nav?nav.offsetHeight:60; var top=el.getBoundingClientRect().top + window.scrollY - navH - 20; window.scrollTo({top:top,behavior:"smooth"}); }
+var currentHomeKey=-1;
+var detailPlayObserver=null;
+function showDetailPlayer(key){ document.querySelectorAll(".detail-player-wrap").forEach(function(w){ w.hidden=(parseInt(w.getAttribute("data-detail-index"),10)!==key); }); }
+function syncPlayersBySrc(){
+var playing=null;
+document.querySelectorAll("audio").forEach(function(a){ if(!a.paused) playing=a; });
+if(playing){
+var pfn=(playing.getAttribute("src")||playing.src||"").split("/").pop();
+document.querySelectorAll("audio").forEach(function(a){ if(a!==playing&&!a.paused) a.pause(); });
+document.querySelectorAll(".meplayer-container").forEach(function(cont){ var a=cont.querySelector("audio"); var fn=a?((a.getAttribute("src")||a.src||"").split("/").pop()):""; cont.classList.toggle("meplayer-isplaying", fn===pfn&&fn!==""); });
+} else {
+document.querySelectorAll(".meplayer-container").forEach(function(cont){ cont.classList.remove("meplayer-isplaying"); });
+}
+}
+window.syncPlayersBySrc=syncPlayersBySrc;
+if(!window.__srcSyncBound){ window.__srcSyncBound=true;
+document.addEventListener("play",function(ev){ if(ev.target&&ev.target.tagName==="AUDIO") setTimeout(syncPlayersBySrc,30); },true);
+document.addEventListener("pause",function(ev){ if(ev.target&&ev.target.tagName==="AUDIO") setTimeout(syncPlayersBySrc,30); },true);
+document.addEventListener("ended",function(ev){ if(ev.target&&ev.target.tagName==="AUDIO") setTimeout(syncPlayersBySrc,30); },true);
+}
+
+function openHome(key){
+var c=homeCards[key]; if(!c) return;
+document.getElementById("homeDetailCover").src=c.cover;
+document.getElementById("homeDetailCover").alt=c.title;
+document.getElementById("homeDetailTitle").textContent=c.title;
+document.getElementById("homeDetailMeta").textContent=c.singer+" · "+c.date;
+document.getElementById("homeDetailIntro").textContent=c.intro;
+document.getElementById("homeDetailPlay").setAttribute("data-card",key);
+currentHomeKey=key;
+document.body.classList.add("home-detail-open");
+showDetailPlayer(key);
+detail.hidden=false;
+scrollBelowNav(detail);
+}
+function closeHome(){  document.body.classList.remove("home-detail-open"); detail.hidden=true; window.scrollTo({top:0,behavior:"smooth"}); }
+function flash(el){ if(!el) return; document.querySelectorAll(".search-hit").forEach(function(n){n.classList.remove("search-hit");}); el.classList.add("search-hit"); setTimeout(function(){el.classList.remove("search-hit");},2200); }
+function goCard(key){ stopDetailPlayerObserve(); stopDetailIconSync(); document.body.classList.remove("home-detail-open"); detail.hidden=true; var card=homeCards[key]; if(card&&card.el){ scrollBelowNav(card.el); flash(card.el); } }
+function goDetail(key){ openHome(key); setTimeout(function(){ var target=document.getElementById("homeDetailIntro"); if(target){ target.scrollIntoView({behavior:"smooth",block:"center"}); flash(target); } },350); }
+var searchInput=document.getElementById("homeSearchInput"), searchBox=document.getElementById("homeSearchResults");
+function addMark(el,text,q){ var lo=text.toLowerCase(), ql=q.toLowerCase(), ix=lo.indexOf(ql); if(ix<0){ el.textContent=text; return; } el.appendChild(document.createTextNode(text.slice(0,ix))); var m=document.createElement("mark"); m.textContent=text.slice(ix,ix+q.length); el.appendChild(m); el.appendChild(document.createTextNode(text.slice(ix+q.length))); }
+var currentSearchRows=[];
+function renderSearch(q){
+if(!q){ searchBox.hidden=true; searchBox.innerHTML=""; return; }
+var lower=q.toLowerCase(), rows=[];
+homeCards.forEach(function(c,key){
+var meta=c.singer+" · "+c.date;
+if(c.title.toLowerCase().indexOf(lower)>=0) rows.push({key:key,kind:"card",field:"歌名",label:c.title,context:meta});
+if(c.singer.toLowerCase().indexOf(lower)>=0) rows.push({key:key,kind:"card",field:"歌手",label:c.singer,context:"《"+c.title+"》 · "+c.date});
+if(c.date.indexOf(q)>=0) rows.push({key:key,kind:"card",field:"发行日期",label:c.date,context:"《"+c.title+"》 · "+c.singer});
+var ii=c.intro.indexOf(q);
+if(ii>=0) rows.push({key:key,kind:"detail",field:"介绍",label:"提到“"+q+"”",context:(ii>20?"…":"")+c.intro.slice(Math.max(0,ii-20),ii+q.length+20)+(ii+q.length+20<c.intro.length?"…":"")});
+});
+currentSearchRows=rows;
+searchBox.innerHTML="";
+if(!rows.length){ var em=document.createElement("div"); em.className="sr-empty"; em.textContent="没有找到和“"+q+"”相关的内容"; searchBox.appendChild(em); }
+rows.slice(0,30).forEach(function(r){
+var b=document.createElement("button"); b.type="button"; b.className="sr-item";
+var top=document.createElement("div"); top.className="sr-top";
+var k=document.createElement("b"); k.className="sr-kind"; k.textContent=r.kind==="card"?"卡片":"详情";
+var al=document.createElement("b"); al.className="sr-album"; al.textContent="《"+homeCards[r.key].title+"》";
+var f=document.createElement("span"); f.className="sr-field"; addMark(f,r.field+"："+r.label,q);
+top.appendChild(k); top.appendChild(al); top.appendChild(f);
+var ctx=document.createElement("div"); ctx.className="sr-context"; addMark(ctx,r.context,q);
+b.appendChild(top); b.appendChild(ctx);
+b.addEventListener("click",function(){ searchBox.hidden=true; if(r.kind==="card") goCard(r.key); else goDetail(r.key); });
+searchBox.appendChild(b);
+});
+searchBox.hidden=false;
+}
+searchInput.addEventListener("input",function(){ renderSearch(searchInput.value.trim()); });
+searchInput.addEventListener("focus",function(){ if(searchInput.value.trim()) renderSearch(searchInput.value.trim()); });
+var navSearch=document.getElementById("navSearch"), navToggle=document.getElementById("navSearchToggle");
+navToggle.addEventListener("click",function(ev){ ev.stopPropagation(); if(navSearch.classList.contains("open")){ if(!searchInput.value.trim()){ navSearch.classList.remove("open"); searchBox.hidden=true; } else { searchInput.focus(); } } else { navSearch.classList.add("open"); searchInput.focus(); } });
+searchInput.addEventListener("keydown",function(ev){
+if(ev.key==="Escape"){ searchBox.hidden=true; searchInput.blur(); if(!searchInput.value.trim()) navSearch.classList.remove("open"); }
+if(ev.key==="Enter"){ ev.preventDefault(); var q=searchInput.value.trim(); if(!q) return; if(!currentSearchRows.length) renderSearch(q); var r=currentSearchRows[0]; if(!r) return; searchBox.hidden=true; if(r.kind==="card") goCard(r.key); else goDetail(r.key); }
+});
+document.addEventListener("click",function(ev){ if(!ev.target.closest(".nav-search")){ searchBox.hidden=true; if(!searchInput.value.trim()) navSearch.classList.remove("open"); } });
+homeCards.forEach(function(c,key){
+if(c.link){ c.link.addEventListener("click",function(ev){ ev.preventDefault(); openHome(key); }); }
+});
+document.getElementById("homeClose").addEventListener("click",closeHome);
+document.getElementById("homeDetailPlay").addEventListener("click",function(ev){ ev.preventDefault(); var key=parseInt(this.getAttribute("data-card"),10); if(!isNaN(key)) goCard(key); });
+document.addEventListener("keydown",function(ev){ if(ev.key==="Escape"&&!detail.hidden) closeHome(); });
+
+})();
+</script>
+<script>
+(function(){ if(window.__srcSyncBound) return; })();
+</script>
+
+
+  <script>
+(function(){ if(window.__clickExclusiveBound) return; window.__clickExclusiveBound=true;
+document.addEventListener("click",function(ev){ var btn=ev.target&&ev.target.closest?ev.target.closest(".meplayer-control-play"):null; if(!btn) return; setTimeout(function(){ if(window.syncPlayersBySrc) window.syncPlayersBySrc(); },80); },true);
+})();
+</script>
+</body>
+</html>
