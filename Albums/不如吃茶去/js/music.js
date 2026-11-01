@@ -907,7 +907,21 @@ var data=[
     try{ want=decodeURIComponent(m[1].replace(/\+/g,' ')); }catch(e){ want=m[1]; }
     var k=-1;
     for(var i=0;i<data.length;i++){ if(data[i].song===want){ k=i; break; } }
-    if(k<0){ return; }
+    var dlReady=false;
+    function markReady(){
+        if(dlReady){ return; }
+        dlReady=true;
+        var rootEl=document.documentElement;
+        function applyReady(){
+            rootEl.className+=' dl-ready';
+            /* 过渡结束后撤掉标记：不长期保留 filter，也不改变 #play-list 的定位基准 */
+            setTimeout(function(){ rootEl.className=rootEl.className.replace(/\s*dl-enter/,''); },750);
+        }
+        if(window.requestAnimationFrame){ requestAnimationFrame(function(){ requestAnimationFrame(applyReady); }); }
+        else{ applyReady(); }
+    }
+    function unmarkEnter(){ document.documentElement.className=document.documentElement.className.replace(/\s*dl-enter/,''); }
+    if(k<0){ unmarkEnter(); return; }
     // 跳过前面的 3D 唱片墙首页
     var stageEl=document.getElementById('stage');
     if(stageEl){ stageEl.style.display='none'; }
@@ -952,6 +966,12 @@ var data=[
     Audio1.play();
     animateRun();
     lyricTimer();
+
+    // ---- 入场过渡：封面就绪后去模糊、撤遮罩（最多等 600ms）----
+    var coverImg=new Image();
+    coverImg.onload=coverImg.onerror=function(){ setTimeout(markReady,50); };
+    coverImg.src=data[n].img;
+    setTimeout(markReady,600);
 
     // ---- 兜底：新标签页没有用户手势，浏览器可能直接拒绝带声播放 ----
     var hasPlayed=false;

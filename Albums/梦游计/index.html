@@ -2,8 +2,12 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
+	<script type="text/javascript">
+	/* 直达进入：在解析 head 时就打标记，保证首帧不出现 3D 唱片墙 */
+	if(/(?:^|[?&])song=/.test(location.search)){ document.documentElement.className+=' dl-enter'; }
+	</script>
 	<meta name="viewport"  id="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0,user-scalable=no"/>
-	<link rel="stylesheet" type="text/css" href="css/music.css?v=26">
+	<link rel="stylesheet" type="text/css" href="css/music.css?v=27">
 	<link rel="icon" href="./img/梦游计ico.png" type="image/x-icon">
 	<script type="text/javascript" src="js/lyrics.js"></script>
 	<title>许嵩 | 梦游计_2012</title>
@@ -200,6 +204,6 @@
 		<audio  src="mp3/音阙诗听,昆玉 - 我已经到了幻想尽头.m4a"></audio>
 	</div>
 <script type="text/javascript" src="js/move.js"></script>
-<script type="text/javascript" src="js/music.js?v=32"></script>
+<script type="text/javascript" src="js/music.js?v=33"></script>
 </body>
 </html>

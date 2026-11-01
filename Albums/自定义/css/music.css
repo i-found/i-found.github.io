@@ -581,3 +581,18 @@ opacity: 0.4;
 	letter-spacing: 0.06em;
 	margin-top: 28px;
 }
+/* ===== 直达进入（?song=曲名）专用过渡：首帧藏起 3D 唱片墙，遮罩淡出 + 由模糊变清晰 ===== */
+html.dl-enter #stage{display:none;}                 /* 首帧就不让唱片墙出现，避免闪到首页/第一首 */
+html.dl-enter #wrapper{filter:blur(18px);transition:filter .55s ease;}
+html.dl-enter.dl-ready #wrapper{filter:blur(0);}
+html.dl-enter::after{
+	content:"";
+	position:fixed;
+	top:0;right:0;bottom:0;left:0;
+	z-index:99999;
+	background:#2D2A2A;                              /* 与唱片墙同色，视觉上无缝 */
+	opacity:1;
+	transition:opacity .45s ease;
+	pointer-events:none;
+}
+html.dl-enter.dl-ready::after{opacity:0;}
