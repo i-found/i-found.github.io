@@ -899,7 +899,7 @@ var data=[
             move(stage,{opacity:1},500,'linear');
         };
     })();
-//////////////////////////<----- 歌曲直达：?song=曲名 打开即定位到该曲并播放 ----->//////////////////////////
+//////////////////////////<----- 歌曲直达：?song=曲名 打开即定位到该曲并直接播放（无切歌动效） ----->//////////////////////////
 (function(){
     var m=/[?&]song=([^&#]*)/.exec(window.location.search);
     if(!m){ return; }
@@ -908,7 +908,7 @@ var data=[
     var k=-1;
     for(var i=0;i<data.length;i++){ if(data[i].song===want){ k=i; break; } }
     if(k<0){ return; }
-    // 直接进入播放界面：跳过前面的 3D 唱片墙首页
+    // 跳过前面的 3D 唱片墙首页
     var stageEl=document.getElementById('stage');
     if(stageEl){ stageEl.style.display='none'; }
 
@@ -922,38 +922,40 @@ var data=[
         return p;
     };
 
-    var same=(k===n);
-    if(!same){
+    if(k!==n){
+        // 静态渲染到目标曲目：唱片直接摆在居中位，封面/背景/音源一次到位
         prevSong=n;
         if(lis[n]){ lis[n].className=''; }
         n=k;
         if(lis[n]){ lis[n].className='active'; }
         loadLyric(data[n].lyric);
-        songName.innerHTML=data[n].song; randomTitleColor(n);
-        artist.innerHTML=data[n].singer;
-        reStatus();
-        changing=true;
+        show(n,0,1);
+        albumBg[0].src=data[n].img;
+        albumBg[1].src=data[n].img;
+        disk[0].style.left=w/2+'px';
+        disk[1].style.left=jl+'px';
+        // 进度归零（不用 reStatus，避免旧曲时长参与换算）
+        currentTime.innerHTML='00:00';
+        Audio1.currentTime=0;
+        processCur.style.width='0px';
+        curBtn.style.left='0px';
+        scrollToMove(ul,42*(k-2),400);
     }
-    // 先把界面置为「播放中」，切歌时由 round→show→playState 接手自动开播
+    changing=false;
+    // 直接进入播放状态
     playBtn.onOff=true;
     playBtn.style.display='none';
     pauseBtn.style.display='inline-block';
     styli.className='';
     bg.style.webkitFilter='blur(10px)';
     timer();
-    if(same){
-        Audio1.play();
-        animateRun();
-        lyricTimer();
-    }else{
-        nextTab();
-        scrollToMove(ul,42*(k-2),400);
-    }
+    Audio1.play();
+    animateRun();
+    lyricTimer();
 
     // ---- 兜底：新标签页没有用户手势，浏览器可能直接拒绝带声播放 ----
     var hasPlayed=false;
     Audio1.addEventListener('playing',function(){ hasPlayed=true; });
-    // 还原成待播放界面
     function revertToPause(){
         playBtn.onOff=false;
         playBtn.style.display='inline-block';
@@ -996,5 +998,5 @@ var data=[
         if(hasPlayed||!Audio1.paused){ return; }
         revertToPause();
         armResume();
-    },same?1300:2600);
+    },1200);
 })();
