@@ -124,9 +124,10 @@
       theDateStr = y+"年"+m+"月"+date+"日 星期"+days[day]+" "+hs+":"+ms+":"+ss;
       theYearStr = y;
       theDayStr = date;
-      document.getElementById("theYear"). innerHTML =theYearStr;
-      document.getElementById("theDate"). innerHTML =theDayStr;
-      document.getElementById("theClock"). innerHTML =theDateStr;
+      var elYear=document.getElementById("theYear"), elDate=document.getElementById("theDate"), elClock=document.getElementById("theClock");
+      if(elYear) elYear.innerHTML=theYearStr;
+      if(elDate) elDate.innerHTML=theDayStr;
+      if(elClock) elClock.innerHTML=theDateStr;
       // setTimeout 在执行时,是在载入后延迟指定时间后,去执行一次表达式,仅执行一次
       window.setTimeout( showDT, 1000);
     }
@@ -134,8 +135,8 @@
     <script type="text/javascript" src="js/SmoothScroll.js"></script>
     <link rel="stylesheet" href="./dist/meplayer.css">
     <link rel="stylesheet" href="main.css">
-    <link rel="stylesheet" href="index.css?v=39">
-    <link rel="stylesheet" type="text/css"media="screen and (max-width:1080px)"href="tinyScreen.css?v=24" />
+    <link rel="stylesheet" href="index.css?v=51">
+    <link rel="stylesheet" type="text/css"media="screen and (max-width:1080px)"href="tinyScreen.css?v=25" />
     <link rel="icon" href="./img/ico.png" type="image/x-icon">
   </head>
   <body onload="showDT()">
@@ -534,7 +535,7 @@
 
 <div class="bookmark3 new1">
   <!-- 音乐播放插件 -->
-    <div class="container1 colorbox-orange">
+    <div class="container1">
       <div class="music8"></div>
     </div>
 
@@ -587,8 +588,8 @@
 
   <!-- 音乐播放插件 -->
 
-  <!-- colorbox标签可以定义播放按钮的颜色 -->
-    <div class="container1 colorbox-green">
+  <!-- 播放按钮统一跟随卡片主题色；如需单独配色，可给 .container1 加 colorbox-green / colorbox-orange -->
+    <div class="container1">
       <div class="music10"></div>
     </div>
 
@@ -671,7 +672,7 @@
 </div>
 <div class="bookmark3 new1">
   <!-- 音乐播放插件 -->
-    <div class="container1 colorbox-green">
+    <div class="container1">
       <div class="music15"></div>
     </div>
 
@@ -942,23 +943,79 @@ function scrollBelowNav(el){ var nav=document.querySelector(".Navi-Bar"); var na
 var currentHomeKey=-1;
 var detailPlayObserver=null;
 function showDetailPlayer(key){ document.querySelectorAll(".detail-player-wrap").forEach(function(w){ w.hidden=(parseInt(w.getAttribute("data-detail-index"),10)!==key); }); }
-function syncPlayersBySrc(){
-var playing=null;
+function syncPlayersBySrc(active){
+/* active 为本次真正触发播放的 audio，避免用“文档里最后一个非暂停的 audio”去猜，
+   否则点了 A 又会被文档靠后的 B 覆盖，导致 A 刚播就被停掉（表现为无法切回上一首）。 */
+var playing=active||null;
+var containers=document.querySelectorAll(".meplayer-container, .meplayer-container-mini");
+if(!playing){
 document.querySelectorAll("audio").forEach(function(a){ if(!a.paused) playing=a; });
+}
 if(playing){
 var pfn=(playing.getAttribute("src")||playing.src||"").split("/").pop();
 document.querySelectorAll("audio").forEach(function(a){ if(a!==playing&&!a.paused) a.pause(); });
-document.querySelectorAll(".meplayer-container").forEach(function(cont){ var a=cont.querySelector("audio"); var fn=a?((a.getAttribute("src")||a.src||"").split("/").pop()):""; cont.classList.toggle("meplayer-isplaying", fn===pfn&&fn!==""); });
+containers.forEach(function(cont){ var a=cont.querySelector("audio"); var fn=a?((a.getAttribute("src")||a.src||"").split("/").pop()):""; cont.classList.toggle("meplayer-isplaying", fn===pfn&&fn!==""); });
 } else {
-document.querySelectorAll(".meplayer-container").forEach(function(cont){ cont.classList.remove("meplayer-isplaying"); });
+containers.forEach(function(cont){ cont.classList.remove("meplayer-isplaying"); });
 }
 }
 window.syncPlayersBySrc=syncPlayersBySrc;
 if(!window.__srcSyncBound){ window.__srcSyncBound=true;
-document.addEventListener("play",function(ev){ if(ev.target&&ev.target.tagName==="AUDIO") setTimeout(syncPlayersBySrc,30); },true);
-document.addEventListener("pause",function(ev){ if(ev.target&&ev.target.tagName==="AUDIO") setTimeout(syncPlayersBySrc,30); },true);
-document.addEventListener("ended",function(ev){ if(ev.target&&ev.target.tagName==="AUDIO") setTimeout(syncPlayersBySrc,30); },true);
+document.addEventListener("play",function(ev){ if(ev.target&&ev.target.tagName==="AUDIO"){ var act=ev.target; setTimeout(function(){ syncPlayersBySrc(act); },30); } },true);
+document.addEventListener("pause",function(ev){ if(ev.target&&ev.target.tagName==="AUDIO") setTimeout(function(){ syncPlayersBySrc(); },30); },true);
+document.addEventListener("ended",function(ev){ if(ev.target&&ev.target.tagName==="AUDIO") setTimeout(function(){ syncPlayersBySrc(); },30); },true);
 }
+
+/* 详情卡片与主页卡片共用同一个播放模块：
+   详情页按钮不播放自己那份 audio，而是直接切换主页对应的播放器，
+   这样两个按钮的图标与播放/暂停状态始终一致，也不会出现双音频同时播放。 */
+function findMainAudioByFile(fn){
+var found=null;
+document.querySelectorAll("audio").forEach(function(a){
+if(a.closest&&a.closest('[class^="detailMusic"]')) return;
+var f=(a.getAttribute("src")||a.src||"").split("/").pop();
+if(f===fn) found=a;
+});
+return found;
+}
+function bindDetailButtons(){
+document.querySelectorAll('[class^="detailMusic"]').forEach(function(det){
+var da=det.querySelector("audio"); if(!da) return;
+var fn=(da.getAttribute("src")||da.src||"").split("/").pop();
+var main=findMainAudioByFile(fn); if(!main) return;
+try{ da.preload="none"; da.pause(); }catch(e){}
+var btn=det.querySelector(".meplayer-control-play"); if(!btn) return;
+/* 详情页按钮外扩了滚轮热区（.home-detail-cover-wrap .container1::after），
+   伪元素盖在圆上，click 的 target 会变成 .container1 而不是按钮本身，
+   所以播放/暂停与滚轮统一挂在 .container1 上，点在热区任意位置都能用。 */
+var wheelHost=btn.closest(".container1")||btn;
+wheelHost.addEventListener("click",function(ev){
+ev.stopImmediatePropagation(); ev.preventDefault();
+if(main.paused){ var p=main.play(); if(p&&p.catch) p.catch(function(){}); } else { main.pause(); }
+},true);
+/* 插件的滚轮调音量挂在它自己的 click 处理里，上面的 stopImmediatePropagation 把它拦掉了，
+   所以详情页按钮滚轮没用、只会滚页面。这里补一份等价实现：滚轮调主播放器音量并阻止页面滚动。 */
+var volTimer=null;
+function showVolumeIcon(){
+var mini=btn.closest(".meplayer-container-mini");
+if(!mini) return;
+mini.classList.add("meplayer-adjusting-volume");
+var ic=mini.querySelector(".meplayer-volume-bg i");
+if(ic) ic.style.opacity=main.volume;      /* 与插件一致：图标透明度即音量 */
+clearTimeout(volTimer);
+volTimer=setTimeout(function(){ mini.classList.remove("meplayer-adjusting-volume"); },1000);
+}
+wheelHost.addEventListener("wheel",function(ev){
+ev.preventDefault();
+ev.stopPropagation();
+var step=0.05;
+if(ev.deltaY<0){ main.volume=Math.min(1, main.volume+step); }
+else if(ev.deltaY>0){ main.volume=Math.max(0, main.volume-step); }
+showVolumeIcon();
+},{passive:false});
+});
+}
+bindDetailButtons();
 
 function openHome(key){
 var c=homeCards[key]; if(!c) return;
@@ -973,10 +1030,11 @@ document.body.classList.add("home-detail-open");
 showDetailPlayer(key);
 detail.hidden=false;
 scrollBelowNav(detail);
+setTimeout(syncPlayersBySrc,0);
 }
-function closeHome(){  document.body.classList.remove("home-detail-open"); detail.hidden=true; window.scrollTo({top:0,behavior:"smooth"}); }
-function flash(el){ if(!el) return; document.querySelectorAll(".search-hit").forEach(function(n){n.classList.remove("search-hit");}); el.classList.add("search-hit"); setTimeout(function(){el.classList.remove("search-hit");},2200); }
-function goCard(key){ stopDetailPlayerObserve(); stopDetailIconSync(); document.body.classList.remove("home-detail-open"); detail.hidden=true; var card=homeCards[key]; if(card&&card.el){ scrollBelowNav(card.el); flash(card.el); } }
+function closeHome(){  document.body.classList.remove("home-detail-open"); detail.hidden=true; window.scrollTo({top:0,behavior:"smooth"}); setTimeout(syncPlayersBySrc,0); }
+function flash(el){ if(!el) return; document.querySelectorAll(".search-hit").forEach(function(n){n.classList.remove("search-hit");}); el.classList.add("search-hit"); setTimeout(function(){el.classList.remove("search-hit");},600); }
+function goCard(key){ document.body.classList.remove("home-detail-open"); detail.hidden=true; var card=homeCards[key]; if(card&&card.el){ scrollBelowNav(card.el); flash(card.el); } }
 function goDetail(key){ openHome(key); setTimeout(function(){ var target=document.getElementById("homeDetailIntro"); if(target){ target.scrollIntoView({behavior:"smooth",block:"center"}); flash(target); } },350); }
 var searchInput=document.getElementById("homeSearchInput"), searchBox=document.getElementById("homeSearchResults");
 function addMark(el,text,q){ var lo=text.toLowerCase(), ql=q.toLowerCase(), ix=lo.indexOf(ql); if(ix<0){ el.textContent=text; return; } el.appendChild(document.createTextNode(text.slice(0,ix))); var m=document.createElement("mark"); m.textContent=text.slice(ix,ix+q.length); el.appendChild(m); el.appendChild(document.createTextNode(text.slice(ix+q.length))); }

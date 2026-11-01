@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>听见 | 美好时光</title>
-<link rel="stylesheet" href="music.css?v=41">
+<link rel="stylesheet" href="music.css?v=46">
 <link rel="icon" href="./img/ico.png" type="image/x-icon">
 </head>
 <body>
@@ -86,6 +86,18 @@
 				<ol class="album-tracklist" id="albumDetailTracks"></ol>
 				<a class="album-play" id="albumDetailPlay" href="#" target="_blank">进入专辑播放 →</a>
 			</div>
+			<!-- 单曲介绍浮层：挂在专辑详情左侧，右边缘对齐封面右侧线，高度与详情页一致 -->
+			<aside class="track-pop" id="trackPop" hidden>
+				<button type="button" class="track-pop-close" id="trackPopClose" aria-label="关闭歌曲介绍">✕</button>
+				<img class="track-pop-cover" id="trackPopCover" src="" alt="">
+				<div class="track-pop-body">
+					<h4 class="track-pop-title" id="trackPopTitle"></h4>
+					<p class="track-pop-meta" id="trackPopMeta"></p>
+					<p class="track-pop-intro" id="trackPopIntro"></p>
+				</div>
+				<!-- 直达该曲：跳进专辑播放页并自动定位播放这首歌，与右侧「进入专辑播放」同一水平线 -->
+				<a class="track-pop-play" id="trackPopPlay" href="#" target="_blank">进入歌曲播放 →</a>
+			</aside>
 		</section>
 
 			<script type="text/javascript" src="js/jquery-3.1.1.min.js"></script>
@@ -222,24 +234,139 @@
 		// 专辑介绍数据：曲目以本站各专辑播放页为准
 		var albumData={
 			
-			zidingyi:{title:"自定义",singer:"许嵩",date:"2009/01/10",cover:"img/自定义cover.png",url:"./Albums/自定义",intro:"许嵩的第一张专辑，也是“许嵩现象”的起点：没有唱片公司宣传推广，一个人包办全部词曲、编曲、录音和混音，仅仅靠歌迷自发在网络上传播就扩散开来。冷色调的感情逻辑贯穿始终，复古与流行碰撞的旋律随处可见，《清明雨上》是江南韵味的小调，《城府》写离别写得哀婉，《有何不可》《多余的解释》《如果当时》则带着强烈的叙事感和自嘲意味。乐评人说，这张专辑每首歌都像一出悲喜剧，难以定义、难以归类，但有血有肉、惹人玩味。",tracks:["有何不可","多余的解释","清明雨上","认错","城府","内线","坏孩子","如果当时","星座书上"]},
+			zidingyi:{title:"自定义",singer:"许嵩",date:"2009/01/10",cover:"img/自定义cover.png",url:"./Albums/自定义",intro:"许嵩的第一张专辑，也是“许嵩现象”的起点：没有唱片公司宣传推广，一个人包办全部词曲、编曲、录音和混音，仅仅靠歌迷自发在网络上传播就扩散开来。冷色调的感情逻辑贯穿始终，复古与流行碰撞的旋律随处可见，《清明雨上》是江南韵味的小调，《城府》写离别写得哀婉，《有何不可》《多余的解释》《如果当时》则带着强烈的叙事感和自嘲意味。乐评人说，这张专辑每首歌都像一出悲喜剧，难以定义、难以归类，但有血有肉、惹人玩味。",tracks:["有何不可","多余的解释","清明雨上","认错","城府","内线","坏孩子","如果当时","星座书上"],
+			covers:{"有何不可":"Albums/自定义/img/有何不可cover.png","多余的解释":"Albums/自定义/img/多余的解释cover.png","清明雨上":"Albums/自定义/img/清明雨上cover.png","认错":"Albums/自定义/img/认错cover.png","城府":"Albums/自定义/img/城府cover.png","内线":"Albums/自定义/img/内线cover.png","坏孩子":"Albums/自定义/img/坏孩子cover.png","如果当时":"Albums/自定义/img/如果当时cover.png"},
+			intros:{
+			"有何不可":"这张专辑里传唱度最高的一首。旋律几乎是顺口溜式的简单，「为你唱这首歌，没有什么风格」一句被无数人记住。写的是少年人那种没什么道理的喜欢——不必讲条件，也不必问结果。",
+			"多余的解释":"写感情里解释的无力。话越说越多，误会反而越结越紧，最后连解释本身都成了对方眼里的辩解。副歌的旋律线一路向下，情绪跟着一起沉。",
+			"清明雨上":"早期国风的代表作之一。借清明时节的雨写追忆，词里有江南的湿润气，二胡与弦乐把哀而不伤的分寸拿捏得很准。每年清明前后，这首歌都会被重新翻出来听。",
+			"认错":"写低头那一刻的复杂：嘴上认了，心里未必服。旋律平实，重点全在语气上的退让与不甘，是专辑里情绪最生活化的一首。",
+			"城府":"这张专辑里最「冷」的一首。写人心的深不可测——你以为看懂了，其实只看到对方愿意让你看到的那一层。语气克制，听感像隔着一层玻璃。",
+			"内线":"用球场上「内线」的位置作比，写关系里那种明明靠得很近、却始终进不到核心的位置感。视角小巧，是专辑里比较被低估的一首。",
+			"坏孩子":"写叛逆少年：被贴上「坏」的标签，索性就按标签活给他们看。节奏偏快，词里带着赌气的劲儿。",
+			"如果当时":"写对过去的假设——如果当时换一种说法、另一种选择，会不会不一样。整首歌停在这个假设里，没有给答案。",
+			"星座书上":"借星座话题写感情里那些自我安慰的推理：把对方的冷淡解释成「水逆」，把不合解释成「星座不合」。是专辑里最俏皮的一首。"
+			}},
 			
-			xunwu:{title:"寻雾启示",singer:"许嵩",date:"2010/01/06",cover:"img/寻物启示cover.png",url:"./Albums/寻雾启示",intro:"许嵩的第二张专辑，依然由他一人包办词曲和制作。标题的意思他自己解释过：每个人都在生活中寻找着，又在寻找中生活着，身边很多美好的事物像雾一样，看得见却抓不住，得失悲喜之后才有启示。风格游走在复古与新锐、嬉皮与深情之间：《灰色头像》的吉他滑音和电钢独奏慵懒深情，《庐州月》化身古代出仕者写功名虚妄与故乡怅惘，《白马非马》以哲学命题为名，纯钢琴伴奏加近乎清唱，连换息声都牵动人心，首波主打则是《叹服》。",tracks:["庐州月","叹服","单人旅途","在那不遥远的地方","不煽情","灰色头像","白马非马","我们的恋爱是对生命的严重浪费","我无所谓"]},
+			xunwu:{title:"寻雾启示",singer:"许嵩",date:"2010/01/06",cover:"img/寻物启示cover.png",url:"./Albums/寻雾启示",intro:"许嵩的第二张专辑，依然由他一人包办词曲和制作。标题的意思他自己解释过：每个人都在生活中寻找着，又在寻找中生活着，身边很多美好的事物像雾一样，看得见却抓不住，得失悲喜之后才有启示。风格游走在复古与新锐、嬉皮与深情之间：《灰色头像》的吉他滑音和电钢独奏慵懒深情，《庐州月》化身古代出仕者写功名虚妄与故乡怅惘，《白马非马》以哲学命题为名，纯钢琴伴奏加近乎清唱，连换息声都牵动人心，首波主打则是《叹服》。",tracks:["庐州月","叹服","单人旅途","在那不遥远的地方","不煽情","灰色头像","白马非马","我们的恋爱是对生命的严重浪费","我无所谓"],
+			covers:{"庐州月":"Albums/寻雾启示/img/庐州月cover.png","叹服":"Albums/寻雾启示/img/叹服cover.png","单人旅途":"Albums/寻雾启示/img/单人旅途cover.png","在那不遥远的地方":"Albums/寻雾启示/img/在那不遥远的地方cover.png","不煽情":"Albums/寻雾启示/img/不煽情cover.png","灰色头像":"Albums/寻雾启示/img/灰色头像cover.png","白马非马":"Albums/寻雾启示/img/白马非马cover.png","我们的恋爱是对生命的严重浪费":"Albums/寻雾启示/img/我们的恋爱是对生命的严重浪费cover.png","我无所谓":"Albums/寻雾启示/img/我无所谓cover.png"},
+			intros:{
+			"庐州月":"专辑里国风色彩最浓的一首。化身古代出仕者：功名在身却回不了故乡，月光一照，怅惘全出来了。词句雅致但不晦涩，「庐州月光」四个字几乎是画面本身。",
+			"叹服":"首波主打。写对一个人的彻底佩服——不是仰慕，是被对方的手段和心思逼到不得不服。节奏推进干脆，副歌的情绪是一层层加上去的。",
+			"单人旅途":"写一个人的路。没有人送，也没有人等，反而走得轻。编曲偏民谣底色，吉他不抢戏，把「一个人也可以」唱得不苦情。",
+			"在那不遥远的地方":"写给理想，也写给自己。副歌反复强调「不遥远」，语气上更像是在给自己打气。是专辑里少有的明亮色彩。",
+			"不煽情":"歌名就是态度：不渲染、不卖惨、不把情绪往你脸上推。写分开之后的分寸感，克制得有点刻意，而那份刻意本身又成了情绪。",
+			"灰色头像":"QQ 时代的集体记忆。吉他滑音和电钢独奏把等待的感觉拉得很长，写的是打开对话框、看到头像灰着的那种安静。",
+			"白马非马":"以公孙龙的名辩命题为名。纯钢琴伴奏，近乎清唱的唱法，连换气声都不加修饰，是专辑里最安静也最难唱的一首。",
+			"我们的恋爱是对生命的严重浪费":"标题长得像个宣言。用夸张的说法自嘲一段消耗型的关系——明知在浪费，还是拖了很久才肯承认。",
+			"我无所谓":"写嘴上说着无所谓、其实样样都记着的那种人。语气听着散漫，尾音却收得用力。"
+			}},
 			
-			sugela:{title:"苏格拉没有底",singer:"许嵩",date:"2011/04/01",cover:"img/苏格拉没有㡳cover.png",url:"./Albums/苏格拉没有㡳",intro:"签约海蝶后的首张专辑，也是许嵩曲风大变的一张：不再只写爱情，开始写世界和社会。《千百度》化用诗词典故，《拆东墙》借古喻今，《河山大好》写得洒脱，《想象之中》则是首支主打。实体唱片卖出超过二十三万张，拿下数字专辑销量榜冠军和年度推荐唱片，被不少歌迷视为他的巅峰之作，豆瓣上也有乐迷说这张专辑越听越有深意，像好茶一样要慢慢品。",tracks:["想象之中","微博控","千百度","河山大好","降温","拆东墙","医生","双人旁","毁人不倦","敬酒不吃"]},
+			sugela:{title:"苏格拉没有底",singer:"许嵩",date:"2011/04/01",cover:"img/苏格拉没有㡳cover.png",url:"./Albums/苏格拉没有㡳",intro:"签约海蝶后的首张专辑，也是许嵩曲风大变的一张：不再只写爱情，开始写世界和社会。《千百度》化用诗词典故，《拆东墙》借古喻今，《河山大好》写得洒脱，《想象之中》则是首支主打。实体唱片卖出超过二十三万张，拿下数字专辑销量榜冠军和年度推荐唱片，被不少歌迷视为他的巅峰之作，豆瓣上也有乐迷说这张专辑越听越有深意，像好茶一样要慢慢品。",tracks:["想象之中","微博控","千百度","河山大好","降温","拆东墙","医生","双人旁","毁人不倦","敬酒不吃"],
+			covers:{"想象之中":"Albums/苏格拉没有㡳/img/想象之中cover.png","微博控":"Albums/苏格拉没有㡳/img/微博控cover.png","千百度":"Albums/苏格拉没有㡳/img/千百度cover.png","河山大好":"Albums/苏格拉没有㡳/img/河山大好cover.png","降温":"Albums/苏格拉没有㡳/img/降温cover.png","拆东墙":"Albums/苏格拉没有㡳/img/拆东墙cover.png","医生":"Albums/苏格拉没有㡳/img/医生cover.jpg","双人旁":"Albums/苏格拉没有㡳/img/双人旁cover.jpg","毁人不倦":"Albums/苏格拉没有㡳/img/毁人不倦cover.jpg","敬酒不吃":"Albums/苏格拉没有㡳/img/敬酒不吃cover.jpg"},
+			intros:{
+			"想象之中":"专辑的第一支主打，也是整张专辑的入口。写的是都市里被想象加工过的人和关系：以为足够了解，其实只见过对方愿意展示的那一面。旋律轻快、编曲清爽，副歌一句压着一句往上走，听感并不沉重，可词里那点清醒的落寞要听几遍才浮出来。",
+			"微博控":"副歌直白到近乎口语，写手机不离手、刷屏到深夜的日常。2011 年微博刚起势，这首歌把「控」这个字唱进了很多人的自我调侃里——一边笑自己停不下来，一边继续往下滑。电子音色铺得很密，是专辑里最当代的一首。",
+			"千百度":"标题取自辛弃疾《青玉案·元夕》「众里寻他千百度」。古意词句配上的却不是复古编曲，写一场错过：灯会散了，人也没等到。这首歌后来常被当作许嵩国风的代表作之一，翻唱版本很多。",
+			"河山大好":"情绪最开阔的一首。不再纠结于某个人某段关系，把视线放到外面去——山高水长，走一走也就散了。副歌的合唱感和鼓点推进，让「河山大好」四个字像一句自我劝解。",
+			"降温":"专辑里情绪最冷的一首。写感情退潮之后的清醒：没有争吵，也没有挽留，只是温度一点一点掉下去。编曲克制、留白很多，适合夜里单独听。",
+			"拆东墙":"社会观察色彩最重的一首。借一个古代故事写现实里的荒诞，表面是旧事，内里说的是普通人在规则面前的无力。许嵩很少直接喊话，这首也一样，把话藏在故事里让人自己品。",
+			"医生":"以医生的视角展开：能开的药方都开了，唯独人心那点病治不好。歌词把「诊断」和「感情」叠在一起说，是这张专辑里叙事最巧的一首。",
+			"双人旁":"从汉字偏旁切入写两个人——一个「双人旁」，两个人挨着才成立，少一个就散了。角度很小，落点很大，是他惯用的那种从一个字写一段情。",
+			"毁人不倦":"反用「诲人不倦」，写以爱为名、以关心为名的消耗：一边说着为你好，一边把人磨掉。语气冷静甚至带笑，听完并不舒服，而那正是它想要的效果。",
+			"敬酒不吃":"写不愿迎合。酒桌上的规矩、场面上的客气，唱的是「我偏不」。节奏硬朗，是专辑里态度最直接的一首。"
+			}},
 			
-			mengyouji:{title:"梦游计",singer:"许嵩",date:"2012/07/11",cover:"img/梦游计cover.png",url:"./Albums/梦游计",intro:"以“梦游”为概念的超现实主义专辑：白天是追逐欲望的脑力较量，深夜不妨借梦游一场，抛开压力，站在自己之外重新审视自己与他人、与世界的关系。除了传唱度极高的《幻听》，专辑还写了君臣、师生、闺蜜、夫妻等各种关系，视野比前作开阔得多，歌词也更直白、不再层层隐喻。《幻听》后来拿下年度金曲和东方风云榜十大金曲，平面写真和MV也都融入了超现实主义的虚实手法。",tracks:["幻听","全球变冷","对话老师","闺蜜","装糊涂","胡萝卜须","亲情式的爱情","伴虎","Play With Style","心疼你的过去"]},
+			mengyouji:{title:"梦游计",singer:"许嵩",date:"2012/07/11",cover:"img/梦游计cover.png",url:"./Albums/梦游计",intro:"以“梦游”为概念的超现实主义专辑：白天是追逐欲望的脑力较量，深夜不妨借梦游一场，抛开压力，站在自己之外重新审视自己与他人、与世界的关系。除了传唱度极高的《幻听》，专辑还写了君臣、师生、闺蜜、夫妻等各种关系，视野比前作开阔得多，歌词也更直白、不再层层隐喻。《幻听》后来拿下年度金曲和东方风云榜十大金曲，平面写真和MV也都融入了超现实主义的虚实手法。",tracks:["幻听","全球变冷","对话老师","闺蜜","装糊涂","胡萝卜须","亲情式的爱情","伴虎","Play With Style","心疼你的过去"],
+			covers:{"幻听":"Albums/梦游计/img/幻听cover.png","全球变冷":"Albums/梦游计/img/全球变冷cover.png","对话老师":"Albums/梦游计/img/对话老师cover.png","闺蜜":"Albums/梦游计/img/闺蜜cover.png","装糊涂":"Albums/梦游计/img/装糊涂cover.png","胡萝卜须":"Albums/梦游计/img/胡萝卜须cover.png","亲情式的爱情":"Albums/梦游计/img/亲情式的爱情cover.png","伴虎":"Albums/梦游计/img/伴虎cover.png","Play With Style":"Albums/梦游计/img/PlayWithStylecover.png","心疼你的过去":"Albums/梦游计/img/心疼你的过去cover.png"},
+			intros:{
+			"幻听":"这张专辑传唱度最高的一首，也拿过年度金曲。写分不清是幻听还是真听见了对方的声音——手机没响，门没开，可那个声音清清楚楚。副歌的情绪推得很满，听完心里空一块。",
+			"全球变冷":"写人与人之间的温度在下降。不是气候，是客气取代了亲近，礼貌里带着距离。编曲偏冷色调，合成器铺底，是专辑里气质最「现代」的一首。",
+			"对话老师":"写师生之间那场不对等的对话：一个在讲台，一个在课桌，说的未必是同一件事。视角很有趣，从学生的位置抬头看大人世界的规训。",
+			"闺蜜":"少见地从女生视角写友谊：分享秘密、互相撑腰，也互相比较。词写得细，把「好朋友」之间那点微妙的较劲也带出来了。",
+			"装糊涂":"写看破不说破。有些事知道了反而更难办，于是选着装不懂。语气轻描淡写，尾音里全是心知肚明。",
+			"胡萝卜须":"借法国作家儒勒·列那尔的《胡萝卜须》立意，写家里那个总被忽视的孩子：红头发、不被偏爱，用乖巧换取一点点注意。是专辑里最沉重的一首。",
+			"亲情式的爱情":"写感情走到后来，爱情变成了亲情：不再心动，但分不开。听起来平淡，其实是最难处理的处境——没有错，也没有解法。",
+			"伴虎":"借「伴君如伴虎」写君臣关系，也影射权力结构里的如履薄冰。词的密度高，典故埋得深，是专辑里最「硬」的一首。",
+			"Play With Style":"专辑里最跳脱的一首，节奏和编曲都往玩儿的方向走，从沉重的话题里透一口气。",
+			"心疼你的过去":"写知道对方过去之后的那种心疼：不追问，也不评判，只是想把之后的日子补得好一点。"
+			}},
 			
-			buchi:{title:"不如吃茶去",singer:"许嵩",date:"2014/08/26",cover:"img/不如吃茶去cover.png",url:"./Albums/不如吃茶去",intro:"国风最浓的一张，标题取自禅宗公案“不如吃茶去”，讲求返璞归真。专辑集结了古筝、竹笛、箫、尺八、埙、古琴、二胡、马头琴等中国民乐演奏家：《山水之间》里古筝与爵士吉他齐奏，《惊鸿一面》与黄龄合唱古典式爱情，《梧桐灯》用世界上最古老的乐器都都克笛配上Trip-Hop节奏，《等到烟火清凉》则以八字唱词写禅意。披着古色古香的外套，内里却是一颗极为现代的心，专辑也因此拿下QQ音乐年度盛典的年度创意专辑。",tracks:["山水之间","弹指一挥间","宇宙之大","惊鸿一面","七夕","有桃花","梧桐灯","隐隐约约","等到烟火清凉"]},
+			buchi:{title:"不如吃茶去",singer:"许嵩",date:"2014/08/26",cover:"img/不如吃茶去cover.png",url:"./Albums/不如吃茶去",intro:"国风最浓的一张，标题取自禅宗公案“不如吃茶去”，讲求返璞归真。专辑集结了古筝、竹笛、箫、尺八、埙、古琴、二胡、马头琴等中国民乐演奏家：《山水之间》里古筝与爵士吉他齐奏，《惊鸿一面》与黄龄合唱古典式爱情，《梧桐灯》用世界上最古老的乐器都都克笛配上Trip-Hop节奏，《等到烟火清凉》则以八字唱词写禅意。披着古色古香的外套，内里却是一颗极为现代的心，专辑也因此拿下QQ音乐年度盛典的年度创意专辑。",tracks:["山水之间","弹指一挥间","宇宙之大","惊鸿一面","七夕","有桃花","梧桐灯","隐隐约约","等到烟火清凉"],
+			covers:{"山水之间":"Albums/不如吃茶去/img/山水之间cover.jpeg","弹指一挥间":"Albums/不如吃茶去/img/弹指一挥间cover.jpeg","宇宙之大":"Albums/不如吃茶去/img/宇宙之大cover.jpeg","七夕":"Albums/不如吃茶去/img/七夕cover.jpg","有桃花":"Albums/不如吃茶去/img/有桃花cover.jpeg","梧桐灯":"Albums/不如吃茶去/img/梧桐灯cover.jpeg","隐隐约约":"Albums/不如吃茶去/img/隐隐约约cover.jpg"},
+			intros:{
+			"山水之间":"专辑主打，也是国风最正的一首。古筝与爵士吉他同台，一个唱山水，一个唱人间。写的是退一步之后的开阔：山还是那座山，人已经不那么急了。",
+			"弹指一挥间":"写时间过得快。相聚、散场、再相聚，回头看不过弹指一下。词里有古意，编曲却是现代的，两种时间感叠在一起。",
+			"宇宙之大":"把视角拉到最大：人这么小，事这么轻。用来劝人，也用来劝自己。是专辑里最开阔的一首。",
+			"惊鸿一面":"惊鸿一瞥般的一首对唱，与黄龄合作，男女声一进一出，写古典式的相遇与惊艳。两个人声线气质差别很大，叠在一起反而成了这首歌的辨识度。",
+			"七夕":"借七夕写相聚与别离。节日里最热闹的那天，往往也是一个人最清楚自己孤单的那天。",
+			"有桃花":"写桃花运，也写桃花劫。词写得轻盈，节奏明快，是专辑里最俏皮的一首。",
+			"梧桐灯":"用都都克笛配上 Trip-Hop 节奏，把最古老的音色放进最现代的编曲里。写一盏灯下的等待，画面感很强。",
+			"隐隐约约":"写看得见又抓不住的东西。旋律线条柔，副歌用气声处理，情绪是含着说的。",
+			"等到烟火清凉":"唱词极少，八字一句反复吟唱，留白大到近乎禅意。等一场烟火散尽，热闹过去了，人也静下来了。"
+			}},
 			
-			youth:{title:"青年晚报",singer:"许嵩",date:"2016/06/28",cover:"img/青年晚报cover.png",url:"./Albums/YouthEveningPaper",intro:"三十而立的青年敞开自己和你交心的一张专辑，像摊开一张晚报：社会生活、人生况味、暖心故事、摄影专栏，甚至娱乐头条和养生提醒都有，歌词诗性与易读性兼具，偶尔透出冷冷的幽默。许嵩担任音乐总监并包办全部制作，《雅俗共赏》回应了“雅俗”这个行业标准，态度是不媚俗也不孤芳自赏，拿下东方风云榜十大金曲；《燕归巢》则是他写给张杰、张靓颖那首歌的个人版本，古风依旧。数字版上线后试听超过1.2亿人次，封面和《摄影艺术》的MV还远赴巴黎拍摄。",tracks:["最佳歌手","平行宇宙","摄影艺术","雅俗共赏","燕归巢","早睡身体好","奇谈","幻胖","摆脱"]},
+			youth:{title:"青年晚报",singer:"许嵩",date:"2016/06/28",cover:"img/青年晚报cover.png",url:"./Albums/YouthEveningPaper",intro:"三十而立的青年敞开自己和你交心的一张专辑，像摊开一张晚报：社会生活、人生况味、暖心故事、摄影专栏，甚至娱乐头条和养生提醒都有，歌词诗性与易读性兼具，偶尔透出冷冷的幽默。许嵩担任音乐总监并包办全部制作，《雅俗共赏》回应了“雅俗”这个行业标准，态度是不媚俗也不孤芳自赏，拿下东方风云榜十大金曲；《燕归巢》则是他写给张杰、张靓颖那首歌的个人版本，古风依旧。数字版上线后试听超过1.2亿人次，封面和《摄影艺术》的MV还远赴巴黎拍摄。",tracks:["最佳歌手","平行宇宙","摄影艺术","雅俗共赏","燕归巢","早睡身体好","奇谈","幻胖","摆脱"],
+			covers:{"最佳歌手":"Albums/YouthEveningPaper/img/最佳歌手cover.jpeg","平行宇宙":"Albums/YouthEveningPaper/img/平行宇宙cover.jpeg","摄影艺术":"Albums/YouthEveningPaper/img/摄影艺术cover.jpg","燕归巢":"Albums/YouthEveningPaper/img/燕归巢cover.jpg","早睡身体好":"Albums/YouthEveningPaper/img/早睡身体好cover.jpeg","奇谈":"Albums/YouthEveningPaper/img/奇谈cover.jpg","幻胖":"Albums/YouthEveningPaper/img/幻胖cover.jpg"},
+			intros:{
+			"最佳歌手":"写舞台上那个人和舞台下那个人的落差：灯一亮就要唱到最好，灯一灭其实什么都没剩下。所谓「最佳歌手」，是把自己也唱进去的那一个。",
+			"平行宇宙":"借平行宇宙的概念写「如果当初」。另一个时空里的自己大概过得很好，而这里的自己只负责想象。旋律开阔，是专辑里最有画面感的一首。",
+			"摄影艺术":"把镜头当作关系里的第三者：取景、对焦、按快门，人也被定格成想要的样子。MV 远赴巴黎拍摄，视觉和歌本身是一体的。",
+			"雅俗共赏":"回应「雅俗」这个行业标准：不媚俗，也不孤芳自赏。这首歌后来拿下东方风云榜十大金曲，也是这张专辑流传最广的一首。",
+			"燕归巢":"写给张杰、张靓颖那首同名的个人版本。古风底子，写归乡与重逢，副歌的情绪一起，思乡的味道就出来了。",
+			"早睡身体好":"像一条冷不丁的养生提醒：别熬了。用轻快的调子说一句最朴素的话，是专辑里最接地气的一首。",
+			"奇谈":"写荒唐事被当成谈资传来传去。语气带点冷幽默，越听越觉得说的是身边。",
+			"幻胖":"写身材焦虑：镜子里那个「胖」是自己想出来的。词写得刻薄又好笑，落点却是让人放过自己。",
+			"摆脱":"写从一段关系、一种期待里挣脱出来。节奏往前推，是专辑里情绪最痛快的一首。"
+			}},
 			
-			treasure:{title:"寻宝游戏",singer:"许嵩",date:"2018/07/12",cover:"img/寻宝游戏cover.png",url:"./Albums/TreasureHunting",intro:"以“寻宝”为概念的专辑，鼓励人们找寻深埋心底的秘密宝藏，音乐语言极致复古，回到上世纪六到八十年代：蓝调、乡村摇滚、民谣摇滚、爵士等根源风格齐头并进，再融合许嵩惯有的书卷气。《如约而至》致敬摇滚巨匠约翰·列侬，《老古董》后来意外走红并拿下年度金曲，《大千世界》《明智之举》也都很有代表性。专辑发布一天就登上酷狗飙升榜榜首，实体限量版据说三秒售罄，还拿下京东音像销量冠军。",tracks:["明智之举","如约而至","大千世界","老古董","艺术家们","柳成荫","重复重复","九月清晨","浪"]}
+			treasure:{title:"寻宝游戏",singer:"许嵩",date:"2018/07/12",cover:"img/寻宝游戏cover.png",url:"./Albums/TreasureHunting",intro:"以“寻宝”为概念的专辑，鼓励人们找寻深埋心底的秘密宝藏，音乐语言极致复古，回到上世纪六到八十年代：蓝调、乡村摇滚、民谣摇滚、爵士等根源风格齐头并进，再融合许嵩惯有的书卷气。《如约而至》致敬摇滚巨匠约翰·列侬，《老古董》后来意外走红并拿下年度金曲，《大千世界》《明智之举》也都很有代表性。专辑发布一天就登上酷狗飙升榜榜首，实体限量版据说三秒售罄，还拿下京东音像销量冠军。",tracks:["明智之举","如约而至","大千世界","老古董","艺术家们","柳成荫","重复重复","九月清晨","浪"],
+			covers:{"明智之举":"Albums/TreasureHunting/img/明智之举cover.webp","如约而至":"Albums/TreasureHunting/img/如约而至cover.jpg","大千世界":"Albums/TreasureHunting/img/大千世界cover.webp","老古董":"Albums/TreasureHunting/img/老古董cover.webp","艺术家们":"Albums/TreasureHunting/img/艺术家们cover.jpg","柳成荫":"Albums/TreasureHunting/img/柳成荫cover.jpg","重复重复":"Albums/TreasureHunting/img/重复重复cover.jpg","九月清晨":"Albums/TreasureHunting/img/九月清晨cover.jpg","浪":"Albums/TreasureHunting/img/浪cover.jpg"},
+			intros:{
+			"明智之举":"复古摇滚的底色，节奏一推就起来了。写「及时收手」这件事：能看清什么时候该走，本身就是明智。是专辑里最干脆的一首。",
+			"如约而至":"致敬约翰·列侬。旋律里有上世纪六十年代摇滚的影子，写守约也写告别——约好的事他做到了，人却已经不在了。",
+			"大千世界":"把视野放到最大：世界这么大，自己这点执念算什么。编曲层次很多，从安静一路推到开阔。",
+			"老古董":"这张专辑里意外走红的一首，也拿了年度金曲。写旧物、旧规矩、旧心思，在什么都要新的年代里，坚持「老」需要一点底气。",
+			"艺术家们":"写那些自封的「艺术家」：姿态比作品大。语气带刺，是专辑里最会心一笑的一首。",
+			"柳成荫":"取「无心插柳柳成荫」的意思。用力找的找不到，随手放下的反倒长起来了。",
+			"重复重复":"写被重复填满的生活：上班、下班、再上班。节奏刻意单调，把「重复」本身做成了编曲。",
+			"九月清晨":"专辑里最安静的一首。九月的早晨，天凉下来，人也清醒下来。适合当整张专辑的开场或收尾。",
+			"浪":"写起起落落：浪来了就上，浪走了就下。语气松弛，是专辑里最放得开的一首。"
+			}}
 		};
 		(function(){
 			var detail=document.getElementById("albumDetail");
+			var pop=document.getElementById("trackPop");
+			var popCover=document.getElementById("trackPopCover");
+			var popTitle=document.getElementById("trackPopTitle");
+			var popMeta=document.getElementById("trackPopMeta");
+			var popIntro=document.getElementById("trackPopIntro");
+			var popPlay=document.getElementById("trackPopPlay");
+			var curAlbum=null;
+			/* 收起单曲浮层，并清掉曲目的选中态 */
+			function hideTrackPop(){
+				pop.hidden=true;
+				document.querySelectorAll("#albumDetailTracks li.track-active").forEach(function(n){ n.classList.remove("track-active"); });
+			}
+			/* 点曲目：左侧浮层显示这首歌的封面与介绍；浮层已开着时直接换内容，不重新弹出 */
+			function showTrack(index){
+				var a=albumData[curAlbum]; if(!a) return;
+				var name=a.tracks[index]; if(!name) return;
+				popCover.src=(a.covers&&a.covers[name])||a.cover;
+				popCover.alt=name;
+				popTitle.textContent=name;
+				popMeta.textContent=a.singer+" · 《"+a.title+"》· 第 "+(index+1)+" 首";
+				popIntro.textContent=(a.intros&&a.intros[name])||"这首歌的详细介绍还在整理中。";
+				popPlay.href=a.url+"/index.html?song="+encodeURIComponent(name); /* 直达该曲播放 */
+				pop.hidden=false;
+				pop.scrollTop=0;
+				var lis=document.querySelectorAll("#albumDetailTracks li");
+				for(var i=0;i<lis.length;i++){ lis[i].classList.toggle("track-active", i===index); }
+			}
 			function openAlbum(key){
 				var a=albumData[key]; if(!a) return;
+				curAlbum=key;
+				hideTrackPop();
 				document.getElementById("albumDetailCover").src=a.cover;
 				document.getElementById("albumDetailCover").alt=a.title;
 				document.getElementById("albumDetailTitle").textContent=a.title;
@@ -250,8 +377,8 @@
 				detail.hidden=false;
 				detail.scrollIntoView({behavior:"smooth",block:"start"});
 			}
-			function closeAlbum(){ detail.hidden=true; window.scrollTo({top:0,behavior:"smooth"}); }
-			function flash(el){ if(!el) return; document.querySelectorAll(".search-hit").forEach(function(n){n.classList.remove("search-hit");}); el.classList.add("search-hit"); setTimeout(function(){el.classList.remove("search-hit");},2200); }
+			function closeAlbum(){ hideTrackPop(); detail.hidden=true; window.scrollTo({top:0,behavior:"smooth"}); }
+			function flash(el){ if(!el) return; document.querySelectorAll(".search-hit").forEach(function(n){n.classList.remove("search-hit");}); el.classList.add("search-hit"); setTimeout(function(){el.classList.remove("search-hit");},600); }
 			function goCard(key){ detail.hidden=true; var card=document.querySelector('.album-card[data-album="'+key+'"]'); if(card){ card.scrollIntoView({behavior:"smooth",block:"start"}); flash(card); } }
 			function goDetail(key,trackIndex){ openAlbum(key); setTimeout(function(){ var target = (typeof trackIndex==="number") ? document.querySelectorAll("#albumDetailTracks li")[trackIndex] : document.getElementById("albumDetailIntro"); if(target){ target.scrollIntoView({behavior:"smooth",block:"center"}); flash(target); } },350); }
 			var searchInput=document.getElementById("albumSearchInput"), searchBox=document.getElementById("albumSearchResults");
@@ -303,7 +430,18 @@
 				});
 			});
 			document.getElementById("albumClose").addEventListener("click",closeAlbum);
-			document.addEventListener("keydown",function(ev){ if(ev.key==="Escape") closeAlbum(); });
+			document.getElementById("trackPopClose").addEventListener("click",hideTrackPop);
+			/* 曲目点击用事件委托，因为列表在每次 openAlbum 时都会重新生成 */
+			document.getElementById("albumDetailTracks").addEventListener("click",function(ev){
+				var li=ev.target.closest("li"); if(!li) return;
+				var lis=Array.prototype.slice.call(this.querySelectorAll("li"));
+				showTrack(lis.indexOf(li));
+			});
+			document.addEventListener("keydown",function(ev){
+				if(ev.key!=="Escape") return;
+				if(!pop.hidden){ hideTrackPop(); return; }   /* 浮层开着就先收浮层，再按才关专辑 */
+				closeAlbum();
+			});
 		})();
 		</script>
 </body>

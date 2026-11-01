@@ -906,3 +906,102 @@ var data=[
             move(stage,{opacity:1},500,'linear');
         };
     })();
+//////////////////////////<----- 歌曲直达：?song=曲名 打开即定位到该曲并播放 ----->//////////////////////////
+(function(){
+    var m=/[?&]song=([^&#]*)/.exec(window.location.search);
+    if(!m){ return; }
+    var want='';
+    try{ want=decodeURIComponent(m[1].replace(/\+/g,' ')); }catch(e){ want=m[1]; }
+    var k=-1;
+    for(var i=0;i<data.length;i++){ if(data[i].song===want){ k=i; break; } }
+    if(k<0){ return; }
+    // 直接进入播放界面：跳过前面的 3D 唱片墙首页
+    var stageEl=document.getElementById('stage');
+    if(stageEl){ stageEl.style.display='none'; }
+
+    // 记住浏览器拒绝播放的原因（NotAllowedError = 自动播放被拦截）
+    var playErr='';
+    var rawPlay=Audio1.play;
+    Audio1.play=function(){
+        var p;
+        try{ p=rawPlay.apply(Audio1,arguments); }catch(e){ playErr=(e&&e.name)||'Error'; return; }
+        if(p&&p.then){ p.then(null,function(e){ playErr=(e&&e.name)||'Error'; }); }
+        return p;
+    };
+
+    var same=(k===n);
+    if(!same){
+        prevSong=n;
+        if(lis[n]){ lis[n].className=''; }
+        n=k;
+        if(lis[n]){ lis[n].className='active'; }
+        loadLyric(data[n].lyric);
+        songName.innerHTML=data[n].song; randomTitleColor(n);
+        artist.innerHTML=data[n].singer;
+        reStatus();
+        changing=true;
+    }
+    // 先把界面置为「播放中」，切歌时由 round→show→playState 接手自动开播
+    playBtn.onOff=true;
+    playBtn.style.display='none';
+    pauseBtn.style.display='inline-block';
+    styli.className='';
+    bg.style.webkitFilter='blur(10px)';
+    timer();
+    if(same){
+        Audio1.play();
+        animateRun();
+        lyricTimer();
+    }else{
+        nextTab();
+        scrollToMove(ul,42*(k-2),400);
+    }
+
+    // ---- 兜底：新标签页没有用户手势，浏览器可能直接拒绝带声播放 ----
+    var hasPlayed=false;
+    Audio1.addEventListener('playing',function(){ hasPlayed=true; });
+    // 还原成待播放界面
+    function revertToPause(){
+        playBtn.onOff=false;
+        playBtn.style.display='inline-block';
+        pauseBtn.style.display='none';
+        styli.className='play-needle';
+        animatePau();
+        clearInterval(lyric.timer);
+        clearInterval(timer2);
+        changing=false;
+    }
+    // 第一次交互时立刻开始播放
+    function resume(){
+        document.removeEventListener('pointerdown',resume,true);
+        document.removeEventListener('keydown',resume,true);
+        document.removeEventListener('touchstart',resume,true);
+        var hint=document.getElementById('autoPlayHint');
+        if(hint&&hint.parentNode){ hint.parentNode.removeChild(hint); }
+        playBtn.onOff=true;
+        playBtn.style.display='none';
+        pauseBtn.style.display='inline-block';
+        styli.className='';
+        bg.style.webkitFilter='blur(10px)';
+        timer();
+        Audio1.play();
+        animateRun();
+        lyricTimer();
+    }
+    function armResume(){
+        var hint=document.createElement('div');
+        hint.id='autoPlayHint';
+        if(window.console&&console.warn){ console.warn('[autoplay] 自动播放被拦截：'+(playErr||'unknown')); }
+        hint.textContent='浏览器未允许自动播放 · 点击任意处开始播放';
+        hint.style.cssText='position:fixed;left:50%;bottom:112px;transform:translateX(-50%);z-index:10000;padding:9px 20px;border-radius:22px;background:rgba(0,0,0,.6);color:#fff;font-size:14px;letter-spacing:1px;pointer-events:none;white-space:nowrap;';
+        document.body.appendChild(hint);
+        document.addEventListener('pointerdown',resume,true);
+        document.addEventListener('keydown',resume,true);
+        document.addEventListener('touchstart',resume,true);
+    }
+    setTimeout(function(){
+        if(hasPlayed||!Audio1.paused){ return; }
+        revertToPause();
+        armResume();
+    },same?1300:2600);
+})();

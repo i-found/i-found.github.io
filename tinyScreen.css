@@ -494,11 +494,7 @@ font-weight: bolder;
 
 }
 
-.foxbox .meplayer-container-mini .meplayer-control-play{
-
-color: #60af37;
-
-}
+/* 原先这里把小屏下 foxbox 卡片的播放按钮单独设成绿色，为保持全站统一已移除 */
 
 #musicImg{
 
