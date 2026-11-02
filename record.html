@@ -1022,6 +1022,9 @@ li.search { position: relative; }
       created_at: record.time || record.id,
       updated_at: record.updatedTime || record.time || record.id
     }).then(function() {
+      /* 推送成功就把这条写进云端快照，后续导入/合并判断才不会误判 */
+      lastCloudRecords = lastCloudRecords.filter(function(x) { return String(x.id) !== String(record.id); });
+      lastCloudRecords.push(record);
       showSyncStatus('已同步 ✓', 'success');
       setTimeout(function() { showSyncStatus('', ''); }, 2000);
     }).catch(function(err) {
@@ -1529,6 +1532,8 @@ li.search { position: relative; }
   function deleteRecord(id) {
     if (!confirm('确定删除这条记录吗？')) return;
     records = records.filter(function(r) { return r.id !== id; });
+    /* 同步更新云端快照，否则后面导入时会误以为"云端还有这条"而不上传 */
+    lastCloudRecords = lastCloudRecords.filter(function(x) { return String(x.id) !== String(id); });
     addPendingDelete(id);
     saveRecords();
     deleteRecordFromD1(id).then(function() {
@@ -1912,32 +1917,38 @@ li.search { position: relative; }
         });
         // 合并前记录数量
         var beforeCount = records.length;
-        mergeRecords(valid);
-        /* 只上传「云端没有的」和「内容确实不同的」记录：
-           以前这里把所有导入记录统统 POST 一遍，云端会把 updated_at 刷成当前时间，
-           导致很早的记录显示成「修改于今天」。内容一样的就不要再发。 */
-        var cloudMap = {};
-        lastCloudRecords.forEach(function(r) { cloudMap[r.id] = r; });
-        var toPush = [];
-        records.forEach(function(r) {
-          var cloud = cloudMap[r.id];
-          if (!cloud) { toPush.push(r); return; }
-          if (!sameRecordContent(r, cloud)) { toPush.push(r); }
+        /* 先重新拉一次云端快照再判断要不要上传：
+           内存里的 lastCloudRecords 可能已过期（比如刚才在页面上删过记录），
+           用它判断"云端已有"会漏推，导致导入后要刷新页面才补同步。 */
+        Promise.resolve(loadFromD1()).then(function(cloudList) {
+          if (cloudList) { lastCloudRecords = cloudList.slice(); }
+          mergeRecords(valid);
+          /* 只上传「云端没有的」和「内容确实不同的」记录：
+             以前这里把所有导入记录统统 POST 一遍，云端会把 updated_at 刷成当前时间，
+             导致很早的记录显示成「修改于今天」。内容一样的就不要再发。 */
+          var cloudMap = {};
+          lastCloudRecords.forEach(function(r) { cloudMap[r.id] = r; });
+          var toPush = [];
+          records.forEach(function(r) {
+            var cloud = cloudMap[r.id];
+            if (!cloud) { toPush.push(r); return; }
+            if (!sameRecordContent(r, cloud)) { toPush.push(r); }
+          });
+          saveRecordsToLocal();
+          toPush.forEach(function(r) { pushRecordToD1(r); });
+          render();
+          var added = records.length - beforeCount;
+          var msg = '导入成功！新增 ' + added + ' 条，共 ' + records.length + ' 条记录';
+          if (toPush.length) {
+            msg += '，正在同步 ' + toPush.length + ' 条到云端…';
+          } else {
+            msg += '，云端已有相同内容，未重复上传';
+          }
+          document.getElementById('syncFeedback').className = 'sync-feedback success';
+          document.getElementById('syncFeedback').textContent = msg;
+          document.getElementById('syncFeedback').style.display = 'block';
+          setTimeout(function() { document.getElementById('syncModal').classList.remove('show'); }, 1500);
         });
-        saveRecordsToLocal();
-        toPush.forEach(function(r) { pushRecordToD1(r); });
-        render();
-        var added = records.length - beforeCount;
-        var msg = '导入成功！新增 ' + added + ' 条，共 ' + records.length + ' 条记录';
-        if (toPush.length) {
-          msg += '，正在同步到云端…';
-        } else {
-          msg += '，云端已有相同内容，未重复上传';
-        }
-        document.getElementById('syncFeedback').className = 'sync-feedback success';
-        document.getElementById('syncFeedback').textContent = msg;
-        document.getElementById('syncFeedback').style.display = 'block';
-        setTimeout(function() { document.getElementById('syncModal').classList.remove('show'); }, 1500);
       } catch(err) {
         alert('文件解析失败: ' + err.message);
       }
