@@ -7,7 +7,7 @@
 	if(/(?:^|[?&])song=/.test(location.search)){ document.documentElement.className+=' dl-enter'; }
 	</script>
 	<meta name="viewport"  id="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0,user-scalable=no"/>
-	<link rel="stylesheet" type="text/css" href="css/music.css?v=27">
+	<link rel="stylesheet" type="text/css" href="css/music.css?v=29">
 	<link rel="icon" href="./img/梦游计ico.png" type="image/x-icon">
 	<script type="text/javascript" src="js/lyrics.js"></script>
 	<title>许嵩 | 梦游计_2012</title>
@@ -17,6 +17,10 @@
 	<div id="wrapper">
 		<!-- bg  背景图 -->
 		<div class="bg"></div>
+		<!-- 视频背景层：盖在模糊封面之上、黑色遮罩之下，配了视频的曲子才显示 -->
+		<div class="bg-video" id="bgVideoBox" aria-hidden="true">
+			<video id="bgVideoEl" muted loop playsinline preload="metadata"></video>
+		</div>
 		<div class="bg-black"></div>
 		<!-- header  顶部歌曲名,歌手名 -->
 		<div class="header">
@@ -204,6 +208,7 @@
 		<audio  src="mp3/音阙诗听,昆玉 - 我已经到了幻想尽头.m4a"></audio>
 	</div>
 <script type="text/javascript" src="js/move.js"></script>
-<script type="text/javascript" src="js/music.js?v=33"></script>
+<script type="text/javascript" src="../../js/video-bg.js"></script>
+<script type="text/javascript" src="js/music.js?v=35"></script>
 </body>
 </html>

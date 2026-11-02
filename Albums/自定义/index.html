@@ -7,7 +7,7 @@
 	if(/(?:^|[?&])song=/.test(location.search)){ document.documentElement.className+=' dl-enter'; }
 	</script>
 	<meta name="viewport"  id="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0,user-scalable=no"/>
-	<link rel="stylesheet" type="text/css" href="css/music.css?v=27">
+	<link rel="stylesheet" type="text/css" href="css/music.css?v=29">
   <link rel="icon" href="./img/自定义ico.png" type="image/x-icon">
 	<script type="text/javascript" src="js/lyrics.js"></script>
 	<title>许嵩 | 自定义_2009</title>
@@ -17,6 +17,10 @@
 	<div id="wrapper">
 		<!-- bg  背景图 -->
 		<div class="bg"></div>
+		<!-- 歌曲专属视频背景：目前只挂在「有何不可」上，用于看效果 -->
+		<div class="bg-video" id="bgVideoBox" aria-hidden="true">
+			<video id="bgVideoEl" muted loop playsinline preload="metadata" poster="../../vid/dark-night.jpg"></video>
+		</div>
 		<div class="bg-black"></div>
 		<!-- header  顶部歌曲名,歌手名 -->
 		<div class="header">
@@ -196,6 +200,7 @@
 		<audio  src="mp3/音阙诗听,昆玉 - 我已经到了幻想尽头.m4a"></audio>
 	</div>
 <script type="text/javascript" src="js/move.js"></script>
-<script type="text/javascript" src="js/music.js?v=33"></script>
+<script type="text/javascript" src="../../js/video-bg.js"></script>
+<script type="text/javascript" src="js/music.js?v=41"></script>
 </body>
 </html>

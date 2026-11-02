@@ -143,7 +143,13 @@ margin: 0px;
   position: absolute;
   top:0px;
   left:0px;
-  
+
+  /* 底部留白：.footer-Bar 是 absolute 定位（不占文档流），高度 140px。
+     不留这段 padding，页面滚到底时最后一排卡片会被底部白色波浪栏压住；
+     展开上部介绍卡片（.home-detail）把内容整体下推后更明显。
+     取 140 + 20 的间隙，内容与波浪栏之间留一条缝。 */
+  padding-bottom: 160px;
+
   color: #424242;
 
   background-color: #F5F6F9;

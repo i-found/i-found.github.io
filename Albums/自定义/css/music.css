@@ -159,6 +159,33 @@ html,body{
 	z-index: -1;
 	background-position: 0 50%;
 }
+/* 歌曲专属视频背景：盖在模糊封面背景之上、黑色遮罩之下；只有加 .on 才显示 */
+.bg-video{
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	z-index: -1;
+	display: none;
+	background: #000;
+}
+.bg-video.on{
+	display: block;
+}
+.bg-video video{
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+	/* 夜色视频本身偏暗，压一点亮度让歌词、唱片更清楚 */
+	-webkit-filter: brightness(.9) saturate(.95);
+	filter: brightness(.9) saturate(.95);
+}
+
 /* 此处为播放页面歌词切换时的遮罩 */
 .bg-black{
 position: absolute;
@@ -250,6 +277,8 @@ opacity: 0.4;
 	left: 5px;
 	top: 6px;
 	position: absolute;
+	/* 非正方形的封面图也不会被拉变形，按中心裁切填满圆形唱片 */
+	object-fit: cover;
 }
 .disk-music-bg{
 	width: 250px;

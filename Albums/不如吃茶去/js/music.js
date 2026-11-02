@@ -78,6 +78,45 @@ var data=[
     var nextBtn=document.getElementsByClassName("next")[0];//下一曲键
     var styli=document.getElementById("styli");//唱针
     var bg=document.getElementsByClassName("bg")[0];//大背景
+    /* ---------------- 随机视频背景（配置在站根 js/video-bg.js） ----------------
+       概率 = 视频数 / 全站歌曲数（钳制 10%~50%）；一轮 = 10 次换歌，
+       每轮必出 round(概率×10) 次，位置随机。加/删视频只改 video-bg.js。 */
+    var videoPlan=new VideoBgPlan();
+    var curVideo=null;
+    var bgVideoBox=document.getElementById("bgVideoBox");//视频背景容器
+    var bgVideoEl=document.getElementById("bgVideoEl");//背景视频
+    /* 每次换歌推进一次轮内位置，返回这一步该不该出视频 */
+    function stepVideo(){ curVideo=videoPlan.next(); return curVideo; }
+    /* 旋转唱片的封面：这一步命中视频就用视频圆图，否则用专辑封面 */
+    function songImg(index){
+        var item=data[index]||{};
+        return (curVideo&&curVideo.cover)?curVideo.cover:item.img;
+    }
+    /* 纯专辑封面：切歌动画里两张盘的预览图，最终封面由 show() 决定 */
+    function albumCover(index){
+        var item=data[index]||{};
+        return item.img;
+    }
+    function applySongVideo(){
+        if(!bgVideoBox||!bgVideoEl) return;
+        var cfg=curVideo;
+        if(!cfg){
+            bgVideoBox.className="bg-video";
+            bgVideoEl.pause();
+            return;
+        }
+        if(bgVideoEl.getAttribute("data-src")!==cfg.src){
+            bgVideoEl.setAttribute("data-src",cfg.src);
+            if(cfg.poster){ bgVideoEl.setAttribute("poster",cfg.poster); }
+            bgVideoEl.src=cfg.src;
+            bgVideoEl.load();
+        }
+        bgVideoBox.className="bg-video on";
+        bgVideoEl.muted=true;
+        var p=bgVideoEl.play();
+        if(p&&p.catch){ p.catch(function(){}); }
+    }
+
     var disk = document.getElementsByClassName("disk");//唱片图(新增)
     var albumBg=document.getElementsByClassName("disk-album-bg");//专辑图片（去掉了[0]）
     var songName=document.getElementById("songName");//歌曲名
@@ -160,12 +199,12 @@ var data=[
             disk[0].style.left=w/2+"px";
             disk[1].style.left=jl+"px";
             if (prevSong>-1) {
-                albumBg[0].src= data[prevSong].img;
+                albumBg[0].src=albumCover(prevSong);
             }
-            albumBg[1].src= data[n].img;
+            albumBg[1].src=albumCover(n);
             move(disk[x],{left:w/2},600,'linear');
             move(disk[j],{left:-122},610,'linear',function(){
-                albumBg[j].src= data[i].img;
+                albumBg[j].src=albumCover(i);
                 disk[j].style.left = "";
                 disk[x].style.left = jl +"px";
                 show(i,j,x);
@@ -177,14 +216,14 @@ var data=[
         if(x<j){
             disk[0].style.left="-122px";
             disk[1].style.left=w/2+"px";
-            albumBg[0].src= data[n].img;
+            albumBg[0].src=albumCover(n);
             if (prevSong>-1) {
-            albumBg[1].src= data[prevSong].img;
+            albumBg[1].src=albumCover(prevSong);
             }
             move(disk[x],{left:w/2},600,'linear');
             move(disk[j],{left:jl},610,'linear',function(){
                 console.log(Audio1.currentTime);
-                albumBg[j].src= data[i].img;
+                albumBg[j].src=albumCover(i);
                 disk[j].style.left = "";
                 disk[x].style.left = -"122px";
                 show(i,j,x);
@@ -206,25 +245,27 @@ var data=[
     }
     // 3.歌曲切换时页面渲染函数
     function show(i,j,x){
+        stepVideo();/* 每次换歌推进一次轮内位置，决定这首出不出视频 */
         songName.innerHTML=data[i].song; randomTitleColor(i);
         artist.innerHTML=data[i].singer;
         disk[j].style.left = w/2 +"px";
         if(x>j){
-            albumBg[j].src=data[i].img;
+            albumBg[j].src=albumCover(i);
             disk[x].style.left = jl + "px";
         }
         if(x<j){
-            albumBg[j].src=data[i].img;
+            albumBg[j].src=albumCover(i);
             disk[x].style.left = "-122px";
         }
         bg.style.backgroundImage='url('+data[i].img+')';
+        applySongVideo();/* 这一步命中视频就换成视频背景，否则回落到模糊封面 */
         Audio1.src=data[i].src;
         timer1();
         playListCount.innerHTML=data.length;
     }
     show(0,0,1);//播放页面初始化渲染
-    albumBg[0].src=data[0].img;
-    albumBg[1].src=data[0].img;
+    albumBg[0].src=albumCover(0);
+    albumBg[1].src=albumCover(0);
     // 4.将秒换算成分钟 换算后放入相应innerHTML函数
     function sToM (sec,name) {
     	var m=Math.floor(sec/60);
@@ -944,8 +985,8 @@ var data=[
         if(lis[n]){ lis[n].className='active'; }
         loadLyric(data[n].lyric);
         show(n,0,1);
-        albumBg[0].src=data[n].img;
-        albumBg[1].src=data[n].img;
+        albumBg[0].src=albumCover(n);
+        albumBg[1].src=albumCover(n);
         disk[0].style.left=w/2+'px';
         disk[1].style.left=jl+'px';
         // 进度归零（不用 reStatus，避免旧曲时长参与换算）
