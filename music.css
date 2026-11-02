@@ -415,6 +415,11 @@ span{
 	color:#828282;
 	margin:0 4px;
 }
+/* 提示文案已去掉，但保留原来的占位高度（17 + 上下 6），卡片高度和「进入专辑播放」的位置都不变 */
+.album-card .album-hint{
+	height:17px;
+	margin:6px 4px;
+}
 .album-card .album-play{
 	display:inline-block;
 	margin:4px;
