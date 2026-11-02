@@ -17,13 +17,26 @@
 (function(){
     /* ---- 视频池：只在末尾追加，不要打乱顺序（封面圆图与视频一一对应） ---- */
     var videoBgPool=[
-        {src:"../../vid/dark-night.mp4",       poster:"../../vid/dark-night.jpg",       cover:"../../vid/dark-night-disc.jpg"},
-        {src:"../../vid/within-monochrome.mp4",poster:"../../vid/within-monochrome.jpg",cover:"../../vid/within-monochrome-disc.jpg"},
-        {src:"../../vid/seaside-rain.mp4",     poster:"../../vid/seaside-rain.jpg",     cover:"../../vid/seaside-rain-disc.jpg"}
+        {src:"../../vid/dark-night.mp4", poster:"../../vid/dark-night.jpg", cover:"../../vid/dark-night-disc.jpg"},
+        {src:"../../vid/within-monochrome.mp4", poster:"../../vid/within-monochrome.jpg", cover:"../../vid/within-monochrome-disc.jpg"},
+        {src:"../../vid/seaside-rain.mp4", poster:"../../vid/seaside-rain.jpg", cover:"../../vid/seaside-rain-disc.jpg"},
+        {src:"../../vid/dark-leaf.mp4", poster:"../../vid/dark-leaf.jpg", cover:"../../vid/dark-leaf-disc.jpg"},
+        {src:"../../vid/misty-valley.mp4", poster:"../../vid/misty-valley.jpg", cover:"../../vid/misty-valley-disc.jpg"},
+        {src:"../../vid/girl-ame-13.mp4", poster:"../../vid/girl-ame-13.jpg", cover:"../../vid/girl-ame-13-disc.jpg"},
+        {src:"../../vid/firewatch-tower.mp4", poster:"../../vid/firewatch-tower.jpg", cover:"../../vid/firewatch-tower-disc.jpg"},
+        {src:"../../vid/sandblack.mp4", poster:"../../vid/sandblack.jpg", cover:"../../vid/sandblack-disc.jpg"},
+        {src:"../../vid/temporal-acceleration.mp4", poster:"../../vid/temporal-acceleration.jpg", cover:"../../vid/temporal-acceleration-disc.jpg"},
+        {src:"../../vid/anime-girl-night.mp4", poster:"../../vid/anime-girl-night.jpg", cover:"../../vid/anime-girl-night-disc.jpg"},
+        {src:"../../vid/moon-touch.mp4", poster:"../../vid/moon-touch.jpg", cover:"../../vid/moon-touch-disc.jpg"},
+        {src:"../../vid/endless-pain.mp4", poster:"../../vid/endless-pain.jpg", cover:"../../vid/endless-pain-disc.jpg"},
+        {src:"../../vid/beyoud.mp4", poster:"../../vid/beyoud.jpg", cover:"../../vid/beyoud-disc.jpg"},
+        {src:"../../vid/a-curse-paper-lily.mp4", poster:"../../vid/a-curse-paper-lily.jpg", cover:"../../vid/a-curse-paper-lily-disc.jpg"},
+        {src:"../../vid/feihua-rumeng.mp4", poster:"../../vid/feihua-rumeng.jpg", cover:"../../vid/feihua-rumeng-disc.jpg"}
     ];
 
     /* ---- 全站歌曲总数：自定义9 + 寻雾启示9 + 苏格拉没有底10 + 梦游计10
-            + 不如吃茶去9 + 青年晚报9 + 寻宝游戏9 = 65 ---- */
+            + 不如吃茶去9 + 青年晚报9 + 寻宝游戏9 = 65
+            视频 15 条 → 15/65 ≈ 23%，一轮 10 次换歌里约出现 2 次 ---- */
     var videoBgTotalSongs=65;
 
     var ROUND_SIZE=10;   // 一轮换歌次数
