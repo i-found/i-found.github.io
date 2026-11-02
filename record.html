@@ -867,6 +867,7 @@ li.search { position: relative; }
   var API_BASE = 'https://meimei.qzz.io';
   var PENDING_DELETES_KEY = 'suihe_pending_deletes';
   var records = [];
+  var lastCloudRecords = [];   // 最近一次从云端拉到的快照，导入时用来判断哪些记录真的需要上传
   var editingImages = []; // 编辑模式下的图片数组（支持多张）
   var editingRecordId = null; // 编辑模式下的记录 ID
 
@@ -984,15 +985,15 @@ li.search { position: relative; }
       var list = (data && data.records) || [];
       var out = list.map(function(r) {
         var idNum = /^-?\d+$/.test(String(r.id)) ? parseInt(r.id, 10) : r.id;
-        var rec = {
+        /* 云端记录同样补齐两个时间：created_at → time，updated_at → updatedTime */
+        return normalizeRecord({
           id: idNum,
           title: r.title || '',
           text: r.text || '',
           images: r.images || [],
-          time: r.created_at || idNum
-        };
-        if (r.updated_at && r.updated_at !== r.created_at) rec.updatedTime = r.updated_at;
-        return rec;
+          time: r.created_at || idNum,
+          updatedTime: r.updated_at || r.created_at || idNum
+        });
       });
       showSyncStatus('云端已拉取 ✓', 'success');
       setTimeout(function() { showSyncStatus('', ''); }, 2000);
@@ -1018,7 +1019,8 @@ li.search { position: relative; }
       title: record.title || '',
       text: record.text || '',
       images: record.images || [],
-      created_at: record.time || record.id
+      created_at: record.time || record.id,
+      updated_at: record.updatedTime || record.time || record.id
     }).then(function() {
       showSyncStatus('已同步 ✓', 'success');
       setTimeout(function() { showSyncStatus('', ''); }, 2000);
@@ -1092,7 +1094,8 @@ li.search { position: relative; }
           title: r.title || '',
           text: r.text || '',
           images: r.images || [],
-          created_at: r.time || r.id
+          created_at: r.time || r.id,
+          updated_at: r.updatedTime || r.time || r.id
         }).then(function() { result.pushed++; }).catch(function(err) {
           result.failed++;
           result.lastError = err.message || '网络错误';
@@ -1135,7 +1138,7 @@ li.search { position: relative; }
     if (window.indexedDB) {
       idbGet(STORAGE_KEY).then(function(data) {
         if (Array.isArray(data)) {
-          records = data;
+          records = data.map(normalizeRecord);   // 旧数据补齐创建/修改时间
           render();
         }
       }).catch(function() {
@@ -1155,7 +1158,7 @@ li.search { position: relative; }
       if (raw) {
         var parsed = JSON.parse(raw);
         if (Array.isArray(parsed) && parsed.length && records.length === 0) {
-          records = parsed;
+          records = parsed.map(normalizeRecord);
           render();
           // 迁移到 IndexedDB
           saveToStorage().catch(function() {});
@@ -1238,7 +1241,8 @@ li.search { position: relative; }
         }
         html += '</div>';
       }
-      html += '<span class="record-time">' + (r.updatedTime ? '修改于 ' + formatTime(r.updatedTime) : formatTime(r.time)) + '</span>';
+      /* 只显示一个时间：改过就显示「修改于」，没改过就显示创建时间 */
+      html += '<span class="record-time">' + (isModifiedRecord(r) ? '修改于 ' + formatTime(r.updatedTime) : formatTime(r.time || r.id)) + '</span>';
       html += '<div style="clear:both;"></div>';
       html += '</div>';
     }
@@ -1276,7 +1280,8 @@ li.search { position: relative; }
       if (record) {
         document.getElementById('recordTitle').value = record.title || '';
         document.getElementById('recordText').value = record.text || '';
-        document.getElementById('modalTime').textContent = '修改于 ' + formatTime(now);
+        /* 编辑弹窗里显示这条记录的创建时间（列表里显示的是"修改于"，这里补回创建时间） */
+        document.getElementById('modalTime').textContent = '创建于 ' + formatTime(record.time || record.id);
         var editImgs = displayImages(record);
         if (editImgs.length) {
           editingImages = editImgs.slice();
@@ -1291,7 +1296,7 @@ li.search { position: relative; }
       // 新增模式
       document.getElementById('recordText').value = '';
       document.getElementById('recordTitle').value = '';
-      document.getElementById('modalTime').textContent = formatTime(now);
+      document.getElementById('modalTime').textContent = '创建于 ' + formatTime(now);
       editingImages = [];
       document.getElementById('imagePreviewArea').style.display = 'none';
       document.getElementById('imagePreviewGrid').innerHTML = '';
@@ -1312,6 +1317,31 @@ li.search { position: relative; }
   // 是否内嵌图片数据（data:image/...;base64,...）
   function isDataUrl(s) {
     return typeof s === 'string' && s.indexOf('data:') === 0;
+  }
+
+  /* 统一时间字段：每条记录必须同时带 time（创建时间）和 updatedTime（最后修改时间）。
+     · 新建记录时两者相同，之后只有真正编辑才更新 updatedTime
+     · 兼容外部 JSON / 云端的各种命名：created_at、updated_at、createdTime、modifiedTime …
+     · 导入时缺哪个就补哪个：缺 updatedTime 视为"没改过"，补成创建时间 */
+  function normalizeRecord(r) {
+    if (!r) return r;
+    var created = r.time || r.createdTime || r.createdAt || r.created_at || r.id || Date.now();
+    var updated = r.updatedTime || r.modifiedTime || r.updatedAt || r.updated_at || created;
+    r.time = created;
+    r.updatedTime = updated;
+    delete r.createdTime;
+    delete r.createdAt;
+    delete r.created_at;
+    delete r.modifiedTime;
+    delete r.updatedAt;
+    delete r.updated_at;
+    return r;
+  }
+
+  // 是否真的被修改过（字符串比较，兼容时间戳和中文时间串）
+  function isModifiedRecord(r) {
+    if (!r || !r.updatedTime) return false;
+    return String(r.updatedTime) !== String(r.time || r.id || '');
   }
 
   // 取一条记录用于「显示」的图片：优先本地原图备份，其次云端地址
@@ -1466,7 +1496,8 @@ li.search { position: relative; }
             id: now,
             title: title || '',
             text: text || '',
-            time: now
+            time: now,
+            updatedTime: now
           };
           syncRecordImages(addRec, editingImages);
           records.push(addRec);
@@ -1479,7 +1510,8 @@ li.search { position: relative; }
           id: now,
           title: title || '',
           text: text || '',
-          time: now
+          time: now,
+          updatedTime: now
         };
         syncRecordImages(newRec, editingImages);
         records.push(newRec);
@@ -1722,6 +1754,16 @@ li.search { position: relative; }
     saveToStorage().catch(function() {});
   }
 
+  // 判断两条记录内容是否一致（图片只比数量：本地是 base64、云端是 URL，不该因为格式被判成"改过"）
+  function sameRecordContent(a, b) {
+    if (!a || !b) return false;
+    if ((a.title || '') !== (b.title || '')) return false;
+    if ((a.text || '') !== (b.text || '')) return false;
+    var ai = (a.images && a.images.length) ? a.images : (a.image ? [a.image] : []);
+    var bi = (b.images && b.images.length) ? b.images : (b.image ? [b.image] : []);
+    return ai.length === bi.length;
+  }
+
   // 合并云端和本地记录（按 id 去重，保留 updatedTime/time 较新的版本）
   function mergeRecords(ghRecords) {
     if (!ghRecords || !ghRecords.length) return;
@@ -1823,7 +1865,7 @@ li.search { position: relative; }
         }
         copy.images = list;
         delete copy.localImages;   // 图片已经在 images 里，备份字段不用导出
-        return copy;
+        return normalizeRecord(copy);   // 导出必须同时带创建时间和修改时间
       });
     });
     Promise.all(jobs).then(function(list) {
@@ -1857,6 +1899,8 @@ li.search { position: relative; }
           alert('文件中没有有效记录');
           return;
         }
+        // 统一时间字段：缺 updatedTime 的视为"没改过"，补成创建时间（导入后按修改时间优先展示）
+        valid.forEach(normalizeRecord);
         // 导入文件里的 base64 图片同时记为本地原图备份，之后即使云端图片被删也能显示
         valid.forEach(function(r) {
           var imgs = (r.images && r.images.length) ? r.images : (r.image ? [r.image] : []);
@@ -1869,12 +1913,26 @@ li.search { position: relative; }
         // 合并前记录数量
         var beforeCount = records.length;
         mergeRecords(valid);
-        saveRecords(valid);
+        /* 只上传「云端没有的」和「内容确实不同的」记录：
+           以前这里把所有导入记录统统 POST 一遍，云端会把 updated_at 刷成当前时间，
+           导致很早的记录显示成「修改于今天」。内容一样的就不要再发。 */
+        var cloudMap = {};
+        lastCloudRecords.forEach(function(r) { cloudMap[r.id] = r; });
+        var toPush = [];
+        records.forEach(function(r) {
+          var cloud = cloudMap[r.id];
+          if (!cloud) { toPush.push(r); return; }
+          if (!sameRecordContent(r, cloud)) { toPush.push(r); }
+        });
+        saveRecordsToLocal();
+        toPush.forEach(function(r) { pushRecordToD1(r); });
         render();
         var added = records.length - beforeCount;
         var msg = '导入成功！新增 ' + added + ' 条，共 ' + records.length + ' 条记录';
-        if (added > 0) {
+        if (toPush.length) {
           msg += '，正在同步到云端…';
+        } else {
+          msg += '，云端已有相同内容，未重复上传';
         }
         document.getElementById('syncFeedback').className = 'sync-feedback success';
         document.getElementById('syncFeedback').textContent = msg;
@@ -1899,6 +1957,7 @@ li.search { position: relative; }
     if (hasToken()) {
       loadFromD1().then(function(d1Records) {
         if (d1Records === null) return;
+        lastCloudRecords = d1Records.slice();
         var localBefore = records.slice();
         var pending = getPendingDeletes();
         var filteredCloud = d1Records.filter(function(r) { return !isPendingDelete(r.id); });
