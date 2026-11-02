@@ -490,7 +490,8 @@ opacity: 0.4;
 	background-color: rgba(250,250,250, 0.9);
 	position: fixed;
 	width: 25%;
-	height: 430px;
+	/* 高度由曲目行数决定：曲目多少就是多高，底部留一点白，不用滚动 */
+	height: auto;
 	/* 这里相当于出生时隐藏了 */
 	bottom: -430px;
 	right:0px;
@@ -502,14 +503,20 @@ opacity: 0.4;
 	border-radius: 8px  8px 0 0;
 }
 #play-list ul{
-    height: 365px;
-    width: 102%;
-    padding: 0 4% 0 0;
-    overflow-x: hidden;
-    overflow-y: scroll;
+    /* 整张列表一屏放下，不再滚动 */
+    height: auto;
+    width: 100%;
+    padding: 0 0 10px;/* 最后一行下面留一点白 */
+    overflow: visible;
 }
 #play-list ul li{
-	width: 101%;
+	width: 100%;
+	/* 右侧留出专辑名的宽度：长歌名显示省略号，不会压到专辑名上 */
+	padding-right: 96px;
+	box-sizing: border-box;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
 	height: 41px;
 	border-bottom: #e0e0e0 solid 1px;
 	font-size: 16px;
@@ -692,9 +699,15 @@ opacity: 0.4;
 	to{ transform: rotate(360deg); }
 }
 .song{
+	/* 与专辑介绍页卡片标题（26px 粗体无衬线）保持一致 */
 	font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
-	font-weight: 500;
-	letter-spacing: 0.06em;
+	font-size: 26px;
+	font-weight: bold;
+	letter-spacing: normal;
+	/* 不再固定 200px，长歌名给足宽度，超长才省略 */
+	width: auto;
+	max-width: 78%;
+	overflow: hidden;
 	margin-top: 28px;
 }
 /* ===== 直达进入（?song=曲名）专用过渡：首帧藏起 3D 唱片墙，遮罩淡出 + 由模糊变清晰 ===== */

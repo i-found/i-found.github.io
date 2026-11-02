@@ -680,12 +680,12 @@ var data=[
     //8.点击页面隐藏播放列表事件
     oListMask.onclick=function () {
         oListMask.style.display='none';
-        move(playList,{bottom:-430},200,'easeIn');
+        move(playList,{bottom:-playList.offsetHeight},200,'easeIn');
     };
     //9.列表右上角关闭按钮点击隐藏播放列表事件
     listClose.onclick=function(){
         oListMask.style.display='none';
-        move(playList,{bottom:-430},200,'easeIn');
+        move(playList,{bottom:-playList.offsetHeight},200,'easeIn');
     };
     // 10.列表单个点击切换歌曲，并移动列表事件(播放列表根据数据循环生成)
     for (var i = 0; i < data.length; i++) {
@@ -715,10 +715,12 @@ var data=[
             scrollToMove(ul,42*(this.index-2),400);
         };
         li.innerHTML=data[i].song;
-        span.innerHTML=data[i].singer+" | 不如吃茶去";
+        span.innerHTML="不如吃茶去";
         li.appendChild(span);
         ul.appendChild(li);
     }
+    // 面板高度随曲目行数变化：初始位置按自身高度算，保证完全藏在视口外
+    playList.style.bottom=-playList.offsetHeight+'px';
     //11.播放模式选择点击事件。loop.onOff：true是列表循环，false是单曲循环；shuffle.onOff：是否随机播放
     loop.onOff=true;
     shuffle.onOff=false;
