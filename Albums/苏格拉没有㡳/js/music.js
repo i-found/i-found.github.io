@@ -422,9 +422,7 @@ var data=[
         loadLyric (data[n].lyric);
         songName.innerHTML=data[n].song; randomTitleColor(n);
         artist.innerHTML=data[n].singer;
-        sel=n;
-        renderList();
-        autoUnselect();
+        clearSelect();
     }
     // 16.下一曲函数
     // 随机挑一首与当前不同的歌（只有一首时原地不动）
@@ -679,10 +677,7 @@ var data=[
     };
     //7.播放列表按钮点击显示播放列表事件
     listBtn.onclick=function(){
-        // 打开列表先选中当前播放曲目，3 秒后自动退出选中
-        sel=n;
-        renderList();
-        autoUnselect();
+        clearSelect();
         ul.scrollTop=42*(n-2);
         oListMask.style.display='block';
         move(playList,{bottom:0},200,'easeIn');
@@ -752,6 +747,15 @@ var data=[
             renderList();
         },3000);
     }
+    // 清除选中（含未到期的计时器），切歌/打开列表时回到"只有条形图"的常态
+    function clearSelect(){
+        if(selTimer){
+            clearTimeout(selTimer);
+            selTimer=null;
+        }
+        sel=-1;
+        renderList();
+    }
     // 选中行显示播放/暂停图标；未选中但正在播放的曲目显示跳动条形图
     function renderList(){
         var playing=!Audio1.paused&&!Audio1.ended;
@@ -776,14 +780,11 @@ var data=[
             return;
         }
         if(i==n){
-            sel=i;
-            renderList();
-            autoUnselect();
             return;
         }
         prevSong=n;
         n=i;
-        sel=i;
+        clearSelect();
         loadLyric(data[n].lyric);
         songName.innerHTML=data[n].song; randomTitleColor(n);
         artist.innerHTML=data[n].singer;
@@ -990,9 +991,7 @@ var data=[
                     move(stage,{opacity:0},400,'linear');
                     prevSong=n;
                     n=num;
-                    sel=n;
-                    renderList();
-                    autoUnselect();
+                    clearSelect();
                     loadLyric (data[n].lyric);
                     playBtn.onOff = true;
                     playBtn.style.display='none';
@@ -1097,9 +1096,7 @@ var data=[
         // 静态渲染到目标曲目：唱片直接摆在居中位，封面/背景/音源一次到位
         prevSong=n;
         n=k;
-        sel=n;
-        renderList();
-        autoUnselect();
+        clearSelect();
         loadLyric(data[n].lyric);
         show(n,0,1);
         albumBg[0].src=songImg(n);
