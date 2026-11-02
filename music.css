@@ -434,6 +434,8 @@ span{
 .album-detail{
 	scroll-margin-top:80px;
 	width:1200px;
+	display:flex;            /* 封面 + 文字两栏：文字栏拉到卡片满高，播放链接才能压到底 */
+	align-items:stretch;
 	margin:20px auto 0;/* 底部间距交给 .page-end 的 50px，避免叠成 90px */
 	padding:28px;
 	box-sizing:border-box;
@@ -441,6 +443,7 @@ span{
 	border-radius:22px;
 	position:relative;
 	overflow:hidden;
+	min-height:560px;/* 左侧单曲浮层封面为 4:3，内容最高约 546px，保底高度避免浮层内部滚动或压住介绍文字 */
 }
 .album-detail[hidden]{display:none;}
 .album-close{
@@ -459,20 +462,22 @@ span{
 }
 .album-close:hover{font-weight:bold;}
 .album-detail-cover{
-	float:left;
+	flex:0 0 360px;
 	width:360px;
 	height:200px;
 	object-fit:cover;
 	border-radius:16px;
 	margin-right:28px;
 }
-.album-detail-text{overflow:hidden;}
+/* 纵向 flex：卡片被 min-height 撑高后，「进入专辑播放」用 margin-top:auto 压到底部，
+   与左侧浮层的 .track-pop-play 保持同一水平线 */
+.album-detail-text{overflow:hidden;display:flex;flex-direction:column;flex:1 1 auto;min-width:0;}
 .album-detail-text h3{font-size:26px;margin-bottom:6px;}
 .album-detail-text .album-meta{font-size:15px;color:#828282;margin-bottom:14px;}
 .album-detail-intro{font-size:16px;line-height:1.8;color:#555;margin-bottom:18px;}
 .album-tracklist li{position:static;opacity:1;list-style:decimal;}
 .album-tracklist{columns:2;column-gap:28px;font-size:15px;line-height:2;color:#555;margin-bottom:18px;padding-left:20px;}
-.album-detail-text .album-play{font-size:15px;color:#19AAD1;}
+.album-detail-text .album-play{font-size:15px;color:#19AAD1;margin-top:auto;}
 .album-detail-text .album-play:hover{color:#FF8B8B;font-weight:bold;}
 
 /* 单曲介绍浮层：贴在专辑详情卡左侧，右边缘对齐封面右侧线（28 padding + 360 封面 = 388），
@@ -509,7 +514,8 @@ span{
 	cursor:pointer;
 }
 .track-pop-close:hover{font-weight:bold;}
-.track-pop-cover{width:100%;height:172px;object-fit:cover;border-radius:14px;display:block;margin-bottom:14px;}
+/* 封面固定 4:3（宽 348 → 高 261），object-fit:cover 只裁不拉伸 */
+.track-pop-cover{width:100%;height:auto;aspect-ratio:4/3;object-fit:cover;border-radius:14px;display:block;margin-bottom:14px;}
 .track-pop-title{font-size:19px;color:#333;margin-bottom:6px;}
 .track-pop-meta{font-size:13px;color:#9a9a9a;margin-bottom:12px;}
 .track-pop-intro{font-size:14px;line-height:1.9;color:#555;}
