@@ -725,6 +725,17 @@ li.search { position: relative; }
   color: #666;
 }
 .btn-cancel:hover { background: #d0d0d0; }
+/* 同步设置弹窗里的次级按钮：只要描边，不要填充 */
+.sync-modal-content .btn-outline {
+  background: transparent;
+  border: 1px solid #dcdcdc;
+  color: #666;
+}
+.sync-modal-content .btn-outline:hover {
+  background: transparent;
+  border-color: #ff8b9a;
+  color: #ff5a70;
+}
 
 /* 图片灯箱 */
 .image-lightbox {
@@ -840,15 +851,14 @@ li.search { position: relative; }
 <div class="modal-overlay" id="syncModal">
   <div class="modal-content sync-modal-content">
     <h3>云端同步设置</h3>
-    <p class="sync-desc">配置同步密钥后，记录将自动同步到云端数据库（D1），不再整文件覆盖，不会丢数据。</p>
-    <label class="token-label" for="githubToken">记录同步密钥</label>
-    <input type="password" class="token-input" id="githubToken" placeholder="ghp_xxxxxxxxxxxx">
-    <p class="token-hint">密钥只存在本机浏览器，不会写进仓库。密钥丢失或泄露时，让若汐重新换一个即可。</p>
+    <p class="sync-desc">配置密钥后，记录将自动同步至云端。</p>
+    <label class="token-label" for="githubToken">密钥信息</label>
+    <input type="password" class="token-input" id="githubToken" placeholder="……">
     <div class="modal-buttons">
-      <button class="btn-cancel" id="cancelSync">取消</button>
+      <button class="btn-cancel btn-outline" id="importRecordsBtn">导入</button>
+      <button class="btn-cancel btn-outline" id="exportRecordsBtn">导出</button>
+      <button class="btn-cancel btn-outline" id="cancelSync">取消</button>
       <button class="btn-save" id="saveSync">保存</button>
-      <button class="btn-cancel" id="exportRecordsBtn">导出</button>
-      <button class="btn-cancel" id="importRecordsBtn">导入</button>
       <input type="file" id="importRecordsInput" accept="application/json" style="display:none;">
     </div>
     <div class="sync-feedback" id="syncFeedback" style="display:none;"></div>
@@ -1682,6 +1692,23 @@ li.search { position: relative; }
   });
 
   // ========== 同步设置弹窗 ==========
+  /* 弹窗内的提示行 */
+  function syncFeedbackMsg(type, msg) {
+    var fb = document.getElementById('syncFeedback');
+    if (!fb) return;
+    fb.className = 'sync-feedback ' + type;
+    fb.textContent = msg;
+    fb.style.display = 'block';
+  }
+  /* 只有操作成功时才自动关窗；失败留在原地让用户看清原因 */
+  function closeSyncModalSoon(delay) {
+    setTimeout(function() {
+      var modal = document.getElementById('syncModal');
+      if (modal) modal.classList.remove('show');
+      var fb = document.getElementById('syncFeedback');
+      if (fb) { fb.style.display = 'none'; fb.textContent = ''; }
+    }, delay || 900);
+  }
   _el = document.getElementById('syncSettingsBtn');
   if (_el) _el.addEventListener('click', function() {
     document.getElementById('githubToken').value = getToken();
@@ -1697,42 +1724,33 @@ li.search { position: relative; }
   _el = document.getElementById('saveSync');
   if (_el) _el.addEventListener('click', function() {
     var token = document.getElementById('githubToken').value.trim();
-    if (!token) {
-      document.getElementById('syncFeedback').className = 'sync-feedback error';
-      document.getElementById('syncFeedback').textContent = '请输入同步密钥';
-      document.getElementById('syncFeedback').style.display = 'block';
-      return;
-    }
+    if (!token) { syncFeedbackMsg('error', '请输入同步密钥'); return; }
     setToken(token);
     updateSyncUI();
     // 测试连接并加载云端数据
     showSyncStatus('测试连接中…', 'syncing');
     loadFromD1().then(function(d1Records) {
-      if (d1Records !== null) {
-        var localBefore = records.slice();
-        var pending = getPendingDeletes();
-        var filteredCloud = d1Records.filter(function(r) { return !isPendingDelete(r.id); });
-        mergeRecords(filteredCloud);
-        saveRecordsToLocal();
-        render();
-        return pushLocalChanges(localBefore, d1Records).then(function(res) {
-          document.getElementById('syncFeedback').className = 'sync-feedback success';
-          if (res.failed > 0) {
-            document.getElementById('syncFeedback').textContent = '连接成功，但有 ' + res.failed + ' 条本地记录未同步：' + res.lastError + '，请刷新重试';
-          } else {
-            document.getElementById('syncFeedback').textContent = '连接成功！已同步 ' + records.length + ' 条记录，补推 ' + res.pushed + ' 条';
-          }
-        });
-      } else if (d1Records === null) {
-        document.getElementById('syncFeedback').className = 'sync-feedback error';
-        document.getElementById('syncFeedback').textContent = hasToken() ? '连接失败，请稍后重试' : '密钥不正确，请重新输入';
+      if (d1Records === null) {
+        /* 连接失败：只提示，弹窗留着，方便改密钥直接重试 */
+        syncFeedbackMsg('error', '连接失败，请检查密钥后重试');
+        return;
       }
-      document.getElementById('syncFeedback').style.display = 'block';
-      setTimeout(function() { document.getElementById('syncModal').classList.remove('show'); }, 1500);
+      var localBefore = records.slice();
+      var filteredCloud = d1Records.filter(function(r) { return !isPendingDelete(r.id); });
+      mergeRecords(filteredCloud);
+      saveRecordsToLocal();
+      render();
+      return pushLocalChanges(localBefore, d1Records).then(function(res) {
+        if (res.failed > 0) {
+          /* 还有记录没推上去：算失败，不关闭 */
+          syncFeedbackMsg('error', '连接成功，但有 ' + res.failed + ' 条本地记录未同步：' + res.lastError + '，请稍后重试');
+          return;
+        }
+        syncFeedbackMsg('success', '连接成功！已同步 ' + records.length + ' 条记录，补推 ' + res.pushed + ' 条');
+        closeSyncModalSoon(1000);   // 全部成功才自动关闭
+      });
     }).catch(function(err) {
-      document.getElementById('syncFeedback').className = 'sync-feedback error';
-      document.getElementById('syncFeedback').textContent = '连接失败: ' + err.message;
-      document.getElementById('syncFeedback').style.display = 'block';
+      syncFeedbackMsg('error', '连接失败：' + (err.message || err));
       setToken('');
       updateSyncUI();
     });
@@ -1877,12 +1895,16 @@ li.search { position: relative; }
       var ts = new Date().toISOString().slice(0, 10);
       downloadJsonFile(JSON.stringify(list, null, 2), 'records-' + ts + '.json');
       if (failed) {
+        syncFeedbackMsg('success', '已导出 ' + list.length + ' 条，其中 ' + failed + ' 张图片取不到、保留了原链接');
         showSyncStatus('已导出 ' + list.length + ' 条，其中 ' + failed + ' 张图片取不到、保留了链接', 'error');
       } else {
+        syncFeedbackMsg('success', '已导出 ' + list.length + ' 条，图片已全部内嵌');
         showSyncStatus('已导出 ' + list.length + ' 条，图片已全部内嵌', 'success');
       }
+      closeSyncModalSoon(900);   // 文件已下载，导出完成就关窗
       setTimeout(function() { showSyncStatus('', ''); }, 4000);
     }).catch(function(e) {
+      syncFeedbackMsg('error', '导出失败：' + (e.message || e));
       showSyncStatus('导出失败: ' + (e.message || e), 'error');
     });
   }
@@ -1895,13 +1917,13 @@ li.search { position: relative; }
       try {
         var imported = JSON.parse(e.target.result);
         if (!Array.isArray(imported)) {
-          alert('文件格式错误：应为记录数组');
+          syncFeedbackMsg('error', '导入失败：文件格式错误，应为记录数组');
           return;
         }
         // 过滤无效记录
         var valid = imported.filter(function(r) { return r && r.id; });
         if (!valid.length) {
-          alert('文件中没有有效记录');
+          syncFeedbackMsg('error', '导入失败：文件中没有有效记录');
           return;
         }
         // 统一时间字段：缺 updatedTime 的视为"没改过"，补成创建时间（导入后按修改时间优先展示）
@@ -1944,17 +1966,19 @@ li.search { position: relative; }
           } else {
             msg += '，云端已有相同内容，未重复上传';
           }
-          document.getElementById('syncFeedback').className = 'sync-feedback success';
-          document.getElementById('syncFeedback').textContent = msg;
-          document.getElementById('syncFeedback').style.display = 'block';
-          setTimeout(function() { document.getElementById('syncModal').classList.remove('show'); }, 1500);
+          syncFeedbackMsg('success', msg);
+          showSyncStatus(msg, 'success');   // 关窗后左下角仍能看到结果
+          setTimeout(function() { showSyncStatus('', ''); }, 5000);
+          closeSyncModalSoon(1200);   // 导入成功才关窗
+        }).catch(function(err) {
+          syncFeedbackMsg('error', '导入失败：' + (err.message || err));
         });
       } catch(err) {
-        alert('文件解析失败: ' + err.message);
+        syncFeedbackMsg('error', '导入失败：文件解析失败，' + err.message);
       }
     };
     reader.onerror = function() {
-      alert('文件读取失败');
+      syncFeedbackMsg('error', '导入失败：文件读取失败');
     };
     reader.readAsText(file);
   }
