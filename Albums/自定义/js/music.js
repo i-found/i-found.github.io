@@ -149,6 +149,7 @@ var data=[
     var playList=document.getElementById('play-list'); //歌曲列表
     var listClose=document.getElementsByClassName('list-title-close')[0]; //列表右上角关闭按钮
     var loop=document.getElementsByClassName('loop')[0];//循环按钮
+    var shuffle=document.getElementsByClassName('shuffle')[0];//随机播放按钮
     var ul=playList.getElementsByTagName('ul')[0];//播放列表ul
     var lis=playList.getElementsByTagName('li');//播放列表li
     var w = document.documentElement.clientWidth;//可视区宽度（新增）
@@ -417,14 +418,30 @@ var data=[
         lis[n].className="active";
     }
     // 16.下一曲函数
+    // 随机挑一首与当前不同的歌（只有一首时原地不动）
+    function randomSong(){
+        if (data.length < 2) {
+            return n;
+        }
+        var r=n;
+        while (r==n) {
+            r=Math.floor(Math.random()*data.length);
+        }
+        return r;
+    }
     function nextsong(){
         reStatus();
         changing = true;
         prevSong=n;
         lis[prevSong].className="";
-        n++;
-        if (n > data.length - 1) {
-          n = 0;
+        if (shuffle.onOff) {
+            //随机播放
+            n=randomSong();
+        }else{
+            n++;
+            if (n > data.length - 1) {
+              n = 0;
+            }
         }
         tabData();
         nextTab();
@@ -627,9 +644,14 @@ var data=[
             changing = true;
             prevSong=n;
             lis[n].className="";
-            n--;
-            if(n < 0){
-                n = data.length-1;
+            if (shuffle.onOff) {
+                //随机播放：上一首同样随机
+                n=randomSong();
+            }else{
+                n--;
+                if(n < 0){
+                    n = data.length-1;
+                }
             }
             tabData();
             if(playBtn.onOff){
@@ -696,18 +718,37 @@ var data=[
         li.appendChild(span);
         ul.appendChild(li);
     }
-    //11.播放模式选择点击事件。设置一个开关，true是列表循环，false是单曲循环
+    //11.播放模式选择点击事件。loop.onOff：true是列表循环，false是单曲循环；shuffle.onOff：是否随机播放
     loop.onOff=true;
+    shuffle.onOff=false;
     loop.onclick=function(){
         //列表循环
         if(this.onOff){
             this.style.background='url(css/img/play_icn_loop_solo.png)';
             this.onOff=false;
+            //切到单曲循环时，随机播放自动关闭
+            setShuffle(false);
         //单曲循环
         }else{
             this.style.background='url(css/img/play_icn_loop.png)';
             this.onOff=true;
         }
+    };
+    //随机播放开关：打开时把循环模式还原成列表循环，避免两个模式互相打架
+    function setShuffle(on){
+        shuffle.onOff=!!on;
+        if (shuffle.onOff) {
+            loop.onOff=true;
+            loop.style.background='url(css/img/play_icn_loop.png)';
+            shuffle.className='shuffle on';
+            shuffle.setAttribute('aria-label','随机播放：开');
+        }else{
+            shuffle.className='shuffle';
+            shuffle.setAttribute('aria-label','随机播放：关');
+        }
+    }
+    shuffle.onclick=function(){
+        setShuffle(!shuffle.onOff);
     };
     //12.歌词初始化
     loadLyric (data[n].lyric);

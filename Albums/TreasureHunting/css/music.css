@@ -402,9 +402,11 @@ opacity: 0.4;
 	/*缓冲条*/
 }
 #control{
+	font-size: 0;/* 消除按钮之间换行产生的空白，防止挤到第二行 */
 	margin: 0 auto;
-	padding-left: 33px;
-	width: 350px;
+	padding-left: 0;
+	padding-right: 36px;
+	width: 368px;
 	height: 100px;
 }
 #control span{
@@ -412,6 +414,28 @@ opacity: 0.4;
 	margin-right: 15px;
 	cursor: pointer;
 }
+/* 随机播放按钮：和其它小图标一样，默认白色半透明，悬停变粉；
+   打开时换成实心粉 + 一层淡粉圆底，跟「单曲循环」的图标变化区分开 */
+.shuffle{
+	width: 36px;
+	height: 36px;
+	background: url("data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-opacity='.6' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22'/><path d='m18 2 4 4-4 4'/><path d='M2 6h1.9c1.5 0 2.9.9 3.6 2.2'/><path d='M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8'/><path d='m18 14 4 4-4 4'/></svg>") no-repeat center;
+	background-size: 30px 30px;
+	transition: background-color .2s;
+}
+.shuffle:hover{
+	background-image: url("data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23FF758C' stroke-opacity='.6' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22'/><path d='m18 2 4 4-4 4'/><path d='M2 6h1.9c1.5 0 2.9.9 3.6 2.2'/><path d='M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8'/><path d='m18 14 4 4-4 4'/></svg>");
+}
+.shuffle.on{
+	background-image: url("data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23FF758C' stroke-opacity='1' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22'/><path d='m18 2 4 4-4 4'/><path d='M2 6h1.9c1.5 0 2.9.9 3.6 2.2'/><path d='M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8'/><path d='m18 14 4 4-4 4'/></svg>");
+	background-color: rgba(255,117,140,.16);
+	border-radius: 50%;
+}
+.shuffle.on:hover{
+	background-color: rgba(255,117,140,.28);
+}
+
+
 .loop{
 	background: url(img/play_icn_loop.png);
 	width: 36px;
