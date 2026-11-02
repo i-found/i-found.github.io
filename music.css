@@ -406,7 +406,7 @@ span{
 	color:#424242;
 }
 .album-card .album-date{
-	font-size:14px;
+	font-size:12px;   /* 比正文小两号 */
 	color:#828282;
 	margin:2px 4px 0;
 }
@@ -414,11 +414,6 @@ span{
 	font-size:14px;
 	color:#828282;
 	margin:0 4px;
-}
-.album-card .album-hint{
-	font-size:13px;
-	color:#b0b0b0;
-	margin:6px 4px;
 }
 .album-card .album-play{
 	display:inline-block;
