@@ -435,7 +435,7 @@
 					if((a.tracks.length+"首").indexOf(q)>=0) rows.push({key:key,kind:"card",field:"曲目数",label:a.tracks.length+" 首",context:"《"+a.title+"》 · "+a.singer+" · "+a.date});
 					var ii=a.intro.toLowerCase().indexOf(lower);
 					if(ii>=0) rows.push({key:key,kind:"detail",field:"介绍",label:"提到“"+q+"”",context:(ii>20?"…":"")+a.intro.slice(Math.max(0,ii-20),ii+q.length+20)+(ii+q.length+20<a.intro.length?"…":"")});
-					a.tracks.forEach(function(t,idx){ if(t.toLowerCase().indexOf(lower)>=0){ var nb=[]; if(idx>0) nb.push("上一首《"+a.tracks[idx-1]+"》"); if(idx<a.tracks.length-1) nb.push("下一首《"+a.tracks[idx+1]+"》"); rows.push({key:key,kind:"detail",field:"歌曲",label:t,track:idx,context:"《"+a.title+"》第"+(idx+1)+"首"+(nb.length?"，"+nb.join("，"):"")}); } });
+					a.tracks.forEach(function(t,idx){ if(t.toLowerCase().indexOf(lower)>=0){ var nb=[], iv=(a.intros&&a.intros[t])||""; if(idx>0) nb.push("上一首《"+a.tracks[idx-1]+"》"); if(idx<a.tracks.length-1) nb.push("下一首《"+a.tracks[idx+1]+"》"); rows.push({key:key,kind:"detail",field:"歌曲",label:t,track:idx,context:"《"+a.title+"》第"+(idx+1)+"首"+(nb.length?"，"+nb.join("，"):"")+(iv?" · 介绍："+iv.slice(0,26)+"…":"")}); } });
 					/* 每首歌的介绍也进索引：命中后直接弹出那首歌的介绍浮层 */
 					Object.keys(a.intros||{}).forEach(function(nm){
 						var it=a.intros[nm]||"", j=it.toLowerCase().indexOf(lower), ti=a.tracks.indexOf(nm);
