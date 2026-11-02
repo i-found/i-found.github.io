@@ -385,6 +385,9 @@
 			function flash(el){ if(!el) return; document.querySelectorAll(".search-hit").forEach(function(n){n.classList.remove("search-hit");}); el.classList.add("search-hit"); setTimeout(function(){el.classList.remove("search-hit");},600); }
 			function goCard(key){ detail.hidden=true; var card=document.querySelector('.album-card[data-album="'+key+'"]'); if(card){ card.scrollIntoView({behavior:"smooth",block:"start"}); flash(card); } }
 			function goDetail(key,trackIndex){ openAlbum(key); setTimeout(function(){ var target = (typeof trackIndex==="number") ? document.querySelectorAll("#albumDetailTracks li")[trackIndex] : document.getElementById("albumDetailIntro"); if(target){ target.scrollIntoView({behavior:"smooth",block:"center"}); flash(target); } },350); }
+			/* 命中单曲介绍：打开专辑详情并直接弹出这首歌的介绍浮层 */
+			function goTrack(key,trackIndex){ openAlbum(key); setTimeout(function(){ showTrack(trackIndex); var el=document.getElementById("trackPopTitle"); if(el){ el.scrollIntoView({behavior:"smooth",block:"center"}); flash(el); } },350); }
+			function goRow(r){ if(!r) return; if(r.kind==="card") goCard(r.key); else if(r.kind==="song") goTrack(r.key,r.track); else goDetail(r.key,r.track); }
 			var searchInput=document.getElementById("albumSearchInput"), searchBox=document.getElementById("albumSearchResults");
 			function addMark(el,text,q){ var lo=text.toLowerCase(), ql=q.toLowerCase(), ix=lo.indexOf(ql); if(ix<0){ el.textContent=text; return; } el.appendChild(document.createTextNode(text.slice(0,ix))); var m=document.createElement("mark"); m.textContent=text.slice(ix,ix+q.length); el.appendChild(m); el.appendChild(document.createTextNode(text.slice(ix+q.length))); }
 			var currentSearchRows=[];
@@ -397,9 +400,15 @@
 					if(a.singer.toLowerCase().indexOf(lower)>=0) rows.push({key:key,kind:"card",field:"歌手",label:a.singer,context:"《"+a.title+"》 · "+a.tracks.length+" 首 · "+a.date});
 					if(a.date.indexOf(q)>=0) rows.push({key:key,kind:"card",field:"发行日期",label:a.date,context:"《"+a.title+"》 · "+meta.split(" · ")[0]+" · "+a.tracks.length+" 首"});
 					if((a.tracks.length+"首").indexOf(q)>=0) rows.push({key:key,kind:"card",field:"曲目数",label:a.tracks.length+" 首",context:"《"+a.title+"》 · "+a.singer+" · "+a.date});
-					var ii=a.intro.indexOf(q);
+					var ii=a.intro.toLowerCase().indexOf(lower);
 					if(ii>=0) rows.push({key:key,kind:"detail",field:"介绍",label:"提到“"+q+"”",context:(ii>20?"…":"")+a.intro.slice(Math.max(0,ii-20),ii+q.length+20)+(ii+q.length+20<a.intro.length?"…":"")});
 					a.tracks.forEach(function(t,idx){ if(t.toLowerCase().indexOf(lower)>=0){ var nb=[]; if(idx>0) nb.push("上一首《"+a.tracks[idx-1]+"》"); if(idx<a.tracks.length-1) nb.push("下一首《"+a.tracks[idx+1]+"》"); rows.push({key:key,kind:"detail",field:"歌曲",label:t,track:idx,context:"《"+a.title+"》第"+(idx+1)+"首"+(nb.length?"，"+nb.join("，"):"")}); } });
+					/* 每首歌的介绍也进索引：命中后直接弹出那首歌的介绍浮层 */
+					Object.keys(a.intros||{}).forEach(function(nm){
+						var it=a.intros[nm]||"", j=it.toLowerCase().indexOf(lower), ti=a.tracks.indexOf(nm);
+						if(j<0||ti<0) return;
+						rows.push({key:key,kind:"song",track:ti,field:"歌曲介绍",label:nm,context:(j>20?"…":"")+it.slice(Math.max(0,j-20),j+q.length+20)+(j+q.length+20<it.length?"…":"")});
+					});
 				});
 				currentSearchRows=rows;
 				searchBox.innerHTML="";
@@ -407,13 +416,13 @@
 				rows.slice(0,30).forEach(function(r){
 					var b=document.createElement("button"); b.type="button"; b.className="sr-item";
 					var top=document.createElement("div"); top.className="sr-top";
-					var k=document.createElement("b"); k.className="sr-kind"; k.textContent=r.kind==="card"?"卡片":"详情";
+					var k=document.createElement("b"); k.className="sr-kind"; k.textContent=r.kind==="card"?"卡片":(r.kind==="song"?"歌曲":"详情");
 					var al=document.createElement("b"); al.className="sr-album"; al.textContent="《"+albumData[r.key].title+"》";
 					var f=document.createElement("span"); f.className="sr-field"; addMark(f,r.field+"："+r.label,q);
 					top.appendChild(k); top.appendChild(al); top.appendChild(f);
 					var ctx=document.createElement("div"); ctx.className="sr-context"; addMark(ctx,r.context,q);
 					b.appendChild(top); b.appendChild(ctx);
-					b.addEventListener("click",function(){ searchBox.hidden=true; if(r.kind==="card") goCard(r.key); else goDetail(r.key,r.track); });
+					b.addEventListener("click",function(){ searchBox.hidden=true; goRow(r); });
 					searchBox.appendChild(b);
 				});
 				searchBox.hidden=false;
@@ -424,7 +433,7 @@
 			navToggle.addEventListener("click",function(ev){ ev.stopPropagation(); if(navSearch.classList.contains("open")){ if(!searchInput.value.trim()){ navSearch.classList.remove("open"); searchBox.hidden=true; } else { searchInput.focus(); } } else { navSearch.classList.add("open"); searchInput.focus(); } });
 			searchInput.addEventListener("keydown",function(ev){
 				if(ev.key==="Escape"){ searchBox.hidden=true; searchInput.blur(); if(!searchInput.value.trim()) navSearch.classList.remove("open"); }
-				if(ev.key==="Enter"){ ev.preventDefault(); var q=searchInput.value.trim(); if(!q) return; if(!currentSearchRows.length) renderSearch(q); var r=currentSearchRows[0]; if(!r) return; searchBox.hidden=true; if(r.kind==="card") goCard(r.key); else goDetail(r.key,r.track); }
+				if(ev.key==="Enter"){ ev.preventDefault(); var q=searchInput.value.trim(); if(!q) return; if(!currentSearchRows.length) renderSearch(q); var r=currentSearchRows[0]; if(!r) return; searchBox.hidden=true; goRow(r); }
 			});
 			document.addEventListener("click",function(ev){ if(!ev.target.closest(".nav-search")){ searchBox.hidden=true; if(!searchInput.value.trim()) navSearch.classList.remove("open"); } });
 			document.querySelectorAll(".album-card").forEach(function(card){
