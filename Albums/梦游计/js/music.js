@@ -695,7 +695,7 @@ var data=[
         var li=document.createElement('li');
         var span=document.createElement('span');
         li.index=i;
-        // 行本身不响应点击：只有悬停出现的状态图标可点
+        // 行本身不响应单击：只有悬停出现的状态图标可点
         li.onclick=function (ev) {
             var t=ev&&ev.target;
             if (t&&t.nodeName==='I') {
@@ -704,6 +704,21 @@ var data=[
                 }else {
                     playAt(this.index);
                 }
+            }
+        };
+        // 双击任意曲目：正在播放的那首切换播放/暂停，其它曲目切过去播放（双击图标交给单击处理）
+        li.ondblclick=function (ev) {
+            var t=ev&&ev.target;
+            if (t&&t.nodeName==='I') {
+                return;
+            }
+            if(changing){
+                return;
+            }
+            if(this.index==n){
+                togglePlay();
+            }else {
+                playAt(this.index);
             }
         };
 
