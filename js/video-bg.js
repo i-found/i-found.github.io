@@ -34,14 +34,14 @@
         {src:"../../vid/anime-girl-night.mp4", poster:"../../vid/anime-girl-night.jpg", cover:"../../vid/anime-girl-night-disc.jpg"},
         {src:"../../vid/moon-touch.mp4", poster:"../../vid/moon-touch.jpg", cover:"../../vid/moon-touch-disc.jpg"},
         {src:"../../vid/endless-pain.mp4", poster:"../../vid/endless-pain.jpg", cover:"../../vid/endless-pain-disc.jpg"},
-        {src:"../../vid/beyoud.mp4", poster:"../../vid/beyoud.jpg", cover:"../../vid/beyoud-disc.jpg"},
+        {src:"../../vid/beyoud.mp4?v=2", poster:"../../vid/beyoud.jpg", cover:"../../vid/beyoud-disc.jpg"},
         {src:"../../vid/a-curse-paper-lily.mp4", poster:"../../vid/a-curse-paper-lily.jpg", cover:"../../vid/a-curse-paper-lily-disc.jpg"}
     ];
 
     /* ---- 专属背景：按歌名锁定视频，进到这首歌必出，不参与上面的随机池 ----
        键是播放页 data 里的 song 字段（要与歌名完全一致） */
     var videoBgBySong={
-        "内线": {src:"../../vid/feihua-rumeng.mp4", poster:"../../vid/feihua-rumeng.jpg?v=2", cover:"../../vid/feihua-rumeng-disc.jpg?v=2"}
+        "内线": {src:"../../vid/feihua-rumeng.mp4?v=2", poster:"../../vid/feihua-rumeng.jpg?v=3", cover:"../../vid/feihua-rumeng-disc.jpg?v=3"}
     };
 
     /* 专属视频自动从随机池剔除（同 src 视为同一条）：
