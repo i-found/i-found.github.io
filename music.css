@@ -523,8 +523,19 @@ span{
 	text-decoration:none;
 }
 .track-pop-play:hover{color:#FF8B8B;font-weight:bold;}
-.album-tracklist li{cursor:pointer;transition:color .2s;}
-.album-tracklist li:hover{color:#FF8B8B;}
+/* 只有曲目文字本身是点击热区：整行（含列内空白）不再显示手型、不再变色 */
+.album-tracklist li{cursor:default;transition:color .2s;}
+/* 覆盖全局 span 的圆点样式（display:block;width:10px;height:10px;border-radius:50%;background:#ffcc00） */
+.album-tracklist li .track-name{
+	display:inline;
+	width:auto;
+	height:auto;
+	background:none;
+	border-radius:0;
+	cursor:pointer;
+	transition:color .2s;
+}
+.album-tracklist li .track-name:hover{color:#FF8B8B;}
 .album-tracklist li.track-active{color:#FF5252;font-weight:bold;}
 
 /* 欢迎语：马善政毛笔手写体，仅含“欢迎来到若汐的音乐小屋”11字子集，内嵌于样式中，不依赖外站字体 */

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>听见 | 美好时光</title>
-<link rel="stylesheet" href="music.css?v=50">
+<link rel="stylesheet" href="music.css?v=52">
 <link rel="icon" href="./img/ico.png" type="image/x-icon">
 </head>
 <body>
@@ -375,7 +375,8 @@
 				document.getElementById("albumDetailTitle").textContent=a.title;
 				document.getElementById("albumDetailMeta").textContent=a.singer+" · "+a.tracks.length+" 首 · "+a.date;
 				document.getElementById("albumDetailIntro").textContent=a.intro;
-				document.getElementById("albumDetailTracks").innerHTML=a.tracks.map(function(t){return "<li>"+t+"</li>";}).join("");
+				/* 曲名包一层 .track-name：只有文字是点击热区，行内空白不响应 */
+				document.getElementById("albumDetailTracks").innerHTML=a.tracks.map(function(t){return '<li><span class="track-name">'+t+'</span></li>';}).join("");
 				document.getElementById("albumDetailPlay").href=a.url;
 				detail.hidden=false;
 				detail.scrollIntoView({behavior:"smooth",block:"start"});
@@ -436,7 +437,8 @@
 			document.getElementById("trackPopClose").addEventListener("click",hideTrackPop);
 			/* 曲目点击用事件委托，因为列表在每次 openAlbum 时都会重新生成 */
 			document.getElementById("albumDetailTracks").addEventListener("click",function(ev){
-				var li=ev.target.closest("li"); if(!li) return;
+				var name=ev.target.closest(".track-name"); if(!name) return;   /* 只有点中曲名才算 */
+				var li=name.closest("li"); if(!li) return;
 				var lis=Array.prototype.slice.call(this.querySelectorAll("li"));
 				showTrack(lis.indexOf(li));
 			});

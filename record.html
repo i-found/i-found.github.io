@@ -128,9 +128,10 @@
       theDateStr = y+"年"+m+"月"+date+"日 星期"+days[day]+" "+hs+":"+ms+":"+ss;
       theYearStr = y;
       theDayStr = date;
-      document.getElementById("theYear"). innerHTML =theYearStr;
-      document.getElementById("theDate"). innerHTML =theDayStr;
-      document.getElementById("theClock"). innerHTML =theDateStr;
+      /* 记录页没有这几个时钟元素，取不到就跳过（否则每秒抛 null 错误） */
+      var elY = document.getElementById("theYear");  if (elY) elY.innerHTML = theYearStr;
+      var elD = document.getElementById("theDate");  if (elD) elD.innerHTML = theDayStr;
+      var elC = document.getElementById("theClock"); if (elC) elC.innerHTML = theDateStr;
       // setTimeout 在执行时,是在载入后延迟指定时间后,去执行一次表达式,仅执行一次
       window.setTimeout( showDT, 1000);
     }
@@ -485,6 +486,25 @@ li.search { position: relative; }
   transition: transform 0.2s;
 }
 .record-image:hover { transform: scale(1.02); }
+
+/* 图片加载失败（如早期记录的云端图片已被删除）：显示占位块，不留破图图标 */
+.record-image.img-broken,
+.record-images .record-image.img-broken {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 140px;
+  height: 100px;
+  background: #f5f6f9;
+  border: 1px dashed #dfe3e8;
+  border-radius: 6px;
+  color: #a9aeb6;
+  font-size: 13px;
+  cursor: default;
+  transform: none;
+}
+.record-image.img-broken:hover,
+.record-images .record-image.img-broken:hover { transform: none; }
 
 .record-images {
   display: flex;
@@ -1209,11 +1229,12 @@ li.search { position: relative; }
         html += '<div class="record-title">' + highlightText(r.title, searchTerm) + '</div>';
       }
       html += '<div class="record-text">' + highlightText(r.text, searchTerm) + '</div>';
-      var imgs = (r.images && r.images.length) ? r.images : (r.image ? [r.image] : []);
+      var imgs = displayImages(r);
       if (imgs.length) {
         html += '<div class="record-images">';
         for (var ii = 0; ii < imgs.length; ii++) {
-          html += '<img class="record-image" src="' + imgs[ii] + '" alt="记录图片" data-src="' + imgs[ii] + '">';
+          /* 加载失败（比如早期记录的云端图片已被删除）就显示占位块，不留破图图标 */
+          html += '<img class="record-image" src="' + imgs[ii] + '" alt="图片已失效" data-src="' + imgs[ii] + '" onerror="this.classList.add(\'img-broken\');this.removeAttribute(\'src\');">';
         }
         html += '</div>';
       }
@@ -1256,12 +1277,9 @@ li.search { position: relative; }
         document.getElementById('recordTitle').value = record.title || '';
         document.getElementById('recordText').value = record.text || '';
         document.getElementById('modalTime').textContent = '修改于 ' + formatTime(now);
-        if (record.images && record.images.length) {
-          editingImages = record.images.slice();
-          renderImagePreview();
-        } else if (record.image) {
-          // 兼容旧单图数据
-          editingImages = [record.image];
+        var editImgs = displayImages(record);
+        if (editImgs.length) {
+          editingImages = editImgs.slice();
           renderImagePreview();
         } else {
           editingImages = [];
@@ -1288,6 +1306,54 @@ li.search { position: relative; }
       if (records[i].id === id) return records[i];
     }
     return null;
+  }
+
+  // ========== 图片字段维护 ==========
+  // 是否内嵌图片数据（data:image/...;base64,...）
+  function isDataUrl(s) {
+    return typeof s === 'string' && s.indexOf('data:') === 0;
+  }
+
+  // 取一条记录用于「显示」的图片：优先本地原图备份，其次云端地址
+  function displayImages(r) {
+    if (!r) return [];
+    var imgs = (r.images && r.images.length) ? r.images : (r.image ? [r.image] : []);
+    var backup = r.localImages || [];
+    var out = [];
+    for (var i = 0; i < imgs.length; i++) {
+      out.push(backup[i] || imgs[i]);
+    }
+    return out;
+  }
+
+  /* 维护两种图片字段：
+     · record.images     —— 给云端和推送用的（已上传的保持 URL，新图保持 base64，避免重复上传）
+     · record.localImages —— 本地原图备份，只存在浏览器里、不推送；与 images 等长，
+                            没有原图的位置为 null。用于 URL 失效时仍能显示、导出时内嵌。 */
+  function syncRecordImages(record, newImages) {
+    var prevImages = record.images || [];
+    var prevBackup = record.localImages || [];
+    var prevLen = Math.max(prevImages.length, prevBackup.length);
+    var prevLocal = [];
+    for (var i = 0; i < prevLen; i++) {
+      prevLocal.push(prevBackup[i] || prevImages[i] || '');
+    }
+    var cloud = [];
+    var backup = [];
+    for (var j = 0; j < newImages.length; j++) {
+      var src = newImages[j];
+      // 位置对齐、内容没变、云端已有 URL → 沿用 URL
+      if (j < prevLocal.length && prevLocal[j] === src && j < prevImages.length && !isDataUrl(prevImages[j])) {
+        cloud.push(prevImages[j]);
+      } else {
+        cloud.push(src);
+      }
+      backup.push(isDataUrl(src) ? src : null);
+    }
+    record.images = cloud;
+    var hasBackup = false;
+    for (var k = 0; k < backup.length; k++) { if (backup[k]) { hasBackup = true; break; } }
+    if (hasBackup) { record.localImages = backup; } else { delete record.localImages; }
   }
 
   // 关闭弹窗
@@ -1391,31 +1457,33 @@ li.search { position: relative; }
         if (record) {
           record.title = title || '';
           record.text = text || '';
-          record.images = editingImages.slice();
+          syncRecordImages(record, editingImages);   // 图片：已上传的沿用 URL，新图存 base64
           record.updatedTime = now;
           savedRecord = record;
         } else {
           // 记录不存在，降级为新增
-          records.push({
+          var addRec = {
             id: now,
             title: title || '',
             text: text || '',
-            images: editingImages.slice(),
             time: now
-          });
-          savedRecord = records[records.length - 1];
+          };
+          syncRecordImages(addRec, editingImages);
+          records.push(addRec);
+          savedRecord = addRec;
         }
         editingRecordId = null;
       } else {
         // 新增模式
-        records.push({
+        var newRec = {
           id: now,
           title: title || '',
           text: text || '',
-          images: editingImages.slice(),
           time: now
-        });
-        savedRecord = records[records.length - 1];
+        };
+        syncRecordImages(newRec, editingImages);
+        records.push(newRec);
+        savedRecord = newRec;
       }
       saveRecords(savedRecord ? [savedRecord] : []);
     } catch(e) {
@@ -1667,26 +1735,109 @@ li.search { position: relative; }
         map[r.id] = r;
       } else {
         var existVer = exist.updatedTime || exist.time || exist.id || 0;
-        if (ver > existVer) map[r.id] = r;
+        if (ver > existVer) {
+          // 云端版本胜出时，把本地保存的原图备份带过来（云端只存 URL，本地才有原图）
+          var winner = r;
+          if (exist.localImages && exist.localImages.length) {
+            winner = Object.assign({}, r, { localImages: exist.localImages });
+          }
+          map[r.id] = winner;
+        }
       }
     }
     records = Object.values(map).sort(function(a, b) { return a.id - b.id; });
+
+    /* 收尾：本地记录里若是 base64 图片、而云端同一位置已有 URL，
+       就把 images 换成 URL，原图存进 localImages 备份。
+       这样后续补推发出去的是 URL，云端不会把同一张图重复上传进 R2。 */
+    var cloudById = {};
+    for (var c = 0; c < ghRecords.length; c++) { cloudById[ghRecords[c].id] = ghRecords[c]; }
+    records.forEach(function(rec) {
+      var cloud = cloudById[rec.id];
+      if (!cloud || !cloud.images || !cloud.images.length) return;
+      if (!rec.images || rec.images.length !== cloud.images.length) return;
+      var backup = (rec.localImages && rec.localImages.length) ? rec.localImages.slice() : [];
+      var changed = false;
+      var next = [];
+      for (var i = 0; i < rec.images.length; i++) {
+        var s = rec.images[i];
+        if (isDataUrl(s) && !isDataUrl(cloud.images[i])) {
+          backup[i] = s;
+          next.push(cloud.images[i]);
+          changed = true;
+        } else {
+          next.push(s);
+        }
+      }
+      if (changed) {
+        rec.images = next;
+        rec.localImages = backup;
+      }
+    });
   }
 
   // ========== 导入导出 ==========
-  // 导出本地所有记录为 JSON 文件
-  function exportRecords() {
-    var data = JSON.stringify(records, null, 2);
+  // 把一张远程图片转成 base64（导出时内嵌用；跨域被拒/404 时抛错，由调用处降级）
+  function imageToDataUrl(url) {
+    return fetch(url, { credentials: 'omit' }).then(function(res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.blob();
+    }).then(function(blob) {
+      return new Promise(function(resolve, reject) {
+        var fr = new FileReader();
+        fr.onload = function() { resolve(fr.result); };
+        fr.onerror = function() { reject(new Error('读取失败')); };
+        fr.readAsDataURL(blob);
+      });
+    });
+  }
+
+  function downloadJsonFile(data, filename) {
     var blob = new Blob([data], { type: 'application/json' });
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
-    var ts = new Date().toISOString().slice(0, 10);
     a.href = url;
-    a.download = 'records-' + ts + '.json';
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+  }
+
+  /* 导出本地所有记录为 JSON 文件：
+     图片能内嵌成 base64 的一律内嵌（导出文件自包含，云端删了也能完整恢复）；
+     跨域或 404 取不到的保留原链接，并在提示里说明有几张没内嵌。 */
+  function exportRecords() {
+    showSyncStatus('正在打包图片…', 'syncing');
+    var failed = 0;
+    var jobs = records.map(function(r) {
+      var imgs = displayImages(r);
+      var tasks = imgs.map(function(src) {
+        if (isDataUrl(src)) return Promise.resolve(src);
+        return imageToDataUrl(src).catch(function() { failed++; return src; });
+      });
+      return Promise.all(tasks).then(function(list) {
+        var copy = {};
+        for (var k in r) {
+          if (Object.prototype.hasOwnProperty.call(r, k)) copy[k] = r[k];
+        }
+        copy.images = list;
+        delete copy.localImages;   // 图片已经在 images 里，备份字段不用导出
+        return copy;
+      });
+    });
+    Promise.all(jobs).then(function(list) {
+      var ts = new Date().toISOString().slice(0, 10);
+      downloadJsonFile(JSON.stringify(list, null, 2), 'records-' + ts + '.json');
+      if (failed) {
+        showSyncStatus('已导出 ' + list.length + ' 条，其中 ' + failed + ' 张图片取不到、保留了链接', 'error');
+      } else {
+        showSyncStatus('已导出 ' + list.length + ' 条，图片已全部内嵌', 'success');
+      }
+      setTimeout(function() { showSyncStatus('', ''); }, 4000);
+    }).catch(function(e) {
+      showSyncStatus('导出失败: ' + (e.message || e), 'error');
+    });
   }
 
   // 导入 JSON 文件，与现有记录按 id 去重合并，按时间排序后同步到云端
@@ -1706,6 +1857,15 @@ li.search { position: relative; }
           alert('文件中没有有效记录');
           return;
         }
+        // 导入文件里的 base64 图片同时记为本地原图备份，之后即使云端图片被删也能显示
+        valid.forEach(function(r) {
+          var imgs = (r.images && r.images.length) ? r.images : (r.image ? [r.image] : []);
+          if (!imgs.length) return;
+          var backup = imgs.map(function(s) { return isDataUrl(s) ? s : null; });
+          for (var bi = 0; bi < backup.length; bi++) {
+            if (backup[bi]) { r.localImages = backup; break; }
+          }
+        });
         // 合并前记录数量
         var beforeCount = records.length;
         mergeRecords(valid);
