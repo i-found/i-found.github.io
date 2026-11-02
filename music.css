@@ -8,7 +8,8 @@
 /* 网页背景 */
 .bodybox{
   width:100%;
-  min-height:2600px;
+  /* 至少铺满一屏；内容（含展开的专辑介绍）变高时自动跟着长，不会出现固定高度撑不开 */
+  min-height:100vh;
   height:auto;
   position: absolute;
   top:0px;
@@ -16,6 +17,8 @@
   /* 这里设置absolute定位方式，时为了不产生margin坍塌，否则将与子级块content-layout产生margin坍塌，自身被往下带 */
   color: #424242;
   z-index:1;
+  display:flex;
+  flex-direction:column;
 
   /* 与首页一致的底色 */
   background-color: #F5F6F9;
@@ -23,6 +26,23 @@
   /* background-image: linear-gradient(135deg,#F9B9B7 20%,#C0E3DE 80%); */
   /* background-image: linear-gradient(to right, #eea2a2 0%, #bbc1bf 19%, #57c6e1 42%, #b49fda 79%, #7ac5d8 100%); */
 
+}
+
+/* 页面结束标记：内容超过一屏时跟在内容后 50px；
+   内容不足一屏时 margin-top:auto 把它推到页面底部，不留大片空白。
+   以后增删卡片、展开专辑介绍，都自动跟着内容走，不用改这里。 */
+.page-end{
+  flex:0 0 auto;
+  margin-top:auto;
+  padding-top:50px;
+  padding-bottom:40px;
+  text-align:center;
+  font-size:14px;
+  line-height:1;
+  letter-spacing:3px;
+  color:#B6BAC1;
+  user-select:none;
+  -webkit-user-select:none;
 }
 
 
@@ -414,7 +434,7 @@ span{
 .album-detail{
 	scroll-margin-top:80px;
 	width:1200px;
-	margin:20px auto 40px;
+	margin:20px auto 0;/* 底部间距交给 .page-end 的 50px，避免叠成 90px */
 	padding:28px;
 	box-sizing:border-box;
 	background:#fff;

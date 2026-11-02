@@ -234,10 +234,30 @@
 
 <style media="screen">
 
+/* 记录页底部收尾：内容不足一屏时把 - the end - 贴到页面底部，内容超出则跟在内容后 50px */
+.bodybox{
+  display:flex;
+  flex-direction:column;
+  min-height:100vh;
+  padding-bottom:0;   /* 覆盖 index.css 里给首页波浪栏预留的 160px */
+}
+.page-end{
+  flex:0 0 auto;
+  margin-top:auto;
+  padding-top:50px;
+  padding-bottom:40px;
+  text-align:center;
+  font-size:14px;
+  line-height:1;
+  letter-spacing:3px;
+  color:#B6BAC1;
+  user-select:none;
+  -webkit-user-select:none;
+}
 
 .bookmark-detail{
     width: 875px;
-    min-height: 1000px;
+    min-height: 0;   /* 原来固定 1000px，记录少时下方会空一大片，改成随内容 */
     background: transparent;
     -webkit-box-shadow: none;
     box-shadow: none;
@@ -756,7 +776,11 @@ li.search { position: relative; }
 
 
 
+	<!-- 内容结束标记：内容不足一屏时自动贴底，内容超出则跟在内容后 50px -->
+	<div class="page-end">- the end -</div>
+
 </div>
+
 <!-- 这个js要放在引用时间的后面才有作用 -->
 <script src="./js/lately.min.js"></script>
 <script>
