@@ -443,9 +443,11 @@
 			function setActiveSearch(i){
 				var items=searchBox.querySelectorAll(".sr-item");
 				if(!items.length){ activeSearchIndex=-1; return; }
-				if(i<0) i=0; else if(i>items.length-1) i=items.length-1;
+				/* 首尾相接循环：末条再按 ↓ 回到第一条，首条再按 ↑ 跳到最后一条 */
+				var n=items.length;
+				i=((i%n)+n)%n;
 				activeSearchIndex=i;
-				for(var n=0;n<items.length;n++){ items[n].classList.toggle("active",n===i); }
+				for(var k=0;k<n;k++){ items[k].classList.toggle("active",k===i); }
 				items[i].scrollIntoView({block:"nearest"});
 			}
 			function renderSearch(q){
@@ -509,8 +511,10 @@
 					ev.preventDefault();
 					var qk=searchInput.value.trim(); if(!qk) return;
 					if(searchBox.hidden||!searchBox.querySelector(".sr-item")) renderSearch(qk);
-					if(!searchBox.querySelector(".sr-item")) return;
-					setActiveSearch(activeSearchIndex<0?0:activeSearchIndex+(ev.key==="ArrowDown"?1:-1));
+					var cnt=searchBox.querySelectorAll(".sr-item").length;
+					if(!cnt) return;
+					if(activeSearchIndex<0) setActiveSearch(ev.key==="ArrowDown"?0:cnt-1);
+					else setActiveSearch(activeSearchIndex+(ev.key==="ArrowDown"?1:-1));
 					return;
 				}
 				if(ev.key==="Enter"){ ev.preventDefault(); var q=searchInput.value.trim(); if(!q) return; if(!currentSearchRows.length) renderSearch(q); var r=currentSearchRows[activeSearchIndex]||currentSearchRows[0]; if(!r) return; searchBox.hidden=true; goRow(r); }
