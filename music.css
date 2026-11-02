@@ -443,7 +443,7 @@ span{
 	border-radius:22px;
 	position:relative;
 	overflow:hidden;
-	min-height:560px;/* 左侧单曲浮层封面为 4:3，内容最高约 546px，保底高度避免浮层内部滚动或压住介绍文字 */
+	min-height:560px;/* 保底高度：左侧单曲浮层（封面等比完整显示 + 标题 + 介绍 + 播放链接）最高约 540px，避免被 overflow 裁掉 */
 }
 .album-detail[hidden]{display:none;}
 .album-close{
@@ -486,7 +486,8 @@ span{
 	position:absolute;
 	left:0;
 	top:0;
-	bottom:0;
+	bottom:auto;            /* 高度随内容走，不再强制与详情卡等高 */
+	max-height:100%;        /* 超过详情卡高度时才滚动 */
 	width:388px;
 	padding:20px 20px 58px;   /* 底部留出「进入歌曲播放」的位置 */
 	box-sizing:border-box;
@@ -514,8 +515,8 @@ span{
 	cursor:pointer;
 }
 .track-pop-close:hover{font-weight:bold;}
-/* 封面固定 4:3（宽 348 → 高 261），object-fit:cover 只裁不拉伸 */
-.track-pop-cover{width:100%;height:auto;aspect-ratio:4/3;object-fit:cover;border-radius:14px;display:block;margin-bottom:14px;}
+/* 封面按原图比例完整显示、不裁切：超出宽度或 250px 高度时等比缩小并居中 */
+.track-pop-cover{display:block;width:auto;height:auto;max-width:100%;max-height:250px;margin:0 auto 14px;border-radius:14px;}
 .track-pop-title{font-size:19px;color:#333;margin-bottom:6px;}
 .track-pop-meta{font-size:13px;color:#9a9a9a;margin-bottom:12px;}
 .track-pop-intro{font-size:14px;line-height:1.9;color:#555;}
