@@ -1089,8 +1089,8 @@ li.search { position: relative; }
       } else {
         var local = localMap[r.id];
         if (local) {
-          var localVer = local.updatedTime || local.time || local.id || 0;
-          var cloudVer = cloud.updatedTime || cloud.time || cloud.id || 0;
+          var localVer = timeToMs(local.updatedTime) || timeToMs(local.time) || 0;
+          var cloudVer = timeToMs(cloud.updatedTime) || timeToMs(cloud.time) || 0;
           if (localVer > cloudVer) toPush.push(r);
         }
       }
@@ -1152,6 +1152,8 @@ li.search { position: relative; }
       idbGet(STORAGE_KEY).then(function(data) {
         if (Array.isArray(data)) {
           records = data.map(normalizeRecord);   // 旧数据补齐创建/修改时间
+          healBatchTimes(records);               // 修正被同步批量刷新的「修改时间」
+          saveToStorage().catch(function() {});  // 修完存回去，下次无需再算
           render();
         }
       }).catch(function() {
@@ -1172,6 +1174,7 @@ li.search { position: relative; }
         var parsed = JSON.parse(raw);
         if (Array.isArray(parsed) && parsed.length && records.length === 0) {
           records = parsed.map(normalizeRecord);
+          healBatchTimes(records);
           render();
           // 迁移到 IndexedDB
           saveToStorage().catch(function() {});
@@ -1332,14 +1335,57 @@ li.search { position: relative; }
     return typeof s === 'string' && s.indexOf('data:') === 0;
   }
 
+  /* ========== 时间字段：以记录 id 作为创建时间的锚点 ==========
+     新建记录时 id = Date.now()，所以 id 本身就是可靠的创建时间戳。
+     云端会把 created_at / updated_at 写成"同步那一刻"，于是卡片会莫名显示「修改于今天」。
+     这里统一校正，保证同一份数据每次算出来的时间都一样：
+       · 创建时间偏离 id 超过 1 分钟 → 判定被改写，回退成 id
+       · 修改时间与"被改写的创建时间"相同（同一批写进去的）→ 一起回退成 id
+       · 多条记录在同一分钟被"修改" → 视为批量污染，回退成创建时间（见 healBatchTimes） */
+  var TIME_MIN = 1000000000000;   // 13 位毫秒时间戳下限（2001-09-09）
+  var TIME_MAX = 4102444800000;   // 上限（2100-01-01）
+
+  // 各种时间写法统一成毫秒数（兼容秒级时间戳、数字字符串、日期字符串），认不出返回 0
+  function timeToMs(v) {
+    if (typeof v === 'number') return isFinite(v) ? v : 0;
+    if (typeof v === 'string') {
+      var s = v.trim();
+      if (!s) return 0;
+      if (/^\d+$/.test(s)) {
+        var n = parseInt(s, 10);
+        return n < 100000000000 ? n * 1000 : n;
+      }
+      var t = Date.parse(s);
+      return isNaN(t) ? 0 : t;
+    }
+    return 0;
+  }
+
+  // 记录 id 是毫秒时间戳时返回它（老数据的自增序号返回 0）
+  function recordIdMs(r) {
+    if (!r) return 0;
+    var n = timeToMs(r.id);
+    return (n > TIME_MIN && n < TIME_MAX) ? n : 0;
+  }
+
   /* 统一时间字段：每条记录必须同时带 time（创建时间）和 updatedTime（最后修改时间）。
      · 新建记录时两者相同，之后只有真正编辑才更新 updatedTime
      · 兼容外部 JSON / 云端的各种命名：created_at、updated_at、createdTime、modifiedTime …
      · 导入时缺哪个就补哪个：缺 updatedTime 视为"没改过"，补成创建时间 */
   function normalizeRecord(r) {
     if (!r) return r;
-    var created = r.time || r.createdTime || r.createdAt || r.created_at || r.id || Date.now();
-    var updated = r.updatedTime || r.modifiedTime || r.updatedAt || r.updated_at || created;
+    var rawCreated = r.time || r.createdTime || r.createdAt || r.created_at || 0;
+    var rawUpdated = r.updatedTime || r.modifiedTime || r.updatedAt || r.updated_at || 0;
+    var idMs = recordIdMs(r);
+    var created = timeToMs(rawCreated) || idMs;
+    var updated = timeToMs(rawUpdated) || created;
+    if (idMs && created && Math.abs(created - idMs) > 60000) {
+      /* 创建时间被同步改写过：以 id 为准；修改时间若跟着被刷，也一起回退 */
+      if (Math.abs(updated - created) <= 60000) updated = idMs;
+      created = idMs;
+    }
+    if (!created) created = Date.now();
+    if (!updated) updated = created;
     r.time = created;
     r.updatedTime = updated;
     delete r.createdTime;
@@ -1351,10 +1397,37 @@ li.search { position: relative; }
     return r;
   }
 
-  // 是否真的被修改过（字符串比较，兼容时间戳和中文时间串）
+  /* 同一分钟里"被修改"的一大堆记录，只可能是同步批量写时间造成的，
+     逐条没法判断真假，所以按批处理：回退成各自的创建时间 */
+  function healBatchTimes(list) {
+    var groups = {}, i, r, u, idMs, key, d;
+    for (i = 0; i < (list || []).length; i++) {
+      r = list[i];
+      u = timeToMs(r.updatedTime);
+      idMs = recordIdMs(r);
+      if (!u || !idMs || u - idMs < 60000) continue;
+      d = new Date(u);
+      key = d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate() + ' ' + d.getHours() + ':' + d.getMinutes();
+      (groups[key] = groups[key] || []).push(r);
+    }
+    Object.keys(groups).forEach(function(k) {
+      var g = groups[k];
+      if (g.length < 2) return;
+      g.forEach(function(rec) {
+        rec.updatedTime = timeToMs(rec.time) || recordIdMs(rec) || rec.updatedTime;
+      });
+    });
+    return list;
+  }
+
+  // 是否真的被修改过（统一换算成毫秒比较，1 秒以内视为没改过）
   function isModifiedRecord(r) {
-    if (!r || !r.updatedTime) return false;
-    return String(r.updatedTime) !== String(r.time || r.id || '');
+    if (!r) return false;
+    var u = timeToMs(r.updatedTime);
+    if (!u) return false;
+    var t = timeToMs(r.time) || recordIdMs(r);
+    if (!t) return true;
+    return Math.abs(u - t) > 1000;
   }
 
   // 取一条记录用于「显示」的图片：优先本地原图备份，其次云端地址
@@ -1787,30 +1860,42 @@ li.search { position: relative; }
     return ai.length === bi.length;
   }
 
-  // 合并云端和本地记录（按 id 去重，保留 updatedTime/time 较新的版本）
+  /* 合并云端和本地记录（按 id 去重）：
+     · 内容完全一致 → 一律保留本地那份的创建/修改时间，绝不让云端时间覆盖
+       （云端会把 updated_at 写成同步那一刻，一覆盖就变成「修改于今天」）
+     · 内容不同 → 才按时间取较新的版本 */
   function mergeRecords(ghRecords) {
     if (!ghRecords || !ghRecords.length) return;
     var map = {};
     var all = records.concat(ghRecords);
     for (var i = 0; i < all.length; i++) {
       var r = all[i];
-      var ver = r.updatedTime || r.time || r.id || 0;
       var exist = map[r.id];
       if (!exist) {
         map[r.id] = r;
-      } else {
-        var existVer = exist.updatedTime || exist.time || exist.id || 0;
-        if (ver > existVer) {
-          // 云端版本胜出时，把本地保存的原图备份带过来（云端只存 URL，本地才有原图）
-          var winner = r;
-          if (exist.localImages && exist.localImages.length) {
-            winner = Object.assign({}, r, { localImages: exist.localImages });
-          }
-          map[r.id] = winner;
+        continue;
+      }
+      if (sameRecordContent(exist, r)) {
+        /* 同一份内容：本地时间说了算，只把云端多出来的原图备份补进来 */
+        if ((!exist.localImages || !exist.localImages.length) && r.localImages && r.localImages.length) {
+          exist.localImages = r.localImages;
         }
+        map[r.id] = exist;
+        continue;
+      }
+      var ver = timeToMs(r.updatedTime) || timeToMs(r.time) || 0;
+      var existVer = timeToMs(exist.updatedTime) || timeToMs(exist.time) || 0;
+      if (ver > existVer) {
+        // 云端版本胜出时，把本地保存的原图备份带过来（云端只存 URL，本地才有原图）
+        var winner = r;
+        if (exist.localImages && exist.localImages.length) {
+          winner = Object.assign({}, r, { localImages: exist.localImages });
+        }
+        map[r.id] = winner;
       }
     }
     records = Object.values(map).sort(function(a, b) { return a.id - b.id; });
+    healBatchTimes(records);
 
     /* 收尾：本地记录里若是 base64 图片、而云端同一位置已有 URL，
        就把 images 换成 URL，原图存进 localImages 备份。
