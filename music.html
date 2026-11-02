@@ -394,7 +394,7 @@
 				if(!el) return;
 				document.querySelectorAll(".search-hit").forEach(function(n){n.classList.remove("search-hit");});
 				el.classList.add("search-hit");
-				setTimeout(function(){el.classList.remove("search-hit");},1600);
+				setTimeout(function(){el.classList.remove("search-hit");},2400);
 				ring((el.closest&&el.closest(".album-card,.album-detail,.track-pop"))||el);
 			}
 			/* 卡片上的字段：专辑名 → h3，歌手/曲目数 → .album-meta，发行日期 → .album-date */
