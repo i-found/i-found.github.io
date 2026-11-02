@@ -636,6 +636,7 @@ opacity: 0.4;
 	border-width: 0 2px 2px 0;
 	transform: translate(-45%, -50%) rotate(135deg);
 	z-index: 2;
+	transition: border-width .15s ease;
 }
 /* hover：粉蓝渐变圆环，顺时针旋转 */
 #tofirstpage::after{
@@ -657,7 +658,10 @@ opacity: 0.4;
 }
 #tofirstpage:hover::after{
 	opacity: 1;
-	animation: tfRingSpin 2.4s linear infinite;
+	animation: tfRingSpin 1.6s linear infinite;
+}
+#tofirstpage:hover::before{
+	border-width: 0 3px 3px 0;
 }
 @keyframes tfRingSpin{
 	to{ transform: rotate(360deg); }
