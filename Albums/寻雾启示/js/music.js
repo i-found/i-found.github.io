@@ -416,6 +416,7 @@ var data=[
         songName.innerHTML=data[n].song; randomTitleColor(n);
         artist.innerHTML=data[n].singer;
         lis[n].className="active";
+        syncListPlay();
     }
     // 16.下一曲函数
     // 随机挑一首与当前不同的歌（只有一首时原地不动）
@@ -704,6 +705,7 @@ var data=[
             prevSong=n;
             lis[n].className="";
             n=this.index;
+            lastSwitch=Date.now();
             this.className="active";
             loadLyric (data[n].lyric);
             songName.innerHTML=data[n].song; randomTitleColor(n);
@@ -713,11 +715,48 @@ var data=[
             nextTab();
             scrollToMove(ul,42*(this.index-2),400);
         };
+        // 双击当前曲目：切换播放/暂停，与中间播放暂停按钮保持一致
+        li.ondblclick=function () {
+            if(changing){
+                return;
+            }
+            if(this.index!=n){
+                return;
+            }
+            // 这次双击刚刚触发过切歌，就只切歌，不要再暂停
+            if(Date.now()-lastSwitch<600){
+                return;
+            }
+            if(playBtn.onOff){
+                pauseBtn.onclick();
+            }else{
+                playBtn.onclick();
+            }
+        };
+
         li.innerHTML=data[i].song;
         span.innerHTML="寻雾启示";
         li.appendChild(span);
         ul.appendChild(li);
     }
+    // 列表播放状态图标：与中间按钮同款（播放中显示暂停图标，暂停时显示播放三角）
+    var lastSwitch=0;
+    function syncListPlay(){
+        var playing=!Audio1.paused&&!Audio1.ended;
+        for (var j = 0; j < lis.length; j++) {
+            var cls=(' '+lis[j].className+' ').replace(/ playing /g,' ').replace(/^\s+|\s+$/g,'');
+            if (playing&&j==n) {
+                cls=cls?cls+' playing':'playing';
+            }
+            if (cls!=lis[j].className) {
+                lis[j].className=cls;
+            }
+        }
+    }
+    Audio1.addEventListener('play',syncListPlay);
+    Audio1.addEventListener('playing',syncListPlay);
+    Audio1.addEventListener('pause',syncListPlay);
+    Audio1.addEventListener('ended',syncListPlay);
     // 面板高度随曲目行数变化：初始位置按自身高度算，保证完全藏在视口外
     playList.style.bottom=-playList.offsetHeight+'px';
     //11.播放模式：一个按钮循环切换 列表循环 → 单曲循环 → 随机播放

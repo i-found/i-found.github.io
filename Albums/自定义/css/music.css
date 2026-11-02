@@ -506,6 +506,10 @@ opacity: 0.4;
 	/* background-color: red; */
 	color:#FF758C;
 }
+/* 当前曲目正在播放时，列表图标与中间按钮保持一致：显示暂停图标 */
+#play-list ul li.active.playing{
+	background-image: url(img/song_pause_icon.png);
+}
 .list-title{
 	font-size: 22px;
 	font-weight: bold;
