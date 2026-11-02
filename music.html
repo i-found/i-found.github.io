@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>听见 | 美好时光</title>
-<link rel="stylesheet" href="music.css?v=05048422">
+<link rel="stylesheet" href="music.css?v=5168a967">
 <link rel="icon" href="./img/ico.png?v=c6aeb3b5" type="image/x-icon">
 </head>
 <body>
@@ -382,12 +382,35 @@
 				detail.scrollIntoView({behavior:"smooth",block:"start"});
 			}
 			function closeAlbum(){ hideTrackPop(); detail.hidden=true; window.scrollTo({top:0,behavior:"smooth"}); }
-			function flash(el){ if(!el) return; document.querySelectorAll(".search-hit").forEach(function(n){n.classList.remove("search-hit");}); el.classList.add("search-hit"); setTimeout(function(){el.classList.remove("search-hit");},600); }
-			function goCard(key){ detail.hidden=true; var card=document.querySelector('.album-card[data-album="'+key+'"]'); if(card){ card.scrollIntoView({behavior:"smooth",block:"start"}); flash(card); } }
-			function goDetail(key,trackIndex){ openAlbum(key); setTimeout(function(){ var target = (typeof trackIndex==="number") ? document.querySelectorAll("#albumDetailTracks li")[trackIndex] : document.getElementById("albumDetailIntro"); if(target){ target.scrollIntoView({behavior:"smooth",block:"center"}); flash(target); } },350); }
+			/* 定位动效：给卡片/详情/浮层套一圈蓝粉渐变描边，转一圈后淡出 */
+			function ring(box){
+				if(!box) return;
+				var old=box.querySelector(".locate-ring"); if(old&&old.parentNode) old.parentNode.removeChild(old);
+				var sp=document.createElement("span"); sp.className="locate-ring"; box.appendChild(sp);
+				setTimeout(function(){ if(sp.parentNode) sp.parentNode.removeChild(sp); },1400);
+			}
+			function flash(el){
+				if(!el) return;
+				document.querySelectorAll(".search-hit").forEach(function(n){n.classList.remove("search-hit");});
+				el.classList.add("search-hit");
+				setTimeout(function(){el.classList.remove("search-hit");},1600);
+				ring((el.closest&&el.closest(".album-card,.album-detail,.track-pop"))||el);
+			}
+			/* 卡片上的字段：专辑名 → h3，歌手/曲目数 → .album-meta，发行日期 → .album-date */
+			function cardField(card,field){
+				if(!card) return card;
+				var t=null;
+				if(field==="专辑名") t=card.querySelector("h3");
+				else if(field==="歌手"||field==="曲目数") t=card.querySelector(".album-meta");
+				else if(field==="发行日期") t=card.querySelector(".album-date");
+				return t||card;
+			}
+			function goCard(key,field){ detail.hidden=true; var card=document.querySelector('.album-card[data-album="'+key+'"]'); if(!card) return; var t=cardField(card,field); t.scrollIntoView({behavior:"smooth",block:"center"}); flash(t); }
+			/* 命中歌名 → 定位到详情里的那一行；命中介绍 → 定位到介绍段落；其余定位到专辑信息行 */
+			function goDetail(key,trackIndex,field){ openAlbum(key); setTimeout(function(){ var target=null; if(typeof trackIndex==="number"&&trackIndex>=0){ target=document.querySelectorAll("#albumDetailTracks li")[trackIndex]; } else if(field==="介绍"){ target=document.getElementById("albumDetailIntro"); } if(!target){ target=document.getElementById("albumDetailMeta"); } if(target){ target.scrollIntoView({behavior:"smooth",block:"center"}); flash(target); } },350); }
 			/* 命中单曲介绍：打开专辑详情并直接弹出这首歌的介绍浮层 */
 			function goTrack(key,trackIndex){ openAlbum(key); setTimeout(function(){ showTrack(trackIndex); var el=document.getElementById("trackPopTitle"); if(el){ el.scrollIntoView({behavior:"smooth",block:"center"}); flash(el); } },350); }
-			function goRow(r){ if(!r) return; if(r.kind==="card") goCard(r.key); else if(r.kind==="song") goTrack(r.key,r.track); else goDetail(r.key,r.track); }
+			function goRow(r){ if(!r) return; if(r.kind==="card") goCard(r.key,r.field); else if(r.kind==="song") goTrack(r.key,r.track); else goDetail(r.key,r.track,r.field); }
 			var searchInput=document.getElementById("albumSearchInput"), searchBox=document.getElementById("albumSearchResults");
 			function addMark(el,text,q){ var lo=text.toLowerCase(), ql=q.toLowerCase(), ix=lo.indexOf(ql); if(ix<0){ el.textContent=text; return; } el.appendChild(document.createTextNode(text.slice(0,ix))); var m=document.createElement("mark"); m.textContent=text.slice(ix,ix+q.length); el.appendChild(m); el.appendChild(document.createTextNode(text.slice(ix+q.length))); }
 			var currentSearchRows=[];
