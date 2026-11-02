@@ -422,7 +422,6 @@ var data=[
         loadLyric (data[n].lyric);
         songName.innerHTML=data[n].song; randomTitleColor(n);
         artist.innerHTML=data[n].singer;
-        clearSelect();
     }
     // 16.下一曲函数
     // 随机挑一首与当前不同的歌（只有一首时原地不动）
@@ -677,7 +676,6 @@ var data=[
     };
     //7.播放列表按钮点击显示播放列表事件
     listBtn.onclick=function(){
-        clearSelect();
         ul.scrollTop=42*(n-2);
         oListMask.style.display='block';
         move(playList,{bottom:0},200,'easeIn');
@@ -697,31 +695,15 @@ var data=[
         var li=document.createElement('li');
         var span=document.createElement('span');
         li.index=i;
+        // 行本身不响应点击：只有悬停出现的状态图标可点
         li.onclick=function (ev) {
             var t=ev&&ev.target;
             if (t&&t.nodeName==='I') {
-                // 点行内状态图标：直接改变播放状态
                 if (this.index==n) {
                     togglePlay();
                 }else {
                     playAt(this.index);
                 }
-                return;
-            }
-            // 单击只是选择：文字变粉，不改变播放
-            sel=this.index;
-            renderList();
-            autoUnselect();
-        };
-        // 双击任意曲目：正在播放的那首切换播放/暂停，其它曲目切过去播放
-        li.ondblclick=function () {
-            if(changing){
-                return;
-            }
-            if(this.index==n){
-                togglePlay();
-            }else {
-                playAt(this.index);
             }
         };
 
@@ -730,37 +712,11 @@ var data=[
         li.appendChild(span);
         ul.appendChild(li);
     }
-    // 列表状态：sel 是选中项（粉色文字），-1 表示当前没有选中行
-    var sel=n;
-    var selTimer=null;
-    // 选中高亮 3 秒后自动退出
-    function autoUnselect(){
-        if(selTimer){
-            clearTimeout(selTimer);
-        }
-        selTimer=setTimeout(function(){
-            if(changing){
-                autoUnselect();
-                return;
-            }
-            sel=-1;
-            renderList();
-        },3000);
-    }
-    // 清除选中（含未到期的计时器），切歌/打开列表时回到"只有条形图"的常态
-    function clearSelect(){
-        if(selTimer){
-            clearTimeout(selTimer);
-            selTimer=null;
-        }
-        sel=-1;
-        renderList();
-    }
-    // 选中行显示播放/暂停图标；未选中但正在播放的曲目显示跳动条形图
+    // 列表状态：只有正在播放的那一首带 playing 类（显示条形图），悬停样式交给 CSS
     function renderList(){
         var playing=!Audio1.paused&&!Audio1.ended;
         for (var j = 0; j < lis.length; j++) {
-            var cls=(j==sel?'active':'')+((playing&&j==n)?' playing':'');
+            var cls=(playing&&j==n)?'playing':'';
             if (lis[j].className!=cls) {
                 lis[j].className=cls;
             }
@@ -784,7 +740,6 @@ var data=[
         }
         prevSong=n;
         n=i;
-        clearSelect();
         loadLyric(data[n].lyric);
         songName.innerHTML=data[n].song; randomTitleColor(n);
         artist.innerHTML=data[n].singer;
@@ -991,7 +946,6 @@ var data=[
                     move(stage,{opacity:0},400,'linear');
                     prevSong=n;
                     n=num;
-                    clearSelect();
                     loadLyric (data[n].lyric);
                     playBtn.onOff = true;
                     playBtn.style.display='none';
@@ -1096,7 +1050,6 @@ var data=[
         // 静态渲染到目标曲目：唱片直接摆在居中位，封面/背景/音源一次到位
         prevSong=n;
         n=k;
-        clearSelect();
         loadLyric(data[n].lyric);
         show(n,0,1);
         albumBg[0].src=songImg(n);

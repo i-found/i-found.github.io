@@ -488,7 +488,7 @@ opacity: 0.4;
 	font-size: 16px;
 	line-height: 40px;
 	text-indent: 2em;
-	cursor: pointer;
+	cursor: default;
 	position: relative;
 }
 #play-list ul li span{
@@ -497,10 +497,11 @@ opacity: 0.4;
 	position: absolute;
 	right: 9px;
 }
-#play-list ul li.active{
+/* 鼠标移入某一行：文字变粉，状态图标优先于条形图 */
+#play-list ul li:hover{
 	color:#FF758C;
 }
-/* 行内状态图标：只有选中的曲目才显示，图标与中间播放/暂停按钮一致 */
+/* 行内状态图标：悬停才出现；悬停播放中的曲目=暂停图标，其它=播放图标 */
 #play-list ul li i.ic{
 	position: absolute;
 	left: calc(1em - 5px);
@@ -514,16 +515,20 @@ opacity: 0.4;
 	background-size: 10px auto;
 	cursor: pointer;
 }
-#play-list ul li.active i.ic{
+#play-list ul li:hover i.ic{
 	display: block;
 	background-image: url(img/song_play_icon.png);
 }
-#play-list ul li.active.playing i.ic{
+#play-list ul li.playing:hover i.ic{
 	background-image: url(img/song_pause_icon.png);
 }
-/* 正在播放但未被选中：通用音乐条形图动画 */
-#play-list ul li.playing:not(.active) i.ic{
+/* 正在播放的曲目：未移入时显示跳动条形图，且不拦截点击 */
+#play-list ul li.playing i.ic{
 	display: block;
+	pointer-events: none;
+}
+#play-list ul li.playing:hover i.ic{
+	pointer-events: auto;
 }
 #play-list ul li i.ic b{
 	position: absolute;
@@ -538,7 +543,8 @@ opacity: 0.4;
 #play-list ul li i.ic b:nth-child(1){ left: 5px; height: 8px; }
 #play-list ul li i.ic b:nth-child(2){ left: 9px; height: 10px; animation-delay: .3s; }
 #play-list ul li i.ic b:nth-child(3){ left: 13px; height: 7px; animation-delay: .15s; }
-#play-list ul li.playing:not(.active) i.ic b{
+/* 条形图只在"播放中且未移入"时出现 */
+#play-list ul li.playing:not(:hover) i.ic b{
 	display: block;
 	animation: liEq .9s ease-in-out infinite;
 }
