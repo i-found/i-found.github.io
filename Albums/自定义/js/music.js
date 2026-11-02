@@ -414,8 +414,8 @@ var data=[
         loadLyric (data[n].lyric);
         songName.innerHTML=data[n].song; randomTitleColor(n);
         artist.innerHTML=data[n].singer;
-        lis[n].className="active";
-        syncListPlay();
+        sel=n;
+        renderList();
     }
     // 16.下一曲函数
     // 随机挑一首与当前不同的歌（只有一首时原地不动）
@@ -433,7 +433,6 @@ var data=[
         reStatus();
         changing = true;
         prevSong=n;
-        lis[prevSong].className="";
         if (loop.random) {
             //随机播放
             n=randomSong();
@@ -643,7 +642,6 @@ var data=[
             reStatus();
             changing = true;
             prevSong=n;
-            lis[n].className="";
             if (loop.random) {
                 //随机播放：上一首同样随机
                 n=randomSong();
@@ -672,7 +670,7 @@ var data=[
     };
     //7.播放列表按钮点击显示播放列表事件
     listBtn.onclick=function(){
-        ul.scrollTop=42*(n-2);
+        ul.scrollTop=42*(sel-2);
         oListMask.style.display='block';
         move(playList,{bottom:0},200,'easeIn');
     };
@@ -690,72 +688,94 @@ var data=[
     for (var i = 0; i < data.length; i++) {
         var li=document.createElement('li');
         var span=document.createElement('span');
-        if (i==n) {
-            li.className="active";
-        }
         li.index=i;
-        li.onclick=function () {
-            if(changing){
+        li.onclick=function (ev) {
+            var t=ev&&ev.target;
+            if (t&&t.nodeName==='I') {
+                // 点行内状态图标：直接改变播放状态
+                if (this.index==n) {
+                    togglePlay();
+                }else {
+                    playAt(this.index);
+                }
                 return;
             }
-            if (n==this.index) {
-               return;
-            }
-            prevSong=n;
-            lis[n].className="";
-            n=this.index;
-            lastSwitch=Date.now();
-            this.className="active";
-            loadLyric (data[n].lyric);
-            songName.innerHTML=data[n].song; randomTitleColor(n);
-            artist.innerHTML=data[n].singer;
-            reStatus();
-            changing = true;
-            nextTab();
-            scrollToMove(ul,42*(this.index-2),400);
+            // 单击只是选择：文字变粉，不改变播放
+            sel=this.index;
+            renderList();
         };
-        // 双击当前曲目：切换播放/暂停，与中间播放暂停按钮保持一致
+        // 双击任意曲目：正在播放的那首切换播放/暂停，其它曲目切过去播放
         li.ondblclick=function () {
             if(changing){
                 return;
             }
-            if(this.index!=n){
-                return;
-            }
-            // 这次双击刚刚触发过切歌，就只切歌，不要再暂停
-            if(Date.now()-lastSwitch<600){
-                return;
-            }
-            if(playBtn.onOff){
-                pauseBtn.onclick();
-            }else{
-                playBtn.onclick();
+            if(this.index==n){
+                togglePlay();
+            }else {
+                playAt(this.index);
             }
         };
 
-        li.innerHTML=data[i].song;
+        li.innerHTML='<i class="ic"><b></b><b></b><b></b></i>'+data[i].song;
         span.innerHTML="自定义";
         li.appendChild(span);
         ul.appendChild(li);
     }
-    // 列表播放状态图标：与中间按钮同款（播放中显示暂停图标，暂停时显示播放三角）
-    var lastSwitch=0;
-    function syncListPlay(){
+    // 列表状态：sel 是选中项（粉色文字），n 是当前播放曲目
+    var sel=n;
+    // 选中行显示播放/暂停图标；未选中但正在播放的曲目显示跳动条形图
+    function renderList(){
         var playing=!Audio1.paused&&!Audio1.ended;
         for (var j = 0; j < lis.length; j++) {
-            var cls=(' '+lis[j].className+' ').replace(/ playing /g,' ').replace(/^\s+|\s+$/g,'');
-            if (playing&&j==n) {
-                cls=cls?cls+' playing':'playing';
-            }
-            if (cls!=lis[j].className) {
+            var cls=(j==sel?'active':'')+((playing&&j==n)?' playing':'');
+            if (lis[j].className!=cls) {
                 lis[j].className=cls;
             }
         }
     }
-    Audio1.addEventListener('play',syncListPlay);
-    Audio1.addEventListener('playing',syncListPlay);
-    Audio1.addEventListener('pause',syncListPlay);
-    Audio1.addEventListener('ended',syncListPlay);
+    // 与中间播放/暂停按钮保持一致
+    function togglePlay(){
+        if(playBtn.onOff){
+            pauseBtn.onclick();
+        }else {
+            playBtn.onclick();
+        }
+    }
+    // 切到指定曲目并播放（暂停状态下也直接开始播放）
+    function playAt(i){
+        if(changing){
+            return;
+        }
+        if(i==n){
+            sel=i;
+            renderList();
+            return;
+        }
+        prevSong=n;
+        n=i;
+        sel=i;
+        loadLyric(data[n].lyric);
+        songName.innerHTML=data[n].song; randomTitleColor(n);
+        artist.innerHTML=data[n].singer;
+        reStatus();
+        if(!playBtn.onOff){
+            playBtn.onOff=true;
+            playBtn.style.display='none';
+            pauseBtn.style.display='inline-block';
+            styli.className='';
+            bg.style.webkitFilter='blur(10px)';
+            timer();
+        }
+        changing=true;
+        nextTab();
+        scrollToMove(ul,42*(i-2),400);
+        renderList();
+    }
+    Audio1.addEventListener('play',renderList);
+    Audio1.addEventListener('playing',renderList);
+    Audio1.addEventListener('pause',renderList);
+    Audio1.addEventListener('ended',renderList);
+    renderList();
     // 面板高度随曲目行数变化：初始位置按自身高度算，保证完全藏在视口外
     playList.style.bottom=-playList.offsetHeight+'px';
     //11.播放模式：一个按钮循环切换 列表循环 → 单曲循环 → 随机播放
@@ -938,13 +958,10 @@ var data=[
                 move(_this,{backgroundPosition:-100},1000,'linear');
                 setTimeout(function(){
                     move(stage,{opacity:0},400,'linear');
-                    // 样式初始化
-                    for (var i = 0; i < lis.length; i++) {
-                        lis[i].className="";
-                    }
                     prevSong=n;
                     n=num;
-                    lis[n].className="active";
+                    sel=n;
+                    renderList();
                     loadLyric (data[n].lyric);
                     playBtn.onOff = true;
                     playBtn.style.display='none';
@@ -1048,9 +1065,9 @@ var data=[
     if(k!==n){
         // 静态渲染到目标曲目：唱片直接摆在居中位，封面/背景/音源一次到位
         prevSong=n;
-        if(lis[n]){ lis[n].className=''; }
         n=k;
-        if(lis[n]){ lis[n].className='active'; }
+        sel=n;
+        renderList();
         loadLyric(data[n].lyric);
         show(n,0,1);
         albumBg[0].src=songImg(n);
