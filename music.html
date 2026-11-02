@@ -397,21 +397,45 @@
 				setTimeout(function(){el.classList.remove("search-hit");},2400);
 				ring((el.closest&&el.closest(".album-card,.album-detail,.track-pop"))||el);
 			}
-			/* 卡片上的字段：专辑名 → h3，歌手/曲目数 → .album-meta，发行日期 → .album-date */
+			/* 卡片上的字段：专辑名 → h3，歌手·曲目数 → .album-meta，发行日期 → .album-date */
 			function cardField(card,field){
 				if(!card) return card;
 				var t=null;
 				if(field==="专辑名") t=card.querySelector("h3");
-				else if(field==="歌手"||field==="曲目数") t=card.querySelector(".album-meta");
 				else if(field==="发行日期") t=card.querySelector(".album-date");
+				else t=card.querySelector(".album-meta");
 				return t||card;
 			}
 			function goCard(key,field){ detail.hidden=true; var card=document.querySelector('.album-card[data-album="'+key+'"]'); if(!card) return; var t=cardField(card,field); t.scrollIntoView({behavior:"smooth",block:"center"}); flash(t); }
-			/* 命中歌名 → 定位到详情里的那一行；命中介绍 → 定位到介绍段落；其余定位到专辑信息行 */
-			function goDetail(key,trackIndex,field){ openAlbum(key,true); setTimeout(function(){ var target=null; if(typeof trackIndex==="number"&&trackIndex>=0){ target=document.querySelectorAll("#albumDetailTracks li")[trackIndex]; } else if(field==="介绍"){ target=document.getElementById("albumDetailIntro"); } if(!target){ target=document.getElementById("albumDetailMeta"); } if(!target) return; target.scrollIntoView({behavior:"smooth",block:"center"}); flash(target); },180); }
-			/* 命中歌名或单曲介绍：打开详情并弹出这首歌的介绍浮层，标题带高亮、浮层描边转一圈 */
-			function goTrack(key,trackIndex){ openAlbum(key,true); setTimeout(function(){ showTrack(trackIndex); var el=document.getElementById("trackPopTitle"), box=document.getElementById("trackPop")||el; if(!el) return; box.scrollIntoView({behavior:"smooth",block:"center"}); flash(el); },180); }
-			function goRow(r){ if(!r) return; if(r.kind==="card") goCard(r.key,r.field); else if(r.kind==="song"||r.field==="歌曲") goTrack(r.key,r.track); else goDetail(r.key,r.track,r.field); }
+			/* 详情卡片上的字段：专辑名 → 详情标题，歌手·日期 → 信息行，专辑介绍 → 介绍段落，曲目 → 曲目行 */
+			function goDetail(key,trackIndex,field){
+				openAlbum(key,true);
+				setTimeout(function(){
+					var target=null;
+					if(field==="专辑名") target=document.getElementById("albumDetailTitle");
+					else if(field==="歌手 · 日期") target=document.getElementById("albumDetailMeta");
+					else if(field==="专辑介绍") target=document.getElementById("albumDetailIntro");
+					else if(typeof trackIndex==="number"&&trackIndex>=0) target=document.querySelectorAll("#albumDetailTracks li")[trackIndex];
+					if(!target) return;
+					/* 标题/信息行定位时把整张详情卡带到视口顶部，更像“打开了这个详情页” */
+					if(field==="专辑名"||field==="歌手 · 日期"){ (document.querySelector(".album-detail")||target).scrollIntoView({behavior:"smooth",block:"start"}); }
+					else target.scrollIntoView({behavior:"smooth",block:"center"});
+					flash(target);
+				},180);
+			}
+			/* 单曲介绍浮层：歌名 → 浮层标题，歌曲介绍 → 浮层里的介绍段落 */
+			function goTrack(key,trackIndex,field){
+				openAlbum(key,true);
+				setTimeout(function(){
+					showTrack(trackIndex);
+					var el=(field==="歌曲介绍")?document.getElementById("trackPopIntro"):document.getElementById("trackPopTitle");
+					var box=document.getElementById("trackPop");
+					if(!el) return;
+					(box||el).scrollIntoView({behavior:"smooth",block:"center"});
+					flash(el);
+				},180);
+			}
+			function goRow(r){ if(!r) return; if(r.kind==="card") goCard(r.key,r.field); else if(r.kind==="song") goTrack(r.key,r.track,r.field); else goDetail(r.key,r.track,r.field); }
 			var searchInput=document.getElementById("albumSearchInput"), searchBox=document.getElementById("albumSearchResults");
 			function addMark(el,text,q){ var lo=text.toLowerCase(), ql=q.toLowerCase(), ix=lo.indexOf(ql); if(ix<0){ el.textContent=text; return; } el.appendChild(document.createTextNode(text.slice(0,ix))); var m=document.createElement("mark"); m.textContent=text.slice(ix,ix+q.length); el.appendChild(m); el.appendChild(document.createTextNode(text.slice(ix+q.length))); }
 			var currentSearchRows=[], activeSearchIndex=-1;
@@ -427,16 +451,29 @@
 			function renderSearch(q){
 				if(!q){ searchBox.hidden=true; searchBox.innerHTML=""; currentSearchRows=[]; activeSearchIndex=-1; return; }
 				var lower=q.toLowerCase(), rows=[];
+				/* 索引按“位置”逐条列出：同一段文字出现在卡片 / 详情 / 单曲浮层里，就各出一条，互不替代 */
 				Object.keys(albumData).forEach(function(key){
 					var a=albumData[key], meta=a.singer+" · "+a.tracks.length+" 首 · "+a.date;
+					/* ① 专辑卡片上的字段 */
 					if(a.title.toLowerCase().indexOf(lower)>=0) rows.push({key:key,kind:"card",field:"专辑名",label:a.title,context:meta});
-					if(a.singer.toLowerCase().indexOf(lower)>=0) rows.push({key:key,kind:"card",field:"歌手",label:a.singer,context:"《"+a.title+"》 · "+a.tracks.length+" 首 · "+a.date});
-					if(a.date.indexOf(q)>=0) rows.push({key:key,kind:"card",field:"发行日期",label:a.date,context:"《"+a.title+"》 · "+meta.split(" · ")[0]+" · "+a.tracks.length+" 首"});
-					if((a.tracks.length+"首").indexOf(q)>=0) rows.push({key:key,kind:"card",field:"曲目数",label:a.tracks.length+" 首",context:"《"+a.title+"》 · "+a.singer+" · "+a.date});
+					if((a.singer+" · "+a.tracks.length+" 首").toLowerCase().indexOf(lower)>=0) rows.push({key:key,kind:"card",field:"歌手 · 曲目数",label:a.singer+" · "+a.tracks.length+" 首",context:"《"+a.title+"》 · "+a.date});
+					if(a.date.toLowerCase().indexOf(lower)>=0) rows.push({key:key,kind:"card",field:"发行日期",label:a.date,context:"《"+a.title+"》 · "+a.singer+" · "+a.tracks.length+" 首"});
+					/* ② 专辑详情卡片上的字段 */
+					if(a.title.toLowerCase().indexOf(lower)>=0) rows.push({key:key,kind:"detail",field:"专辑名",label:a.title,context:"专辑详情标题 · "+meta});
+					if((a.singer+" · "+a.tracks.length+" 首 · "+a.date).toLowerCase().indexOf(lower)>=0) rows.push({key:key,kind:"detail",field:"歌手 · 日期",label:a.singer+" · "+a.tracks.length+" 首 · "+a.date,context:"《"+a.title+"》详情信息行"});
 					var ii=a.intro.toLowerCase().indexOf(lower);
-					if(ii>=0) rows.push({key:key,kind:"detail",field:"介绍",label:"提到“"+q+"”",context:(ii>20?"…":"")+a.intro.slice(Math.max(0,ii-20),ii+q.length+20)+(ii+q.length+20<a.intro.length?"…":"")});
-					a.tracks.forEach(function(t,idx){ if(t.toLowerCase().indexOf(lower)>=0){ var nb=[], iv=(a.intros&&a.intros[t])||""; if(idx>0) nb.push("上一首《"+a.tracks[idx-1]+"》"); if(idx<a.tracks.length-1) nb.push("下一首《"+a.tracks[idx+1]+"》"); rows.push({key:key,kind:"detail",field:"歌曲",label:t,track:idx,context:"《"+a.title+"》第"+(idx+1)+"首"+(nb.length?"，"+nb.join("，"):"")+(iv?" · 介绍："+iv.slice(0,26)+"…":"")}); } });
-					/* 每首歌的介绍也进索引：命中后直接弹出那首歌的介绍浮层 */
+					if(ii>=0) rows.push({key:key,kind:"detail",field:"专辑介绍",label:"提到“"+q+"”",context:(ii>20?"…":"")+a.intro.slice(Math.max(0,ii-20),ii+q.length+20)+(ii+q.length+20<a.intro.length?"…":"")});
+					/* ③ 曲目行（详情里）与单曲介绍浮层标题（浮层里）——同一首歌两处都算 */
+					a.tracks.forEach(function(t,idx){
+						if(t.toLowerCase().indexOf(lower)<0) return;
+						var nb=[], iv=(a.intros&&a.intros[t])||"";
+						if(idx>0) nb.push("上一首《"+a.tracks[idx-1]+"》");
+						if(idx<a.tracks.length-1) nb.push("下一首《"+a.tracks[idx+1]+"》");
+						/* 单曲介绍浮层里信息最全（标题+介绍），排在前面；详情里的曲目行跟其后 */
+						rows.push({key:key,kind:"song",field:"歌曲名",label:t,track:idx,context:"单曲介绍浮层标题 · 《"+a.title+"》第"+(idx+1)+"首"+(iv?" · 介绍："+iv.slice(0,22)+"…":"")});
+						rows.push({key:key,kind:"detail",field:"曲目",label:t,track:idx,context:"《"+a.title+"》第"+(idx+1)+"首"+(nb.length?"，"+nb.join("，"):"")});
+					});
+					/* ④ 每首歌的介绍文案 */
 					Object.keys(a.intros||{}).forEach(function(nm){
 						var it=a.intros[nm]||"", j=it.toLowerCase().indexOf(lower), ti=a.tracks.indexOf(nm);
 						if(j<0||ti<0) return;
@@ -449,7 +486,7 @@
 				rows.slice(0,30).forEach(function(r,ix){
 					var b=document.createElement("button"); b.type="button"; b.className="sr-item";
 					var top=document.createElement("div"); top.className="sr-top";
-					var k=document.createElement("b"); k.className="sr-kind"; k.textContent=r.kind==="card"?"卡片":(r.kind==="song"?"歌曲介绍":(r.field==="歌曲"?"歌曲":"详情"));
+					var k=document.createElement("b"); k.className="sr-kind"; k.textContent=r.kind==="card"?"卡片":(r.kind==="song"?"歌曲":"详情");
 					var al=document.createElement("b"); al.className="sr-album"; al.textContent="《"+albumData[r.key].title+"》";
 					var f=document.createElement("span"); f.className="sr-field"; addMark(f,r.field+"："+r.label,q);
 					top.appendChild(k); top.appendChild(al); top.appendChild(f);
