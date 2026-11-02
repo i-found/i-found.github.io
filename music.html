@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>听见 | 美好时光</title>
-<link rel="stylesheet" href="music.css?v=0a7f79db">
+<link rel="stylesheet" href="music.css?v=90e5a101">
 <link rel="icon" href="./img/ico.png?v=c6aeb3b5" type="image/x-icon">
 </head>
 <body>
@@ -409,9 +409,9 @@
 			function goCard(key,field){ detail.hidden=true; var card=document.querySelector('.album-card[data-album="'+key+'"]'); if(!card) return; var t=cardField(card,field); t.scrollIntoView({behavior:"smooth",block:"center"}); flash(t); }
 			/* 命中歌名 → 定位到详情里的那一行；命中介绍 → 定位到介绍段落；其余定位到专辑信息行 */
 			function goDetail(key,trackIndex,field){ openAlbum(key,true); setTimeout(function(){ var target=null; if(typeof trackIndex==="number"&&trackIndex>=0){ target=document.querySelectorAll("#albumDetailTracks li")[trackIndex]; } else if(field==="介绍"){ target=document.getElementById("albumDetailIntro"); } if(!target){ target=document.getElementById("albumDetailMeta"); } if(!target) return; target.scrollIntoView({behavior:"smooth",block:"center"}); flash(target); },180); }
-			/* 命中单曲介绍：打开专辑详情并直接弹出这首歌的介绍浮层 */
-			function goTrack(key,trackIndex){ openAlbum(key); setTimeout(function(){ showTrack(trackIndex); var el=document.getElementById("trackPopTitle"); if(el){ el.scrollIntoView({behavior:"smooth",block:"center"}); flash(el); } },350); }
-			function goRow(r){ if(!r) return; if(r.kind==="card") goCard(r.key,r.field); else if(r.kind==="song") goTrack(r.key,r.track); else goDetail(r.key,r.track,r.field); }
+			/* 命中歌名或单曲介绍：打开详情并弹出这首歌的介绍浮层，标题带高亮、浮层描边转一圈 */
+			function goTrack(key,trackIndex){ openAlbum(key,true); setTimeout(function(){ showTrack(trackIndex); var el=document.getElementById("trackPopTitle"), box=document.getElementById("trackPop")||el; if(!el) return; box.scrollIntoView({behavior:"smooth",block:"center"}); flash(el); },180); }
+			function goRow(r){ if(!r) return; if(r.kind==="card") goCard(r.key,r.field); else if(r.kind==="song"||r.field==="歌曲") goTrack(r.key,r.track); else goDetail(r.key,r.track,r.field); }
 			var searchInput=document.getElementById("albumSearchInput"), searchBox=document.getElementById("albumSearchResults");
 			function addMark(el,text,q){ var lo=text.toLowerCase(), ql=q.toLowerCase(), ix=lo.indexOf(ql); if(ix<0){ el.textContent=text; return; } el.appendChild(document.createTextNode(text.slice(0,ix))); var m=document.createElement("mark"); m.textContent=text.slice(ix,ix+q.length); el.appendChild(m); el.appendChild(document.createTextNode(text.slice(ix+q.length))); }
 			var currentSearchRows=[], activeSearchIndex=-1;
@@ -449,7 +449,7 @@
 				rows.slice(0,30).forEach(function(r,ix){
 					var b=document.createElement("button"); b.type="button"; b.className="sr-item";
 					var top=document.createElement("div"); top.className="sr-top";
-					var k=document.createElement("b"); k.className="sr-kind"; k.textContent=r.kind==="card"?"卡片":(r.kind==="song"?"歌曲":(r.field==="歌曲"?"曲目":"详情"));
+					var k=document.createElement("b"); k.className="sr-kind"; k.textContent=r.kind==="card"?"卡片":(r.kind==="song"?"歌曲介绍":(r.field==="歌曲"?"歌曲":"详情"));
 					var al=document.createElement("b"); al.className="sr-album"; al.textContent="《"+albumData[r.key].title+"》";
 					var f=document.createElement("span"); f.className="sr-field"; addMark(f,r.field+"："+r.label,q);
 					top.appendChild(k); top.appendChild(al); top.appendChild(f);

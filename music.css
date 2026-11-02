@@ -587,6 +587,7 @@ span{
 /* 搜索定位：命中的字段本身变粉，卡片/详情/浮层的描边交给 .locate-ring */
 .album-card h3.search-hit,.album-card .album-meta.search-hit,.album-card .album-date.search-hit{color:#FF8B8B;}
 .album-detail-intro.search-hit,.album-tracklist li.search-hit{background:#fff0f0; border-radius:6px;}
+.track-pop-title.search-hit{color:#FF8B8B;}
 .album-tracklist li.search-hit{color:#FF5252; box-shadow:inset 3px 0 0 #FF8B8B; padding-left:6px; margin-left:-6px;}
 /* 蓝粉渐变描边绕定位目标转一圈后淡出 */
 @property --ringAng{syntax:"<angle>";inherits:false;initial-value:0deg;}
