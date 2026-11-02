@@ -688,3 +688,27 @@ html.dl-enter::after{
 	pointer-events:none;
 }
 html.dl-enter.dl-ready::after{opacity:0;}
+
+/* 悬停图标预加载
+   底部按钮的悬停态原来写成 .xxx:hover{ background: url(xxx-touch.png) }，
+   浏览器要到第一次悬停才开始下载这张图，图标会先消失一下再出现。
+   这里把这几张图挂到一个不可见元素上，跟首屏图片一起请求，悬停时直接命中缓存。 */
+body::after {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: -9999px;
+	width: 8px;
+	height: 8px;
+	opacity: 0;
+	pointer-events: none;
+	background-image:
+		url(img/play_icn_loop-touch.png),
+		url(img/play_btn_prev-touch.png),
+		url(img/play_rdi_btn_play-touch.png),
+		url(img/play_rdi_btn_pause-touch.png),
+		url(img/play_btn_next-touch.png),
+		url(img/play_icn_src-touch.png);
+	background-repeat: no-repeat;
+	background-size: 8px 8px;
+}

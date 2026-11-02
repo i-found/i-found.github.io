@@ -7,7 +7,7 @@
 	if(/(?:^|[?&])song=/.test(location.search)){ document.documentElement.className+=' dl-enter'; }
 	</script>
 	<meta name="viewport"  id="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0,user-scalable=no"/>
-	<link rel="stylesheet" type="text/css" href="css/music.css?v=4d578ddf">
+	<link rel="stylesheet" type="text/css" href="css/music.css?v=0e0cdda6">
 	<link rel="icon" href="./img/梦游计ico.png?v=a0a09a1e" type="image/x-icon">
 	<script type="text/javascript" src="js/lyrics.js?v=7bee7866"></script>
 	<title>许嵩 | 梦游计_2012</title>
@@ -32,7 +32,7 @@
 			<div class="artist" id="artist"></div>
 		</div>
 		<!-- center  中间部分 -->
-		<div class="center" title="打开歌词">
+		<div class="center">
 			<img id="styli" class="play-needle" src="img/play_needle.png?v=36f0e1e0" alt="">
 			<div class="disk-bg"></div>
 			<div class="disk">
@@ -68,17 +68,17 @@
 			</div>
 			<div id="control">
 				        <!--loop 循环按钮  -->
-                <span class="loop" title="列表循环/单曲循环"></span>
+                <span class="loop" aria-label="列表循环/单曲循环"></span>
                 <!--pre 上一曲按钮  -->
-                <span class="pre" title="上一首"></span>
+                <span class="pre" aria-label="上一首"></span>
                 <!--play 播放按钮  -->
-                <span class="play" title="播放"></span>
+                <span class="play" aria-label="播放"></span>
                 <!--pause 暂停按钮  -->
-                <span class="pause" style="display:none"  title="暂停"></span>
+                <span class="pause" style="display:none"  aria-label="暂停"></span>
                 <!--next 下一曲按钮  -->
-                <span class="next" title="下一首"></span>
+                <span class="next" aria-label="下一首"></span>
                 <!--list 列表按钮  -->
-                <span class="list" title="打开播放列表"></span>
+                <span class="list" aria-label="打开播放列表"></span>
             </div>
 		</div>
 		<div id="list-mask"></div>
