@@ -571,7 +571,8 @@ span{
 .nav-search-results{position:absolute; top:48px; right:0; width:360px; max-height:420px; overflow-y:auto; background:#fff; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.15); text-align:left; z-index:9;}
 .nav-search-results span{display:inline; width:auto; height:auto; background:none; border-radius:0;}
 .sr-item{display:block; width:100%; padding:10px 14px; border:none; border-bottom:1px solid #f0f0f0; background:#fff; cursor:pointer; text-align:left;}
-.sr-item:hover{background:#fff5f5;}
+.sr-item:hover,.sr-item.active{background:#fff5f5;}
+.sr-item.active{box-shadow:inset 3px 0 0 #FF8B8B;}
 .sr-top{display:flex; gap:6px; font-size:14px; line-height:1.5; margin:0;}
 /* 覆盖导航栏通用 div 规则（60px 浮动块），否则结果行会被压扁 */
 .Navi-Bar .nav-search .sr-top,.Navi-Bar .nav-search .sr-empty{width:auto; height:auto; float:none; margin:0; line-height:1.5; text-align:left;}

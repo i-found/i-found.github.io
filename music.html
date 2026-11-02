@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>听见 | 美好时光</title>
-<link rel="stylesheet" href="music.css?v=5168a967">
+<link rel="stylesheet" href="music.css?v=3db45037">
 <link rel="icon" href="./img/ico.png?v=c6aeb3b5" type="image/x-icon">
 </head>
 <body>
@@ -413,9 +413,18 @@
 			function goRow(r){ if(!r) return; if(r.kind==="card") goCard(r.key,r.field); else if(r.kind==="song") goTrack(r.key,r.track); else goDetail(r.key,r.track,r.field); }
 			var searchInput=document.getElementById("albumSearchInput"), searchBox=document.getElementById("albumSearchResults");
 			function addMark(el,text,q){ var lo=text.toLowerCase(), ql=q.toLowerCase(), ix=lo.indexOf(ql); if(ix<0){ el.textContent=text; return; } el.appendChild(document.createTextNode(text.slice(0,ix))); var m=document.createElement("mark"); m.textContent=text.slice(ix,ix+q.length); el.appendChild(m); el.appendChild(document.createTextNode(text.slice(ix+q.length))); }
-			var currentSearchRows=[];
+			var currentSearchRows=[], activeSearchIndex=-1;
+			/* 键盘上下键在结果间移动：视觉等同鼠标悬停，Enter 打开当前高亮项 */
+			function setActiveSearch(i){
+				var items=searchBox.querySelectorAll(".sr-item");
+				if(!items.length){ activeSearchIndex=-1; return; }
+				if(i<0) i=0; else if(i>items.length-1) i=items.length-1;
+				activeSearchIndex=i;
+				for(var n=0;n<items.length;n++){ items[n].classList.toggle("active",n===i); }
+				items[i].scrollIntoView({block:"nearest"});
+			}
 			function renderSearch(q){
-				if(!q){ searchBox.hidden=true; searchBox.innerHTML=""; return; }
+				if(!q){ searchBox.hidden=true; searchBox.innerHTML=""; currentSearchRows=[]; activeSearchIndex=-1; return; }
 				var lower=q.toLowerCase(), rows=[];
 				Object.keys(albumData).forEach(function(key){
 					var a=albumData[key], meta=a.singer+" · "+a.tracks.length+" 首 · "+a.date;
@@ -436,7 +445,7 @@
 				currentSearchRows=rows;
 				searchBox.innerHTML="";
 				if(!rows.length){ var em=document.createElement("div"); em.className="sr-empty"; em.textContent="没有找到和“"+q+"”相关的内容"; searchBox.appendChild(em); }
-				rows.slice(0,30).forEach(function(r){
+				rows.slice(0,30).forEach(function(r,ix){
 					var b=document.createElement("button"); b.type="button"; b.className="sr-item";
 					var top=document.createElement("div"); top.className="sr-top";
 					var k=document.createElement("b"); k.className="sr-kind"; k.textContent=r.kind==="card"?"卡片":(r.kind==="song"?"歌曲":"详情");
@@ -446,17 +455,27 @@
 					var ctx=document.createElement("div"); ctx.className="sr-context"; addMark(ctx,r.context,q);
 					b.appendChild(top); b.appendChild(ctx);
 					b.addEventListener("click",function(){ searchBox.hidden=true; goRow(r); });
+					b.addEventListener("mouseenter",function(){ setActiveSearch(ix); });
 					searchBox.appendChild(b);
 				});
 				searchBox.hidden=false;
+				setActiveSearch(0);
 			}
 			searchInput.addEventListener("input",function(){ renderSearch(searchInput.value.trim()); });
 			searchInput.addEventListener("focus",function(){ if(searchInput.value.trim()) renderSearch(searchInput.value.trim()); });
 			var navSearch=document.getElementById("navSearch"), navToggle=document.getElementById("navSearchToggle");
 			navToggle.addEventListener("click",function(ev){ ev.stopPropagation(); if(navSearch.classList.contains("open")){ if(!searchInput.value.trim()){ navSearch.classList.remove("open"); searchBox.hidden=true; } else { searchInput.focus(); } } else { navSearch.classList.add("open"); searchInput.focus(); } });
 			searchInput.addEventListener("keydown",function(ev){
-				if(ev.key==="Escape"){ searchBox.hidden=true; searchInput.blur(); if(!searchInput.value.trim()) navSearch.classList.remove("open"); }
-				if(ev.key==="Enter"){ ev.preventDefault(); var q=searchInput.value.trim(); if(!q) return; if(!currentSearchRows.length) renderSearch(q); var r=currentSearchRows[0]; if(!r) return; searchBox.hidden=true; goRow(r); }
+				if(ev.key==="Escape"){ searchBox.hidden=true; searchInput.blur(); if(!searchInput.value.trim()) navSearch.classList.remove("open"); return; }
+				if(ev.key==="ArrowDown"||ev.key==="ArrowUp"){
+					ev.preventDefault();
+					var qk=searchInput.value.trim(); if(!qk) return;
+					if(searchBox.hidden||!searchBox.querySelector(".sr-item")) renderSearch(qk);
+					if(!searchBox.querySelector(".sr-item")) return;
+					setActiveSearch(activeSearchIndex<0?0:activeSearchIndex+(ev.key==="ArrowDown"?1:-1));
+					return;
+				}
+				if(ev.key==="Enter"){ ev.preventDefault(); var q=searchInput.value.trim(); if(!q) return; if(!currentSearchRows.length) renderSearch(q); var r=currentSearchRows[activeSearchIndex]||currentSearchRows[0]; if(!r) return; searchBox.hidden=true; goRow(r); }
 			});
 			document.addEventListener("click",function(ev){ if(!ev.target.closest(".nav-search")){ searchBox.hidden=true; if(!searchInput.value.trim()) navSearch.classList.remove("open"); } });
 			document.querySelectorAll(".album-card").forEach(function(card){
