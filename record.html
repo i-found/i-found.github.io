@@ -1442,6 +1442,17 @@ li.search { position: relative; }
     return out;
   }
 
+  // 两组图片是否完全一样（数量和每一张都相同才算没动过）
+  function sameImageList(a, b) {
+    a = a || [];
+    b = b || [];
+    if (a.length !== b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] !== b[i]) return false;
+    }
+    return true;
+  }
+
   /* 维护两种图片字段：
      · record.images     —— 给云端和推送用的（已上传的保持 URL，新图保持 base64，避免重复上传）
      · record.localImages —— 本地原图备份，只存在浏览器里、不推送；与 images 等长，
@@ -1571,11 +1582,23 @@ li.search { position: relative; }
         // 编辑模式：更新已有记录
         var record = findRecord(editingRecordId);
         if (record) {
-          record.title = title || '';
-          record.text = text || '';
-          syncRecordImages(record, editingImages);   // 图片：已上传的沿用 URL，新图存 base64
-          record.updatedTime = now;
-          savedRecord = record;
+          var nextTitle = title || '';
+          var nextText = text || '';
+          /* 只有内容真的变了才算一次修改：标题、正文、图片（数量或具体哪几张）任一不同。
+             点保存但什么都没改 → 不动 updatedTime、不推送云端，记录仍是创建时的样子。 */
+          var didChange = (record.title || '') !== nextTitle ||
+                          (record.text || '') !== nextText ||
+                          !sameImageList(displayImages(record), editingImages);
+          if (didChange) {
+            record.title = nextTitle;
+            record.text = nextText;
+            syncRecordImages(record, editingImages);   // 图片：已上传的沿用 URL，新图存 base64
+            record.updatedTime = now;
+            savedRecord = record;
+          } else {
+            showSyncStatus('内容没有变化，未改动修改时间', 'success');
+            setTimeout(function() { showSyncStatus('', ''); }, 2500);
+          }
         } else {
           // 记录不存在，降级为新增
           var addRec = {
@@ -1603,7 +1626,8 @@ li.search { position: relative; }
         records.push(newRec);
         savedRecord = newRec;
       }
-      saveRecords(savedRecord ? [savedRecord] : []);
+      /* 内容没变化时 savedRecord 为 null：不写盘、不推送，避免无谓的「修改于」 */
+      if (savedRecord) saveRecords([savedRecord]);
     } catch(e) {
       showSyncStatus('保存出错: ' + e.message, 'error');
     }
