@@ -1595,10 +1595,8 @@ li.search { position: relative; }
             syncRecordImages(record, editingImages);   // 图片：已上传的沿用 URL，新图存 base64
             record.updatedTime = now;
             savedRecord = record;
-          } else {
-            showSyncStatus('内容没有变化，未改动修改时间', 'success');
-            setTimeout(function() { showSyncStatus('', ''); }, 2500);
           }
+          /* 没改动就静默收工：不更新时间、不写盘、不推送，也不用提示 */
         } else {
           // 记录不存在，降级为新增
           var addRec = {
