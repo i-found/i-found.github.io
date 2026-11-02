@@ -9,8 +9,9 @@
    2) videoBgTotalSongs：全站歌曲总数（新增歌曲/专辑后同步改这个数字）
   3) videoBgBySong：给某一首歌锁定专属背景，键是播放页 data 里的 song 字段，
         格式与池子里的条目一样；锁定的视频不要再放进 videoBgPool（避免别的歌也随机到）
-  4) 改完本文件，务必把 7 个专辑页里的 `video-bg.js?v=YYYYMMDD` 版本号一起改掉
-     —— GitHub Pages 对 .js 是 4 小时强缓存，不换版本号线上会一直用旧池
+  4) 改完本文件，务必把 7 个专辑页里的 `video-bg.js?v=YYYYMMDD` 版本号一起改掉；
+     改了各专辑的 js/music.js 也要把那边的 `music.js?v=N` 加一
+     —— GitHub Pages 对 .js 是 4 小时强缓存，不换版本号线上会一直跑旧代码
 
    概率规则（按需求）：
    概率 = 视频数 / 歌曲总数，钳制在 10% ~ 50% 之间；
@@ -40,7 +41,7 @@
     /* ---- 专属背景：按歌名锁定视频，进到这首歌必出，不参与上面的随机池 ----
        键是播放页 data 里的 song 字段（要与歌名完全一致） */
     var videoBgBySong={
-        "内线": {src:"../../vid/feihua-rumeng.mp4", poster:"../../vid/feihua-rumeng.jpg", cover:"../../vid/feihua-rumeng-disc.jpg"}
+        "内线": {src:"../../vid/feihua-rumeng.mp4", poster:"../../vid/feihua-rumeng.jpg?v=2", cover:"../../vid/feihua-rumeng-disc.jpg?v=2"}
     };
 
     /* 专属视频自动从随机池剔除（同 src 视为同一条）：
