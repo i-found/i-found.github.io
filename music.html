@@ -3,18 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <title>听见 | 美好时光</title>
-<link rel="stylesheet" href="music.css?v=47">
+<link rel="stylesheet" href="music.css?v=49">
 <link rel="icon" href="./img/ico.png" type="image/x-icon">
 </head>
 <body>
-
-	<!-- 全屏背景视频：夜景路灯，muted+loop 保证自动播放；poster 兜底首帧 -->
-	<div class="bg-video" aria-hidden="true">
-		<video id="bgVideo" autoplay muted loop playsinline preload="auto" poster="vid/first.png">
-			<source src="vid/seg.mp4" type="video/mp4">
-		</video>
-		<div class="bg-veil"></div>
-	</div>
 
 	<div class="bodybox">
 
@@ -450,23 +442,6 @@
 				if(!pop.hidden){ hideTrackPop(); return; }   /* 浮层开着就先收浮层，再按才关专辑 */
 				closeAlbum();
 			});
-		})();
-		</script>
-
-		<script type="text/javascript">
-		/* 背景视频兜底：部分浏览器/低电量模式下 autoplay 会被拦，这里补一次 play()；
-		   若仍被拦（比如省流模式），poster 首帧会一直显示，视觉上不穿帮 */
-		(function(){
-			var v=document.getElementById("bgVideo");
-			if(!v) return;
-			v.muted=true;
-			v.setAttribute("muted","");   // iOS 需要属性而不是仅 JS 赋值
-			function tryPlay(){
-				var p=v.play();
-				if(p&&p.catch){ p.catch(function(){}); }
-			}
-			tryPlay();
-			document.addEventListener("visibilitychange",function(){ if(!document.hidden) tryPlay(); });
 		})();
 		</script>
 </body>

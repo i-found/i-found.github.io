@@ -5,36 +5,6 @@
 	padding: 0;
 }
 
-/* 全屏背景视频：固定铺满，object-fit:cover 裁切，不拦鼠标事件 */
-.bg-video{
-  position: fixed;
-  top:0;
-  left:0;
-  right:0;
-  bottom:0;
-  z-index:0;
-  overflow:hidden;
-  pointer-events:none;
-  background:#0b0d10;
-}
-.bg-video video{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  display:block;
-  /* 暗部提亮一点点，避免整体压成纯黑 */
-  filter: brightness(1.15) contrast(1.02);
-}
-/* 蒙版：上淡下浓，让内容和背景视频分层次（想更清楚地看到视频就调小这两个透明度） */
-.bg-veil{
-  position:absolute;
-  top:0;
-  left:0;
-  right:0;
-  bottom:0;
-  background: linear-gradient(180deg, rgba(8,10,14,.35) 0%, rgba(8,10,14,.55) 45%, rgba(8,10,14,.72) 100%);
-}
-
 /* 网页背景 */
 .bodybox{
   width:100%;
@@ -47,8 +17,8 @@
   color: #424242;
   z-index:1;
 
-  /* 半透明底：让背景视频透出来。调大 alpha 更白更干净，调小则视频更明显 */
-  background-color: rgba(245,246,249,0.80);
+  /* 与首页一致的底色 */
+  background-color: #F5F6F9;
   /* 这里定义网页内容展示部分的颜色：轻灰 */
   /* background-image: linear-gradient(135deg,#F9B9B7 20%,#C0E3DE 80%); */
   /* background-image: linear-gradient(to right, #eea2a2 0%, #bbc1bf 19%, #57c6e1 42%, #b49fda 79%, #7ac5d8 100%); */

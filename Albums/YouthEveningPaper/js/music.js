@@ -249,11 +249,11 @@ var data=[
         artist.innerHTML=data[i].singer;
         disk[j].style.left = w/2 +"px";
         if(x>j){
-            albumBg[j].src=albumCover(i);
+            albumBg[j].src=songImg(i);
             disk[x].style.left = jl + "px";
         }
         if(x<j){
-            albumBg[j].src=albumCover(i);
+            albumBg[j].src=songImg(i);
             disk[x].style.left = "-122px";
         }
         bg.style.backgroundImage='url('+data[i].img+')';
@@ -263,8 +263,8 @@ var data=[
         playListCount.innerHTML=data.length;
     }
     show(0,0,1);//播放页面初始化渲染
-    albumBg[0].src=albumCover(0);
-    albumBg[1].src=albumCover(0);
+    albumBg[0].src=songImg(0);
+    albumBg[1].src=songImg(0);
     // 4.将秒换算成分钟 换算后放入相应innerHTML函数
     function sToM (sec,name) {
     	var m=Math.floor(sec/60);
@@ -984,8 +984,8 @@ var data=[
         if(lis[n]){ lis[n].className='active'; }
         loadLyric(data[n].lyric);
         show(n,0,1);
-        albumBg[0].src=albumCover(n);
-        albumBg[1].src=albumCover(n);
+        albumBg[0].src=songImg(n);
+        albumBg[1].src=songImg(n);
         disk[0].style.left=w/2+'px';
         disk[1].style.left=jl+'px';
         // 进度归零（不用 reStatus，避免旧曲时长参与换算）
