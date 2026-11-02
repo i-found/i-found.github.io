@@ -43,9 +43,17 @@
         "内线": {src:"../../vid/feihua-rumeng.mp4", poster:"../../vid/feihua-rumeng.jpg", cover:"../../vid/feihua-rumeng-disc.jpg"}
     };
 
+    /* 专属视频自动从随机池剔除（同 src 视为同一条）：
+       就算忘了手动删，专属视频也不会被别的歌随机抽到 */
+    (function(){
+        var used={},k,i;
+        for(k in videoBgBySong){ if(videoBgBySong.hasOwnProperty(k)){ used[videoBgBySong[k].src]=1; } }
+        for(i=videoBgPool.length-1;i>=0;i--){ if(used[videoBgPool[i].src]){ videoBgPool.splice(i,1); } }
+    })();
+
     /* ---- 全站歌曲总数：自定义9 + 寻雾启示9 + 苏格拉没有底10 + 梦游计10
             + 不如吃茶去9 + 青年晚报9 + 寻宝游戏9 = 65
-            视频 15 条 → 15/65 ≈ 23%，一轮 10 次换歌里约出现 2 次 ---- */
+            随机池 14 条 → 14/65 ≈ 22%，一轮 10 次换歌里约出现 2 次 ---- */
     var videoBgTotalSongs=65;
 
     var ROUND_SIZE=10;   // 一轮换歌次数
