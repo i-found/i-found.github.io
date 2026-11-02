@@ -84,7 +84,13 @@ var data=[
     var videoPlan=new VideoBgPlan();
     var curVideo=null;        //当前这首命中的视频配置（songImg/applySongVideo 共用）
     /* 每次换歌调用一次：本轮走完 10 次就开新一轮，返回这首是否带视频 */
-    function stepVideo(){ curVideo=videoPlan.next(); return curVideo; }
+    function stepVideo(index){
+        var rand=videoPlan.next();                       /* 随机轮照常推进，概率节奏不受影响 */
+        var item=data[index]||{};
+        var fixed=window.videoBgBySong&&window.videoBgBySong[item.song];
+        curVideo=fixed||rand;                            /* 专属背景优先，其余走随机 */
+        return curVideo;
+    }
     var bgVideoBox=document.getElementById("bgVideoBox");//视频背景容器
     var bgVideoEl=document.getElementById("bgVideoEl");//背景视频
     function applySongVideo(){
@@ -244,7 +250,7 @@ var data=[
     }
     // 3.歌曲切换时页面渲染函数
     function show(i,j,x){
-        stepVideo();/* 每次换歌推进一次轮内位置，决定这首出不出视频 */
+        stepVideo(i);/* 换歌：先查专属背景，未命中再按随机轮决定 */
         songName.innerHTML=data[i].song; randomTitleColor(i);
         artist.innerHTML=data[i].singer;
         disk[j].style.left = w/2 +"px";

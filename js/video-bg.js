@@ -7,7 +7,9 @@
         poster —— 首帧图，加载时兜底，不会黑屏
         cover  —— 圆形唱片封面（从视频里裁 1:1）
    2) videoBgTotalSongs：全站歌曲总数（新增歌曲/专辑后同步改这个数字）
-  3) 改完本文件，务必把 7 个专辑页里的 `video-bg.js?v=YYYYMMDD` 版本号一起改掉
+  3) videoBgBySong：给某一首歌锁定专属背景，键是播放页 data 里的 song 字段，
+        格式与池子里的条目一样；锁定的视频不要再放进 videoBgPool（避免别的歌也随机到）
+  4) 改完本文件，务必把 7 个专辑页里的 `video-bg.js?v=YYYYMMDD` 版本号一起改掉
      —— GitHub Pages 对 .js 是 4 小时强缓存，不换版本号线上会一直用旧池
 
    概率规则（按需求）：
@@ -32,9 +34,14 @@
         {src:"../../vid/moon-touch.mp4", poster:"../../vid/moon-touch.jpg", cover:"../../vid/moon-touch-disc.jpg"},
         {src:"../../vid/endless-pain.mp4", poster:"../../vid/endless-pain.jpg", cover:"../../vid/endless-pain-disc.jpg"},
         {src:"../../vid/beyoud.mp4", poster:"../../vid/beyoud.jpg", cover:"../../vid/beyoud-disc.jpg"},
-        {src:"../../vid/a-curse-paper-lily.mp4", poster:"../../vid/a-curse-paper-lily.jpg", cover:"../../vid/a-curse-paper-lily-disc.jpg"},
-        {src:"../../vid/feihua-rumeng.mp4", poster:"../../vid/feihua-rumeng.jpg", cover:"../../vid/feihua-rumeng-disc.jpg"}
+        {src:"../../vid/a-curse-paper-lily.mp4", poster:"../../vid/a-curse-paper-lily.jpg", cover:"../../vid/a-curse-paper-lily-disc.jpg"}
     ];
+
+    /* ---- 专属背景：按歌名锁定视频，进到这首歌必出，不参与上面的随机池 ----
+       键是播放页 data 里的 song 字段（要与歌名完全一致） */
+    var videoBgBySong={
+        "内线": {src:"../../vid/feihua-rumeng.mp4", poster:"../../vid/feihua-rumeng.jpg", cover:"../../vid/feihua-rumeng-disc.jpg"}
+    };
 
     /* ---- 全站歌曲总数：自定义9 + 寻雾启示9 + 苏格拉没有底10 + 梦游计10
             + 不如吃茶去9 + 青年晚报9 + 寻宝游戏9 = 65
@@ -88,5 +95,6 @@
 
     window.VideoBgPlan=VideoBgPlan;
     window.videoBgPool=videoBgPool;
+    window.videoBgBySong=videoBgBySong;
     window.videoBgTotalSongs=videoBgTotalSongs;
 })();
