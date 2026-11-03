@@ -935,20 +935,29 @@ background:conic-gradient(from 0deg,#32B6FF,#6E8CFF,#FF6FC8,#FF9BD6,#32B6FF);
 /* 必须写 closest-side：默认按对角算半径，整块环都会被挖空、什么都看不到 */
 -webkit-mask:radial-gradient(circle closest-side, transparent 0 83%, #000 85%);
 mask:radial-gradient(circle closest-side, transparent 0 83%, #000 85%);
+/* 旋转一直挂着（不可见时暂停），这样淡出时能接着这个角度转，不会跳回 0 度 */
+animation:home-ring-spin 2.8s linear infinite;
+animation-play-state:paused;
 }
 .home-detail-cover-wrap.play-visible .container1::before{
 opacity:.95; transform:scale(1);
-animation:home-ring-spin 2.8s linear infinite;
+animation-play-state:running;
 transition:opacity .3s ease, transform .35s ease;
 }
 .home-detail-cover-wrap.play-fading .container1::before{
-animation:home-ring-fade 2s cubic-bezier(.4,0,.2,1) forwards;
+animation-play-state:running;
+animation-name:home-ring-spin,home-ring-fade;
+animation-duration:2.8s,2s;
+animation-timing-function:linear,cubic-bezier(.4,0,.2,1);
+animation-iteration-count:infinite,1;
+animation-fill-mode:none,forwards;
 }
 @keyframes home-ring-spin{from{rotate:0deg} to{rotate:360deg}}
-/* 消散：一边继续转，一边放大模糊、淡到没有 */
+/* 消散只动透明度/缩放/模糊，角度交给上面那条 spin 接着跑。
+   这里千万别再写 rotate —— 换动画时它会从 0 度重新开始，看着就是「转着转着跳一下」。 */
 @keyframes home-ring-fade{
-from{opacity:.95; transform:scale(1); filter:blur(0); rotate:0deg;}
-to{opacity:0; transform:scale(1.26); filter:blur(3px); rotate:220deg;}
+from{opacity:.95; transform:scale(1); filter:blur(0);}
+to{opacity:0; transform:scale(1.26); filter:blur(3px);}
 }
 
 /* ===== 全屏壁纸（屏保）模式 =====
@@ -1071,13 +1080,21 @@ pointer-events:none; opacity:0; transform:scale(.8);
 background:conic-gradient(from 0deg,#32B6FF,#6E8CFF,#FF6FC8,#FF9BD6,#32B6FF);
 -webkit-mask:radial-gradient(circle closest-side, transparent 0 83%, #000 85%);
 mask:radial-gradient(circle closest-side, transparent 0 83%, #000 85%);
+animation:home-ring-spin 2.8s linear infinite;
+animation-play-state:paused;
 }
 .bookmark3.play-visible .container1::before,.bookmark4.play-visible .container1::before{
-opacity:.95; transform:scale(1); animation:home-ring-spin 2.8s linear infinite;
+opacity:.95; transform:scale(1);
+animation-play-state:running;
 transition:opacity .3s ease, transform .35s ease;
 }
 .bookmark3.play-fading .container1::before,.bookmark4.play-fading .container1::before{
-animation:home-ring-fade 2s cubic-bezier(.4,0,.2,1) forwards;
+animation-play-state:running;
+animation-name:home-ring-spin,home-ring-fade;
+animation-duration:2.8s,2s;
+animation-timing-function:linear,cubic-bezier(.4,0,.2,1);
+animation-iteration-count:infinite,1;
+animation-fill-mode:none,forwards;
 }
 
 /* 触摸操作时按钮会永远出不来，退回常显（光环仍不显示）。
