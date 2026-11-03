@@ -211,6 +211,22 @@ margin:0 auto;
   
 }
 
+/* logo 右侧的版本号：灰色小字，跟着 logo 走，不抢视线 */
+.site-version{
+  float:left;
+  margin:24px 0 0 9px;
+  font-size:11px;
+  line-height:1;
+  letter-spacing:.08em;
+  color:#b3b7bd;
+  font-family:'Avenir-Book','Helvetica Neue',Arial,sans-serif;
+  font-variant-numeric:tabular-nums;
+  user-select:none;
+  cursor:default;
+}
+@media (max-width:768px){
+  .site-version{display:none;}
+}
 .Navi-Bar ul{
   float:left;
   list-style: none;
