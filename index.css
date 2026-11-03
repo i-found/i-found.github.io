@@ -930,7 +930,8 @@ border-radius: 10px;
 .home-detail-zoom{
 position:absolute; right:10px; bottom:10px; width:34px; height:34px; padding:0; z-index:3;
 display:none; align-items:center; justify-content:center; box-sizing:border-box;
-border:0; border-radius:10px; cursor:pointer; color:#fff; background:rgba(0,0,0,.42);
+border:0; border-radius:10px; cursor:pointer; color:#5B5B5B; background:rgba(255,255,255,.66);
+box-shadow:0 1px 4px rgba(0,0,0,.10);
 -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
 opacity:0; transform:translateY(4px);
 transition:opacity .24s ease, transform .24s ease, background .2s ease;
@@ -938,7 +939,7 @@ transition:opacity .24s ease, transform .24s ease, background .2s ease;
 .home-detail-cover-wrap.has-wallpaper .home-detail-zoom{display:flex;}
 .home-detail-cover-wrap:hover .home-detail-zoom,
 .home-detail-zoom:focus-visible{opacity:1; transform:translateY(0);}
-.home-detail-zoom:hover{background:rgba(0,0,0,.66);}
+.home-detail-zoom:hover{background:rgba(255,255,255,.88); color:#3d3d3d;}
 .home-detail-zoom:active{transform:scale(.92);}
 .home-detail-zoom:focus-visible{outline:2px solid #FF8B8B; outline-offset:2px;}
 .home-detail-zoom svg{width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
