@@ -948,19 +948,35 @@ to{opacity:0; transform:scale(1.26); filter:blur(3px); rotate:220deg;}
 
 /* ===== 全屏壁纸（屏保）模式 =====
    双击有动态壁纸的介绍封面进入：黑底铺满、放原始分辨率视频，中间叠日期时间。
-   先做成能用的版本，字体/位置/动效等细节后面再调。 */
-.screensaver{position:fixed; inset:0; z-index:9999; background:#000; overflow:hidden; cursor:none;}
+   配色不写死在规则里，统一走下面这几个变量，想换风格只改这里即可。 */
+.screensaver{
+  --ss-fg:#fff;                              /* 时间主色 */
+  --ss-fg-dim:rgba(255,255,255,.86);         /* 日期/次要文字 */
+  --ss-fg-hint:rgba(255,255,255,.6);         /* 底部提示 */
+  --ss-shadow:0 4px 40px rgba(0,0,0,.5);     /* 时间阴影 */
+  --ss-shadow-dim:0 2px 18px rgba(0,0,0,.6);
+  --ss-scrim-core:rgba(0,0,0,.30);           /* 时钟背后那团柔和压暗（保证可读） */
+  --ss-scrim-edge:rgba(0,0,0,.45);           /* 四角暗角 */
+  position:fixed; inset:0; z-index:9999; background:#000; overflow:hidden; cursor:none;
+}
 .screensaver[hidden]{display:none;}
 .screensaver-video{position:absolute; left:0; top:0; width:100%; height:100%; object-fit:cover; display:block; background:#000;}
+/* 柔和暗角：一层压在时钟背后保证可读，一层把四角压暗，全程不碰文字颜色 */
+.screensaver-scrim{position:absolute; inset:0; pointer-events:none;
+  background:
+    radial-gradient(64% 48% at 50% 50%, var(--ss-scrim-core) 0%, rgba(0,0,0,0) 100%),
+    radial-gradient(126% 106% at 50% 50%, rgba(0,0,0,0) 50%, var(--ss-scrim-edge) 100%);
+}
 .screensaver-overlay{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
-  gap:10px; color:#fff; text-align:center; pointer-events:none; user-select:none;}
+  gap:10px; color:var(--ss-fg); text-align:center; pointer-events:none; user-select:none;}
 .screensaver-time{font-size:clamp(64px,10vw,150px); font-weight:200; line-height:1; letter-spacing:.02em;
-  text-shadow:0 4px 40px rgba(0,0,0,.45); font-variant-numeric:tabular-nums;}
-.screensaver-date{font-size:clamp(14px,1.5vw,19px); letter-spacing:.34em; opacity:.88; text-shadow:0 2px 18px rgba(0,0,0,.55);}
+  text-shadow:var(--ss-shadow); font-variant-numeric:tabular-nums;}
+.screensaver-date{font-size:clamp(14px,1.5vw,19px); letter-spacing:.34em; color:var(--ss-fg-dim);
+  text-shadow:var(--ss-shadow-dim);}
 /* 提示不常显：进入时不出现，只有动了鼠标/敲了键才亮一下，3 秒无操作就渐隐 */
 .screensaver-hint{position:absolute; left:50%; bottom:26px; transform:translateX(-50%); font-size:12px;
-  letter-spacing:.2em; color:rgba(255,255,255,.6); opacity:0; transition:opacity .6s ease; pointer-events:none;
-  text-shadow:0 2px 14px rgba(0,0,0,.5);}
+  letter-spacing:.2em; color:var(--ss-fg-hint); opacity:0; transition:opacity .6s ease; pointer-events:none;
+  text-shadow:var(--ss-shadow-dim);}
 .screensaver-hint.show{opacity:1; transition:opacity .35s ease;}
 
 /* mini 播放按钮的三角形：不再用字体字形（字形本身宽高比约 1:1.24，不是等边，
