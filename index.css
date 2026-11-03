@@ -917,8 +917,13 @@ body.home-detail-open .bookmark1, body.home-detail-open .bookmark2{margin-top:0;
 .home-detail-cover-wrap .container1{opacity:0; visibility:hidden; transition:opacity .3s ease;}
 .home-detail-cover-wrap.play-visible .container1{opacity:.75; visibility:visible;}
 /* 渐隐用 keyframes 而不是 transition：换类时 transition 常被判定为「没有变化」而直接跳变 */
-.home-detail-cover-wrap.play-fading .container1{opacity:0; visibility:visible; animation:home-btn-fade 2s linear forwards;}
-@keyframes home-btn-fade{from{opacity:.75} to{opacity:0}}
+.home-detail-cover-wrap.play-fading .container1{opacity:0; visibility:visible; animation:home-btn-fade 2s cubic-bezier(.4,0,.2,1) forwards;}
+/* 尾部速度收到接近 0，别让人看着像「最后突然被抽走」；顺带极轻微收缩，退得更柔和 */
+@keyframes home-btn-fade{
+0%{opacity:.75; transform:scale(.5);}
+12%{opacity:.73; transform:scale(.5);}
+100%{opacity:0; transform:scale(.466);}
+}
 
 /* 按钮外圈的蓝粉渐变光环：跟着按钮一起出没，转着转着放大、模糊、散掉。
    ::after 已被滚轮热区占用，这里用 ::before。container1 做了 scale(.5)，
@@ -937,7 +942,7 @@ animation:home-ring-spin 2.8s linear infinite;
 transition:opacity .3s ease, transform .35s ease;
 }
 .home-detail-cover-wrap.play-fading .container1::before{
-animation:home-ring-fade 2s ease-out forwards;
+animation:home-ring-fade 2s cubic-bezier(.4,0,.2,1) forwards;
 }
 @keyframes home-ring-spin{from{rotate:0deg} to{rotate:360deg}}
 /* 消散：一边继续转，一边放大模糊、淡到没有 */
@@ -1055,7 +1060,7 @@ to{opacity:0; transform:scale(1.26); filter:blur(3px); rotate:220deg;}
    （.only-bookmark 里那块 doyoudo 不是这个类型，没算进来。） */
 .bookmark3 .container1,.bookmark4 .container1{opacity:0; visibility:hidden; transition:opacity .3s ease;}
 .bookmark3.play-visible .container1,.bookmark4.play-visible .container1{opacity:.75; visibility:visible;}
-.bookmark3.play-fading .container1,.bookmark4.play-fading .container1{opacity:0; visibility:visible; animation:home-btn-fade 2s linear forwards;}
+.bookmark3.play-fading .container1,.bookmark4.play-fading .container1{opacity:0; visibility:visible; animation:home-btn-fade 2s cubic-bezier(.4,0,.2,1) forwards;}
 
 /* 卡片按钮的光环：container1 是 0×0、mini 90px 盒子 margin-left:-45px，
    所以原点在按钮水平中心、按钮顶边；局部坐标下按钮中心是 (0,45)，
@@ -1072,7 +1077,7 @@ opacity:.95; transform:scale(1); animation:home-ring-spin 2.8s linear infinite;
 transition:opacity .3s ease, transform .35s ease;
 }
 .bookmark3.play-fading .container1::before,.bookmark4.play-fading .container1::before{
-animation:home-ring-fade 2s ease-out forwards;
+animation:home-ring-fade 2s cubic-bezier(.4,0,.2,1) forwards;
 }
 
 /* 触摸操作时按钮会永远出不来，退回常显（光环仍不显示）。
