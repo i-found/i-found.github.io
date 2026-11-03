@@ -135,7 +135,7 @@
     <script type="text/javascript" src="js/SmoothScroll.js?v=dc3721b7"></script>
     <link rel="stylesheet" href="./dist/meplayer.css?v=af1ac3be">
     <link rel="stylesheet" href="main.css?v=9d556d4a">
-    <link rel="stylesheet" href="index.css?v=db5b209b">
+    <link rel="stylesheet" href="index.css?v=598e321e">
     <link rel="stylesheet" type="text/css"media="screen and (max-width:1080px)"href="tinyScreen.css?v=19ca5be7" />
     <link rel="icon" href="./img/ico.png?v=c6aeb3b5" type="image/x-icon">
   </head>
@@ -815,7 +815,7 @@
     <div class="screensaver-time" id="ssTime">--:--</div>
     <div class="screensaver-date" id="ssDate"></div>
   </div>
-  <div class="screensaver-hint">双击或按 Esc 退出</div>
+  <div class="screensaver-hint" id="ssHint">双击或按 Esc 退出</div>
 </div>
 
 <!-- 回顶部标签 -->
@@ -1126,8 +1126,27 @@ var ssBox=document.getElementById("screensaver");
 var ssVideo=document.getElementById("screensaverVideo");
 var ssTimeEl=document.getElementById("ssTime");
 var ssDateEl=document.getElementById("ssDate");
-var ssTimer=null;
+var ssHintEl=document.getElementById("ssHint");
+var ssTimer=null, ssHintTimer=null;
 function pad2(n){ return n<10?"0"+n:""+n; }
+/* 底部那行提示：平时不显示，只有动了鼠标或敲了键才亮 3 秒，然后自己渐隐 */
+function bumpScreensaverHint(){
+if(!ssBox||ssBox.hidden||!ssHintEl) return;
+ssHintEl.classList.add("show");
+clearTimeout(ssHintTimer);
+ssHintTimer=setTimeout(function(){ ssHintEl.classList.remove("show"); },3000);
+}
+function clearScreensaverHint(){
+if(!ssHintEl) return;
+clearTimeout(ssHintTimer); ssHintTimer=null;
+ssHintEl.classList.remove("show");
+}
+/* 空格：暂停/继续当前卡片正在放的那首歌（详情页按钮走的就是这条链路，直接借它的点击） */
+function toggleDetailPlayback(){
+var host=null;
+document.querySelectorAll(".home-detail-cover-wrap .container1").forEach(function(el){ if(!el.hidden) host=el; });
+if(host) host.click();
+}
 function tickScreensaverClock(){
 var d=new Date();
 if(ssTimeEl) ssTimeEl.textContent=pad2(d.getHours())+":"+pad2(d.getMinutes());
@@ -1144,6 +1163,7 @@ if(ssVideo.getAttribute("data-src")!==wp.full){
   if(wp.fullPoster) ssVideo.poster=wp.fullPoster;
 }
 ssBox.hidden=false;
+clearScreensaverHint();          // 刚进来不显示提示，等有操作再说
 tickScreensaverClock();
 clearInterval(ssTimer); ssTimer=setInterval(tickScreensaverClock,1000);
 var p=ssVideo.play(); if(p&&p.catch) p.catch(function(){});
@@ -1153,6 +1173,7 @@ if(req){ try{ var r=req.call(ssBox); if(r&&r.catch) r.catch(function(){}); }catc
 function closeScreensaver(){
 if(!ssBox||ssBox.hidden) return;
 clearInterval(ssTimer); ssTimer=null;
+clearScreensaverHint();
 if(ssVideo) ssVideo.pause();
 ssBox.hidden=true;
 if(document.fullscreenElement||document.webkitFullscreenElement){
@@ -1169,12 +1190,21 @@ setTimeout(function(){
 }
 document.addEventListener("fullscreenchange",function(){ if(!document.fullscreenElement) closeScreensaver(); });
 document.addEventListener("webkitfullscreenchange",function(){ if(!document.webkitFullscreenElement) closeScreensaver(); });
-/* 屏保开着时 Esc 只退屏保：捕获阶段拦下来，别让后面那条「Esc 关详情」的监听器把卡片也关了 */
+/* 屏保开着时接管键盘：Esc 只退屏保（别让后面那条「Esc 关详情」把卡片也关了），
+   空格暂停/继续当前卡片的歌，任意按键都亮一下底部提示 */
 document.addEventListener("keydown",function(ev){
-if(ev.key!=="Escape") return;
-if(ssBox&&!ssBox.hidden){ ev.stopPropagation(); closeScreensaver(); }
+if(!ssBox||ssBox.hidden) return;
+if(ev.key==="Escape"){ ev.stopPropagation(); closeScreensaver(); return; }
+bumpScreensaverHint();
+if(ev.key===" "||ev.code==="Space"){
+  ev.preventDefault(); ev.stopPropagation();
+  toggleDetailPlayback();
+}
 },true);
-if(ssBox) ssBox.addEventListener("dblclick",closeScreensaver);
+if(ssBox){
+ssBox.addEventListener("dblclick",closeScreensaver);
+ssBox.addEventListener("mousemove",bumpScreensaverHint);
+}
 if(coverWrap){
 coverWrap.addEventListener("dblclick",function(ev){
   var c=homeCards[currentHomeKey]; if(!c) return;

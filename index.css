@@ -957,9 +957,11 @@ to{opacity:0; transform:scale(1.26); filter:blur(3px); rotate:220deg;}
 .screensaver-time{font-size:clamp(64px,10vw,150px); font-weight:200; line-height:1; letter-spacing:.02em;
   text-shadow:0 4px 40px rgba(0,0,0,.45); font-variant-numeric:tabular-nums;}
 .screensaver-date{font-size:clamp(14px,1.5vw,19px); letter-spacing:.34em; opacity:.88; text-shadow:0 2px 18px rgba(0,0,0,.55);}
+/* 提示不常显：进入时不出现，只有动了鼠标/敲了键才亮一下，3 秒无操作就渐隐 */
 .screensaver-hint{position:absolute; left:50%; bottom:26px; transform:translateX(-50%); font-size:12px;
-  letter-spacing:.2em; color:rgba(255,255,255,.55); opacity:0; transition:opacity .5s ease; pointer-events:none;}
-.screensaver:hover .screensaver-hint{opacity:1;}
+  letter-spacing:.2em; color:rgba(255,255,255,.6); opacity:0; transition:opacity .6s ease; pointer-events:none;
+  text-shadow:0 2px 14px rgba(0,0,0,.5);}
+.screensaver-hint.show{opacity:1; transition:opacity .35s ease;}
 
 /* mini 播放按钮的三角形：不再用字体字形（字形本身宽高比约 1:1.24，不是等边，
    且靠 translate/scale 硬拉会失真、亚像素渲染还会随尺寸抖动）。
