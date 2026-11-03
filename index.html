@@ -135,7 +135,7 @@
     <script type="text/javascript" src="js/SmoothScroll.js?v=dc3721b7"></script>
     <link rel="stylesheet" href="./dist/meplayer.css?v=af1ac3be">
     <link rel="stylesheet" href="main.css?v=9d556d4a">
-    <link rel="stylesheet" href="index.css?v=78fb4815">
+    <link rel="stylesheet" href="index.css?v=8588e4ae">
     <link rel="stylesheet" type="text/css"media="screen and (max-width:1080px)"href="tinyScreen.css?v=19ca5be7" />
     <link rel="icon" href="./img/ico.png?v=c6aeb3b5" type="image/x-icon">
   </head>
@@ -1066,35 +1066,38 @@ if(!v||v.hidden||!v.getAttribute("src")) return;
 try{ v.currentTime=0; }catch(e){}
 var p=v.play(); if(p&&p.catch){ p.catch(function(){}); }
 }
-/* ---- 详情封面播放按钮：默认不常显，鼠标进到封面才出来；移开后停 3 秒，再用 2 秒渐隐 ----
-   （配了视频壁纸的卡片才这样；纯图片卡片保持原来的常显按钮） */
+/* ---- 播放按钮统一显示逻辑：默认不常显，鼠标进来才出现；移开后原地停 3 秒，
+   再用 2 秒渐隐（最多 5 秒彻底消失），外圈那圈蓝粉光环跟着一起转、一起散 ---- */
+function bindHoverRing(host){
+var holdT=null, fadeT=null;
+function show(){
+  clearTimeout(holdT); clearTimeout(fadeT);
+  host.classList.remove("play-fading");
+  host.classList.add("play-visible");
+}
+function hide(){
+  clearTimeout(holdT); clearTimeout(fadeT);
+  /* 先原地停 3 秒（保持 play-visible 不动），再交给 play-fading 走 2 秒渐隐 */
+  holdT=setTimeout(function(){
+    host.classList.remove("play-visible");
+    host.classList.add("play-fading");
+    fadeT=setTimeout(function(){ host.classList.remove("play-fading"); },2000);
+  },3000);
+}
+function reset(){
+  clearTimeout(holdT); clearTimeout(fadeT);
+  host.classList.remove("play-visible","play-fading");
+}
+host.addEventListener("mousemove",show);
+host.addEventListener("mouseleave",hide);
+return {show:show,hide:hide,reset:reset};
+}
+/* 详情封面：配了视频壁纸的卡片才这样（纯图片卡片保持常显按钮） */
 var coverWrap=document.querySelector(".home-detail-cover-wrap");
-var ringHoldTimer=null, ringFadeTimer=null;
-function showPlayRing(){
-if(!coverWrap) return;
-clearTimeout(ringHoldTimer); clearTimeout(ringFadeTimer);
-coverWrap.classList.remove("play-fading");
-coverWrap.classList.add("play-visible");
-}
-function hidePlayRingLater(){
-if(!coverWrap) return;
-clearTimeout(ringHoldTimer); clearTimeout(ringFadeTimer);
-/* 先原地停 3 秒（保持 play-visible 不动），再交给 play-fading 走 2 秒渐隐 */
-ringHoldTimer=setTimeout(function(){
-coverWrap.classList.remove("play-visible");
-coverWrap.classList.add("play-fading");
-ringFadeTimer=setTimeout(function(){ coverWrap.classList.remove("play-fading"); },2000);
-},3000);
-}
-function resetPlayRing(){
-if(!coverWrap) return;
-clearTimeout(ringHoldTimer); clearTimeout(ringFadeTimer);
-coverWrap.classList.remove("play-visible","play-fading");
-}
-if(coverWrap){
-coverWrap.addEventListener("mousemove",showPlayRing);
-coverWrap.addEventListener("mouseleave",hidePlayRingLater);
-}
+var coverRing=coverWrap?bindHoverRing(coverWrap):null;
+function resetPlayRing(){ if(coverRing) coverRing.reset(); }
+/* 首页每张卡片的播放按钮：同一套逻辑（doyoudo 那块 .only-bookmark 不是这个类型，单独不做） */
+document.querySelectorAll(".bookmark3, .bookmark4").forEach(function(card){ bindHoverRing(card); });
 function pauseHomeVideo(){
 var v=document.getElementById("homeDetailVideo"); if(!v) return;
 v.pause();
