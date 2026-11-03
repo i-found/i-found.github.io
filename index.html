@@ -135,7 +135,7 @@
     <script type="text/javascript" src="js/SmoothScroll.js?v=dc3721b7"></script>
     <link rel="stylesheet" href="./dist/meplayer.css?v=af1ac3be">
     <link rel="stylesheet" href="main.css?v=9d556d4a">
-    <link rel="stylesheet" href="index.css?v=2dfdeb29">
+    <link rel="stylesheet" href="index.css?v=b25cb13d">
     <link rel="stylesheet" type="text/css"media="screen and (max-width:1080px)"href="tinyScreen.css?v=19ca5be7" />
     <link rel="icon" href="./img/ico.png?v=c6aeb3b5" type="image/x-icon">
   </head>
@@ -185,7 +185,7 @@
       </a>
 
       <!-- 站点版本号：每次推送 +1，刷新后看这里就能确定是不是最新版本 -->
-      <span class="site-version" id="siteVersion">V1.10.11</span>
+      <span class="site-version" id="siteVersion">V1.10.12</span>
 
       <ul>
         <li><a class="buttom first" href="https://i-found.github.io/">首页</a></li>
@@ -1171,6 +1171,9 @@ v.pause();
 /* ---- 全屏壁纸（屏保）模式 ----
    双击有动态壁纸的介绍封面进入：铺满黑底、放原始分辨率视频，中间叠当前日期时间。
    细节（字体、位置、渐入渐出等）先按最简实现，后面再调。 */
+/* 页面一加载就把时钟字体预热掉（它只有 1.1KB）。否则要等第一次进屏保、
+   浏览器发现要用这个 family 才去下载，那一下就会先看到回退字体、再跳成 X-点黑。 */
+try{ if(document.fonts&&document.fonts.load) document.fonts.load('normal 100px "X-点黑"'); }catch(e){}
 var ssBox=document.getElementById("screensaver");
 var ssVideo=document.getElementById("screensaverVideo");
 var ssTimeEl=document.getElementById("ssTime");
@@ -1263,8 +1266,15 @@ for(var i=0;i<ssSlots.length;i++){
   if(c+h>right) right=c+h;
 }
 if(!isFinite(left)||!isFinite(right)) return;
-var dx=(left+right)/2-mid;
+/* canvas 不知道 letter-spacing：每个数字后面的字距会把文本在槽里整体推左 ls/2，
+   这个量不补掉就会稳定偏左一点点（实测约 1px）。 */
+var ls=parseFloat(cs.letterSpacing); if(!isFinite(ls)) ls=0;
+var dx=(left+right)/2-mid-ls/2;
 ssTimeEl.style.transform=Math.abs(dx)>0.2?"translateX("+(-dx).toFixed(2)+"px)":"";
+}
+/* 字体真正就绪后再校一次：预热是异步的，首次那一下可能还在用回退字体量。 */
+if(document.fonts&&document.fonts.ready){
+  document.fonts.ready.then(function(){ if(ssClockReady) alignScreensaverTime(); });
 }
 function openScreensaver(){
 var c=homeCards[currentHomeKey]; if(!c) return;

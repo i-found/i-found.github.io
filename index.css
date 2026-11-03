@@ -84,6 +84,11 @@ margin: 0px;
                url('./font/X-点黑.ttf') format('truetype');
           font-weight: normal;
           font-style: normal;
+          /* block：字体没就绪时先不画这段文字，等它就位再一次性显示。
+             默认的 swap 会先用回退的 DIN 画出来、字体到了再换成 X-点黑，
+             看着就是「进屏保后字体跳一下」。字体只有 1.1KB，配合启动时预热，
+             这个不可见窗口短到看不见。 */
+          font-display: block;
 }
 
 .test-font1{
@@ -995,7 +1000,11 @@ to{opacity:0; transform:scale(1.26); filter:blur(3px);}
   --ss-scrim-edge:rgba(0,0,0,.45);           /* 四角暗角 */
   position:fixed; inset:0; z-index:9999; background:#000; overflow:hidden; cursor:none;
 }
-.screensaver[hidden]{display:none;}
+/* 关闭时用 visibility 隐掉，而不是 display:none。
+   display:none 会把里面的 video 判成「不可见媒体」，浏览器大幅降低它的预加载优先级，
+   于是双击进全屏时视频通常还没缓冲完，就得黑屏现下几十兆 —— 那一下就是「卡」。
+   visibility:hidden 的元素仍然参与加载，预缓冲能正常跑。 */
+.screensaver[hidden]{display:block; visibility:hidden; pointer-events:none;}
 .screensaver-video{position:absolute; left:0; top:0; width:100%; height:100%; object-fit:cover; display:block; background:#000;}
 /* 柔和暗角：一层压在时钟背后保证可读，一层把四角压暗，全程不碰文字颜色 */
 .screensaver-scrim{position:absolute; inset:0; pointer-events:none;
