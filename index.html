@@ -188,7 +188,7 @@
       </a>
 
       <!-- 站点版本号：每次推送 +1，刷新后看这里就能确定是不是最新版本 -->
-      <span class="site-version" id="siteVersion">V1.10.16</span>
+      <span class="site-version" id="siteVersion">V1.10.17</span>
 
       <ul>
         <li><a class="buttom first" href="https://i-found.github.io/">首页</a></li>
@@ -1053,12 +1053,12 @@ bindDetailButtons();
 /* 只有这里列出来的歌，详情封面才用动态视频壁纸；其余卡片一律显示自己的封面图。
    按歌名对应，视频路径带内容哈希（改了视频记得同步换哈希，否则 4 小时缓存可能还放旧的）。 */
 var homeWallpapers={
-"爱你": {src:"./vid/corgi-detail.mp4?v=9d6b4280", poster:"./vid/corgi-detail.jpg?v=d8bd4066",
-       full:"./vid/corgi-full.mp4?v=cb546850", fullPoster:"./vid/corgi-full.jpg?v=ab60ccb4"},
-"盛夏的果实": {src:"./vid/summer-fruit.mp4?v=37e9a927", poster:"./vid/summer-fruit.jpg?v=a5462822",
-            full:"./vid/summer-fruit-full.mp4?v=75e1ba40", fullPoster:"./vid/summer-fruit-full.jpg?v=32c86f42"},
-"一直很安静": {src:"./vid/quiet-detail.mp4?v=4ce19369", poster:"./vid/quiet-detail.jpg?v=95e4e709",
-            full:"./vid/quiet-full.mp4?v=c685f5ef", fullPoster:"./vid/quiet-full.jpg?v=4c81b609"}
+"爱你": {src:"./vid/corgi-detail.mp4?v=9d6b4280", poster:"./vid/corgi-detail-frame.jpg?v=d8bd4066",
+       full:"./vid/corgi-full.mp4?v=cb546850", fullPoster:"./vid/corgi-full-frame.jpg?v=ab60ccb4"},
+"盛夏的果实": {src:"./vid/summer-fruit.mp4?v=37e9a927", poster:"./vid/summer-fruit-frame.jpg?v=a5462822",
+            full:"./vid/summer-fruit-full.mp4?v=75e1ba40", fullPoster:"./vid/summer-fruit-full-frame.jpg?v=32c86f42"},
+"一直很安静": {src:"./vid/quiet-detail.mp4?v=4ce19369", poster:"./vid/quiet-detail-frame.jpg?v=95e4e709",
+            full:"./vid/quiet-full.mp4?v=c685f5ef", fullPoster:"./vid/quiet-full-frame.jpg?v=4c81b609"}
 };
 function openHome(key){
 var c=homeCards[key]; if(!c) return;
