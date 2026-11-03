@@ -1043,8 +1043,9 @@ transition:opacity .3s ease, transform .35s ease;
 animation:home-ring-fade 2s ease-out forwards;
 }
 
-/* 触摸屏没有 hover，按钮会永远出不来，这类设备上退回常显（光环仍不显示） */
-@media (hover:none){
-.bookmark3 .container1,.bookmark4 .container1{opacity:.75; visibility:visible;}
-.home-detail-cover-wrap.has-wallpaper .container1{opacity:.75; visibility:visible;}
-}
+/* 触摸操作时按钮会永远出不来，退回常显（光环仍不显示）。
+   用 JS 在真收到 touch 时给 body 加 .touch-mode 来判断 —— 不能写成 @media (hover:none)：
+   带触摸屏的笔记本即使插着鼠标也会命中那条媒体查询，hover 逻辑整个失效、按钮又变常显了。 */
+body.touch-mode .bookmark3 .container1,
+body.touch-mode .bookmark4 .container1,
+body.touch-mode .home-detail-cover-wrap.has-wallpaper .container1{opacity:.75; visibility:visible;}

@@ -135,7 +135,7 @@
     <script type="text/javascript" src="js/SmoothScroll.js?v=dc3721b7"></script>
     <link rel="stylesheet" href="./dist/meplayer.css?v=af1ac3be">
     <link rel="stylesheet" href="main.css?v=9d556d4a">
-    <link rel="stylesheet" href="index.css?v=8588e4ae">
+    <link rel="stylesheet" href="index.css?v=3ab198ec">
     <link rel="stylesheet" type="text/css"media="screen and (max-width:1080px)"href="tinyScreen.css?v=19ca5be7" />
     <link rel="icon" href="./img/ico.png?v=c6aeb3b5" type="image/x-icon">
   </head>
@@ -1098,6 +1098,11 @@ var coverRing=coverWrap?bindHoverRing(coverWrap):null;
 function resetPlayRing(){ if(coverRing) coverRing.reset(); }
 /* 首页每张卡片的播放按钮：同一套逻辑（doyoudo 那块 .only-bookmark 不是这个类型，单独不做） */
 document.querySelectorAll(".bookmark3, .bookmark4").forEach(function(card){ bindHoverRing(card); });
+/* 真用手指/触控笔操作时，给 body 打个标记，让按钮退回常显；
+   用鼠标（哪怕是带触摸屏的笔记本）完全不受影响 */
+window.addEventListener("pointerdown", function(ev){
+if(ev.pointerType==="touch") document.body.classList.add("touch-mode");
+}, {passive:true});
 function pauseHomeVideo(){
 var v=document.getElementById("homeDetailVideo"); if(!v) return;
 v.pause();
