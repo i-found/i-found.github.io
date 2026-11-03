@@ -135,7 +135,7 @@
     <script type="text/javascript" src="js/SmoothScroll.js?v=dc3721b7"></script>
     <link rel="stylesheet" href="./dist/meplayer.css?v=af1ac3be">
     <link rel="stylesheet" href="main.css?v=9d556d4a">
-    <link rel="stylesheet" href="index.css?v=dde1eb10">
+    <link rel="stylesheet" href="index.css?v=bfd578e9">
     <link rel="stylesheet" type="text/css"media="screen and (max-width:1080px)"href="tinyScreen.css?v=19ca5be7" />
     <link rel="icon" href="./img/ico.png?v=c6aeb3b5" type="image/x-icon">
   </head>
@@ -185,7 +185,7 @@
       </a>
 
       <!-- 站点版本号：每次推送 +1，刷新后看这里就能确定是不是最新版本 -->
-      <span class="site-version" id="siteVersion">V1.10.01</span>
+      <span class="site-version" id="siteVersion">V1.10.02</span>
 
       <ul>
         <li><a class="buttom first" href="https://i-found.github.io/">首页</a></li>
@@ -816,7 +816,13 @@
   <video class="screensaver-video" id="screensaverVideo" muted loop playsinline preload="auto" aria-hidden="true"></video>
   <div class="screensaver-scrim"></div>
   <div class="screensaver-overlay">
-    <div class="screensaver-time" id="ssTime">--:--</div>
+    <div class="screensaver-time" id="ssTime">
+      <span class="ss-slot"><span class="ss-cur">0</span></span>
+      <span class="ss-slot"><span class="ss-cur">0</span></span>
+      <span class="ss-colon">:</span>
+      <span class="ss-slot"><span class="ss-cur">0</span></span>
+      <span class="ss-slot"><span class="ss-cur">0</span></span>
+    </div>
     <div class="screensaver-date" id="ssDate"></div>
   </div>
   <div class="screensaver-hint" id="ssHint">双击或按 Esc 退出</div>
@@ -1173,10 +1179,36 @@ var host=null;
 document.querySelectorAll(".home-detail-cover-wrap .container1").forEach(function(el){ if(!el.hidden) host=el; });
 if(host) host.click();
 }
+/* 时间按位拆成四个格子：哪一位变了就单独走一遍「旧的上移模糊淡出、新的从下面顶上来」 */
+var ssSlots=ssTimeEl?[].slice.call(ssTimeEl.querySelectorAll(".ss-slot")):[];
+var ssClockReady=false;
+function setScreensaverDigit(slot,ch){
+if(!slot) return;
+var cur=slot.querySelector(".ss-cur");
+if(cur&&cur.textContent===ch) return;
+var next=document.createElement("span");
+next.textContent=ch;
+if(!ssClockReady||!cur){          // 刚进屏保：直接落位，不播切换动画
+  slot.innerHTML="";
+  next.className="ss-cur";
+  slot.appendChild(next);
+  return;
+}
+next.className="ss-cur ss-in";
+slot.appendChild(next);
+next.addEventListener("animationend",function(){ next.classList.remove("ss-in"); },{once:true});
+cur.classList.remove("ss-cur");
+cur.classList.add("ss-out");
+setTimeout(function(){ if(cur.parentNode===slot) slot.removeChild(cur); },560);
+}
 function tickScreensaverClock(){
 var d=new Date();
-if(ssTimeEl) ssTimeEl.textContent=pad2(d.getHours())+":"+pad2(d.getMinutes());
+if(ssTimeEl){
+  var chars=pad2(d.getHours())+pad2(d.getMinutes());
+  for(var i=0;i<ssSlots.length;i++) setScreensaverDigit(ssSlots[i],chars.charAt(i));
+}
 if(ssDateEl) ssDateEl.textContent=d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日 星期"+"日一二三四五六".charAt(d.getDay());
+ssClockReady=true;
 }
 function openScreensaver(){
 var c=homeCards[currentHomeKey]; if(!c) return;
@@ -1190,6 +1222,7 @@ if(ssVideo.getAttribute("data-src")!==wp.full){
 }
 ssBox.hidden=false;
 clearScreensaverHint();          // 刚进来不显示提示，等有操作再说
+ssClockReady=false;              // 首次落位不播切换动画
 tickScreensaverClock();
 clearInterval(ssTimer); ssTimer=setInterval(tickScreensaverClock,1000);
 var p=ssVideo.play(); if(p&&p.catch) p.catch(function(){});
