@@ -135,7 +135,7 @@
     <script type="text/javascript" src="js/SmoothScroll.js?v=dc3721b7"></script>
     <link rel="stylesheet" href="./dist/meplayer.css?v=af1ac3be">
     <link rel="stylesheet" href="main.css?v=9d556d4a">
-    <link rel="stylesheet" href="index.css?v=3ab198ec">
+    <link rel="stylesheet" href="index.css?v=9abea62c">
     <link rel="stylesheet" type="text/css"media="screen and (max-width:1080px)"href="tinyScreen.css?v=19ca5be7" />
     <link rel="icon" href="./img/ico.png?v=c6aeb3b5" type="image/x-icon">
   </head>
@@ -1092,7 +1092,7 @@ host.addEventListener("mousemove",show);
 host.addEventListener("mouseleave",hide);
 return {show:show,hide:hide,reset:reset};
 }
-/* 详情封面：配了视频壁纸的卡片才这样（纯图片卡片保持常显按钮） */
+/* 详情封面：所有介绍卡片都用这套显隐 */
 var coverWrap=document.querySelector(".home-detail-cover-wrap");
 var coverRing=coverWrap?bindHoverRing(coverWrap):null;
 function resetPlayRing(){ if(coverRing) coverRing.reset(); }
