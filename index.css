@@ -893,6 +893,7 @@ border-radius: 10px;
 /* 详情封面用动态视频壁纸铺在封面图上面；图片留着兜底，视频没加载出来时仍有画面。
    pointer-events:none 是为了不挡住中间的播放按钮（.container1）。 */
 .home-detail-video{position:absolute; left:0; top:0; width:100%; height:100%; object-fit:cover; display:block; pointer-events:none; background:center/cover no-repeat;}
+.home-detail-video[hidden]{display:none;}
 
 .home-detail-text{overflow:hidden;}
 .home-detail-text h3{font-size:26px; margin-bottom:6px;}
@@ -910,6 +911,41 @@ body.home-detail-open .bookmark1, body.home-detail-open .bookmark2{margin-top:0;
 /* 详情页按钮只有 45px，鼠标稍偏一点滚轮就变成滚页面，操作很难“粘住”。
    这里用伪元素把滚轮热区外扩（容器 scale(.5)，故 -30px 实际约 -15px，热区约 75px）。 */
 .home-detail-cover-wrap .container1::after{content:''; position:absolute; left:-30px; right:-30px; top:-30px; bottom:-30px; border-radius:50%; cursor:pointer;}
+
+/* 用动态壁纸的卡片：播放按钮不再常显。
+   鼠标进封面 → 淡入；移开 → 原地停 3s，再用 2s 渐隐（总共最多 5s 就彻底消失）。
+   纯图片卡片没有 .has-wallpaper，按钮保持原来的常显。 */
+.home-detail-cover-wrap.has-wallpaper .container1{opacity:0; visibility:hidden; transition:opacity .3s ease;}
+.home-detail-cover-wrap.has-wallpaper.play-visible .container1{opacity:.75; visibility:visible;}
+/* 渐隐用 keyframes 而不是 transition：换类时 transition 常被判定为「没有变化」而直接跳变 */
+.home-detail-cover-wrap.has-wallpaper.play-fading .container1{opacity:0; visibility:visible; animation:home-btn-fade 2s linear forwards;}
+@keyframes home-btn-fade{from{opacity:.75} to{opacity:0}}
+
+/* 按钮外圈的蓝粉渐变光环：跟着按钮一起出没，转着转着放大、模糊、散掉。
+   ::after 已被滚轮热区占用，这里用 ::before。container1 做了 scale(.5)，
+   所以尺寸写两倍：112px → 实际 56px，内圈 82% 刚好贴着 45px 的按钮边。 */
+.home-detail-cover-wrap.has-wallpaper .container1::before{
+content:''; position:absolute; left:-56px; top:-56px; width:112px; height:112px; border-radius:50%;
+pointer-events:none; opacity:0; transform:scale(.8);
+background:conic-gradient(from 0deg,#32B6FF,#6E8CFF,#FF6FC8,#FF9BD6,#32B6FF);
+/* 必须写 closest-side：默认按对角算半径，整块环都会被挖空、什么都看不到 */
+-webkit-mask:radial-gradient(circle closest-side, transparent 0 83%, #000 85%);
+mask:radial-gradient(circle closest-side, transparent 0 83%, #000 85%);
+}
+.home-detail-cover-wrap.has-wallpaper.play-visible .container1::before{
+opacity:.95; transform:scale(1);
+animation:home-ring-spin 2.8s linear infinite;
+transition:opacity .3s ease, transform .35s ease;
+}
+.home-detail-cover-wrap.has-wallpaper.play-fading .container1::before{
+animation:home-ring-fade 2s ease-out forwards;
+}
+@keyframes home-ring-spin{from{rotate:0deg} to{rotate:360deg}}
+/* 消散：一边继续转，一边放大模糊、淡到没有 */
+@keyframes home-ring-fade{
+from{opacity:.95; transform:scale(1); filter:blur(0); rotate:0deg;}
+to{opacity:0; transform:scale(1.26); filter:blur(3px); rotate:220deg;}
+}
 
 /* mini 播放按钮的三角形：不再用字体字形（字形本身宽高比约 1:1.24，不是等边，
    且靠 translate/scale 硬拉会失真、亚像素渲染还会随尺寸抖动）。

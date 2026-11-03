@@ -29,8 +29,8 @@ MEDIA_EXTS = "mp4|jpe?g|png|webp|gif"
 
 # <script src="x.js"> / <link href="x.css"> / <img src="x.png">
 ATTR_REF = re.compile(r'\b(src|href)="([^"?]+\.(?:%s))(?:\?[^"]*)?"' % EXTS)
-# 写在 JS 字符串里的资源： "vid/x.mp4" / "../../vid/x.jpg" / "Albums/…/img/x.png" / "img/x.png"
-STR_REF = re.compile(r'"((?:\.\./)*(?:vid|img|Albums)/[^"?]+\.(?:%s))(?:\?[^"]*)?"' % MEDIA_EXTS)
+# 写在 JS 字符串里的资源： "vid/x.mp4" / "./vid/x.mp4" / "../../vid/x.jpg" / "Albums/…/img/x.png"
+STR_REF = re.compile(r'"((?:\./|\.\./)*(?:vid|img|Albums)/[^"?]+\.(?:%s))(?:\?[^"]*)?"' % MEDIA_EXTS)
 
 _cache = {}
 missing = []
@@ -100,8 +100,8 @@ def run_once():
         if write(fp, t):
             changed.append(os.path.relpath(fp, ROOT))
 
-    # 这两处把媒体路径写在 JS 字符串里，属性正则扫不到
-    for rel in ("js/video-bg.js", "music.html"):
+    # 这几处把媒体路径写在 JS 字符串里，属性正则扫不到
+    for rel in ("index.html", "js/video-bg.js", "music.html"):
         fp = os.path.join(ROOT, *rel.split("/"))
         if os.path.isfile(fp):
             t = stamp(fp, STR_REF, False)
