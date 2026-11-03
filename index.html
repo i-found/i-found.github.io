@@ -135,7 +135,7 @@
     <script type="text/javascript" src="js/SmoothScroll.js?v=dc3721b7"></script>
     <link rel="stylesheet" href="./dist/meplayer.css?v=af1ac3be">
     <link rel="stylesheet" href="main.css?v=9d556d4a">
-    <link rel="stylesheet" href="index.css?v=9abea62c">
+    <link rel="stylesheet" href="index.css?v=db5b209b">
     <link rel="stylesheet" type="text/css"media="screen and (max-width:1080px)"href="tinyScreen.css?v=19ca5be7" />
     <link rel="icon" href="./img/ico.png?v=c6aeb3b5" type="image/x-icon">
   </head>
@@ -808,6 +808,16 @@
 
 
 
+<!-- 全屏壁纸（屏保）模式：双击有动态壁纸的介绍封面进入，Esc 或再双击退出 -->
+<div class="screensaver" id="screensaver" hidden>
+  <video class="screensaver-video" id="screensaverVideo" muted loop playsinline preload="auto" aria-hidden="true"></video>
+  <div class="screensaver-overlay">
+    <div class="screensaver-time" id="ssTime">--:--</div>
+    <div class="screensaver-date" id="ssDate"></div>
+  </div>
+  <div class="screensaver-hint">双击或按 Esc 退出</div>
+</div>
+
 <!-- 回顶部标签 -->
 <div class="to-top">
   <a href="#top" target="_self">
@@ -1021,8 +1031,10 @@ bindDetailButtons();
 /* 只有这里列出来的歌，详情封面才用动态视频壁纸；其余卡片一律显示自己的封面图。
    按歌名对应，视频路径带内容哈希（改了视频记得同步换哈希，否则 4 小时缓存可能还放旧的）。 */
 var homeWallpapers={
-"爱你": {src:"./vid/corgi-detail.mp4?v=9d6b4280", poster:"./vid/corgi-detail.jpg?v=7a9d8b10"},
-"盛夏的果实": {src:"./vid/summer-fruit.mp4?v=5a1908b9", poster:"./vid/summer-fruit.jpg?v=5424da18"}
+"爱你": {src:"./vid/corgi-detail.mp4?v=9d6b4280", poster:"./vid/corgi-detail.jpg?v=7a9d8b10",
+       full:"./vid/corgi-full.mp4?v=e9a96d48", fullPoster:"./vid/corgi-full.jpg?v=e03cdf2c"},
+"盛夏的果实": {src:"./vid/summer-fruit.mp4?v=5a1908b9", poster:"./vid/summer-fruit.jpg?v=5424da18",
+            full:"./vid/summer-fruit-full.mp4?v=4c2a600a", fullPoster:"./vid/summer-fruit-full.jpg?v=62cd44ed"}
 };
 function openHome(key){
 var c=homeCards[key]; if(!c) return;
@@ -1106,6 +1118,70 @@ if(ev.pointerType==="touch") document.body.classList.add("touch-mode");
 function pauseHomeVideo(){
 var v=document.getElementById("homeDetailVideo"); if(!v) return;
 v.pause();
+}
+/* ---- 全屏壁纸（屏保）模式 ----
+   双击有动态壁纸的介绍封面进入：铺满黑底、放原始分辨率视频，中间叠当前日期时间。
+   细节（字体、位置、渐入渐出等）先按最简实现，后面再调。 */
+var ssBox=document.getElementById("screensaver");
+var ssVideo=document.getElementById("screensaverVideo");
+var ssTimeEl=document.getElementById("ssTime");
+var ssDateEl=document.getElementById("ssDate");
+var ssTimer=null;
+function pad2(n){ return n<10?"0"+n:""+n; }
+function tickScreensaverClock(){
+var d=new Date();
+if(ssTimeEl) ssTimeEl.textContent=pad2(d.getHours())+":"+pad2(d.getMinutes());
+if(ssDateEl) ssDateEl.textContent=d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日 星期"+"日一二三四五六".charAt(d.getDay());
+}
+function openScreensaver(){
+var c=homeCards[currentHomeKey]; if(!c) return;
+var wp=homeWallpapers[c.title]; if(!wp||!wp.full||!ssBox||!ssVideo) return;
+pauseHomeVideo();                       // 详情页这份先停，别和全屏这份抢解码器
+resetPlayRing();
+if(ssVideo.getAttribute("data-src")!==wp.full){
+  ssVideo.setAttribute("data-src",wp.full);
+  ssVideo.src=wp.full;
+  if(wp.fullPoster) ssVideo.poster=wp.fullPoster;
+}
+ssBox.hidden=false;
+tickScreensaverClock();
+clearInterval(ssTimer); ssTimer=setInterval(tickScreensaverClock,1000);
+var p=ssVideo.play(); if(p&&p.catch) p.catch(function(){});
+var req=ssBox.requestFullscreen||ssBox.webkitRequestFullscreen;
+if(req){ try{ var r=req.call(ssBox); if(r&&r.catch) r.catch(function(){}); }catch(e){} }
+}
+function closeScreensaver(){
+if(!ssBox||ssBox.hidden) return;
+clearInterval(ssTimer); ssTimer=null;
+if(ssVideo) ssVideo.pause();
+ssBox.hidden=true;
+if(document.fullscreenElement||document.webkitFullscreenElement){
+  var ex=document.exitFullscreen||document.webkitExitFullscreen;
+  if(ex){ try{ var r=ex.call(document); if(r&&r.catch) r.catch(function(){}); }catch(e){} }
+}
+/* 退回详情页，把小封面上的壁纸接着放（等全屏真正退出再放，否则会被浏览器按退出动画掐掉） */
+setTimeout(function(){
+  var hv=document.getElementById("homeDetailVideo");
+  if(hv&&!hv.hidden&&hv.getAttribute("src")&&!detail.hidden){
+    var p2=hv.play(); if(p2&&p2.catch) p2.catch(function(){});
+  }
+},280);
+}
+document.addEventListener("fullscreenchange",function(){ if(!document.fullscreenElement) closeScreensaver(); });
+document.addEventListener("webkitfullscreenchange",function(){ if(!document.webkitFullscreenElement) closeScreensaver(); });
+/* 屏保开着时 Esc 只退屏保：捕获阶段拦下来，别让后面那条「Esc 关详情」的监听器把卡片也关了 */
+document.addEventListener("keydown",function(ev){
+if(ev.key!=="Escape") return;
+if(ssBox&&!ssBox.hidden){ ev.stopPropagation(); closeScreensaver(); }
+},true);
+if(ssBox) ssBox.addEventListener("dblclick",closeScreensaver);
+if(coverWrap){
+coverWrap.addEventListener("dblclick",function(ev){
+  var c=homeCards[currentHomeKey]; if(!c) return;
+  if(!homeWallpapers[c.title]) return;   // 只有配了动态壁纸的卡片才响应
+  ev.preventDefault();
+  openScreensaver();
+});
 }
 function closeHome(){  pauseHomeVideo(); resetPlayRing(); document.body.classList.remove("home-detail-open"); detail.hidden=true; window.scrollTo({top:0,behavior:"smooth"}); setTimeout(syncPlayersBySrc,0); }
 function flash(el){ if(!el) return; document.querySelectorAll(".search-hit").forEach(function(n){n.classList.remove("search-hit");}); el.classList.add("search-hit"); setTimeout(function(){el.classList.remove("search-hit");},600); }
