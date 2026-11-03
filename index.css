@@ -1033,7 +1033,10 @@ to{opacity:0; transform:scale(1.26); filter:blur(3px);}
   .ss-slot .ss-out,.ss-slot .ss-in{animation-duration:.01s;}
 }
 .screensaver-date{font-size:clamp(14px,1.5vw,19px); letter-spacing:.34em; color:var(--ss-fg-dim);
-  text-shadow:var(--ss-shadow-dim);}
+  text-shadow:var(--ss-shadow-dim);
+  /* letter-spacing 会在行尾多留出半个字距，让整行文字视觉上偏左；
+     用负右边距把这段空白抵消掉，flex 居中时才是按真实字形居中 */
+  margin-right:-.34em;}
 /* 提示不常显：进入时不出现，只有动了鼠标/敲了键才亮一下，3 秒无操作就渐隐 */
 .screensaver-hint{position:absolute; left:50%; bottom:26px; transform:translateX(-50%); font-size:12px;
   letter-spacing:.2em; color:var(--ss-fg-hint); opacity:0; transition:opacity .6s ease; pointer-events:none;
