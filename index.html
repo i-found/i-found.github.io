@@ -135,7 +135,7 @@
     <script type="text/javascript" src="js/SmoothScroll.js?v=dc3721b7"></script>
     <link rel="stylesheet" href="./dist/meplayer.css?v=af1ac3be">
     <link rel="stylesheet" href="main.css?v=9d556d4a">
-    <link rel="stylesheet" href="index.css?v=c9d905dc">
+    <link rel="stylesheet" href="index.css?v=4d7a3cab">
     <link rel="stylesheet" type="text/css"media="screen and (max-width:1080px)"href="tinyScreen.css?v=19ca5be7" />
     <link rel="icon" href="./img/ico.png?v=c6aeb3b5" type="image/x-icon">
   </head>
@@ -188,7 +188,7 @@
       </a>
 
       <!-- 站点版本号：每次推送 +1，刷新后看这里就能确定是不是最新版本 -->
-      <span class="site-version" id="siteVersion">V1.10.15</span>
+      <span class="site-version" id="siteVersion">V1.10.16</span>
 
       <ul>
         <li><a class="buttom first" href="https://i-found.github.io/">首页</a></li>
@@ -1053,16 +1053,20 @@ bindDetailButtons();
 /* 只有这里列出来的歌，详情封面才用动态视频壁纸；其余卡片一律显示自己的封面图。
    按歌名对应，视频路径带内容哈希（改了视频记得同步换哈希，否则 4 小时缓存可能还放旧的）。 */
 var homeWallpapers={
-"爱你": {src:"./vid/corgi-detail.mp4?v=9d6b4280", poster:"./vid/corgi-detail.jpg?v=7a9d8b10",
-       full:"./vid/corgi-full.mp4?v=cb546850", fullPoster:"./vid/corgi-full.jpg?v=e03cdf2c"},
-"盛夏的果实": {src:"./vid/summer-fruit.mp4?v=37e9a927", poster:"./vid/summer-fruit.jpg?v=5424da18",
-            full:"./vid/summer-fruit-full.mp4?v=75e1ba40", fullPoster:"./vid/summer-fruit-full.jpg?v=62cd44ed"},
-"一直很安静": {src:"./vid/quiet-detail.mp4?v=4ce19369", poster:"./vid/quiet-detail.jpg?v=5ff34266",
-            full:"./vid/quiet-full.mp4?v=c685f5ef", fullPoster:"./vid/quiet-full.jpg?v=fee3fbef"}
+"爱你": {src:"./vid/corgi-detail.mp4?v=9d6b4280", poster:"./vid/corgi-detail.jpg?v=d8bd4066",
+       full:"./vid/corgi-full.mp4?v=cb546850", fullPoster:"./vid/corgi-full.jpg?v=ab60ccb4"},
+"盛夏的果实": {src:"./vid/summer-fruit.mp4?v=37e9a927", poster:"./vid/summer-fruit.jpg?v=a5462822",
+            full:"./vid/summer-fruit-full.mp4?v=75e1ba40", fullPoster:"./vid/summer-fruit-full.jpg?v=32c86f42"},
+"一直很安静": {src:"./vid/quiet-detail.mp4?v=4ce19369", poster:"./vid/quiet-detail.jpg?v=95e4e709",
+            full:"./vid/quiet-full.mp4?v=c685f5ef", fullPoster:"./vid/quiet-full.jpg?v=4c81b609"}
 };
 function openHome(key){
 var c=homeCards[key]; if(!c) return;
-document.getElementById("homeDetailCover").src=c.cover;
+/* 有动态壁纸的卡片，封面直接换成视频首帧：和上面自动播放的视频是同一张画面，
+   展开时就不会出现「先是卡片图、几秒后跳成视频画面」的换脸感。
+   没配壁纸的卡片仍然用自己的封面图。 */
+var wp0=homeWallpapers[c.title];
+document.getElementById("homeDetailCover").src=(wp0&&wp0.poster)?wp0.poster:c.cover;
 document.getElementById("homeDetailCover").alt=c.title;
 document.getElementById("homeDetailTitle").textContent=c.title;
 document.getElementById("homeDetailMeta").textContent=c.singer+" · "+c.date;
@@ -1100,6 +1104,9 @@ preloadScreensaverVideo(wp);
    等用户双击时基本已就绪，不会一进全屏才开始下几十兆、卡半天 */
 function preloadScreensaverVideo(wp){
 if(!ssVideo||!wp||!wp.full) return;
+/* 首帧图也一起预热：几万字节，跟视频比可以忽略，但决定了进全屏那一下是「立刻有画面」
+   还是「先黑一瞬」。浏览器解码完会放在内存里，后面设 src 基本是同帧返回。 */
+if(wp.fullPoster) (new Image()).src=wp.fullPoster;
 if(ssVideo.getAttribute("data-src")===wp.full) return;
 ssVideo.setAttribute("data-src",wp.full);
 ssVideo.preload="auto";
@@ -1291,6 +1298,9 @@ if(ssVideo) ssVideo.classList.add("is-ready");
    不会黑着等 2MB 视频下完（慢网下那一下就是「点了没反应」的感觉）。 */
 function setScreensaverFrame(wp){
 if(ssPosterEl&&wp.fullPoster) ssPosterEl.src=wp.fullPoster;
+/* 容器本身也铺同一张图当底：img 刚换 src 时可能还没解码完，
+   背景层直接从缓存里画，不会露出那一下黑底 */
+if(ssBox&&wp.fullPoster) ssBox.style.backgroundImage='url("'+wp.fullPoster+'")';
 if(!ssVideo) return;
 ssVideo.classList.remove("is-ready");
 if(ssVideo.getAttribute("data-src")!==wp.full){
