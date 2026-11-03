@@ -76,6 +76,16 @@ margin: 0px;
           font-style: normal;
 }
 
+@font-face {
+
+    font-family: 'X-点黑';
+          src: url('./font/X-点黑.woff2') format('woff2'),
+               url('./font/X-点黑.woff') format('woff'),
+               url('./font/X-点黑.ttf') format('truetype');
+          font-weight: normal;
+          font-style: normal;
+}
+
 .test-font1{
 
   color:pink;
@@ -998,8 +1008,8 @@ to{opacity:0; transform:scale(1.26); filter:blur(3px);}
 /* 整块时间：只换了字体（机械感更强的 DIN 系粗体），布局与之前一致。
    阴影挂在整块上用 drop-shadow，因为数字格 overflow:hidden 会把 text-shadow 裁成灰底方块。 */
 .screensaver-time{font-size:clamp(64px,10vw,150px); line-height:1; letter-spacing:.02em;
-  font-family:'Bahnschrift','DIN Alternate','DIN Condensed','Helvetica Neue',Arial,sans-serif;
-  font-weight:600;
+  font-family:'X-点黑','Bahnschrift','DIN Alternate','DIN Condensed','Helvetica Neue',Arial,sans-serif;
+  font-weight:normal;
   font-variant-numeric:tabular-nums;
   display:flex; align-items:center; justify-content:center;
   filter:drop-shadow(var(--ss-shadow));}
