@@ -185,7 +185,7 @@
       </a>
 
       <!-- 站点版本号：每次推送 +1，刷新后看这里就能确定是不是最新版本 -->
-      <span class="site-version" id="siteVersion">V1.10.00</span>
+      <span class="site-version" id="siteVersion">V1.10.01</span>
 
       <ul>
         <li><a class="buttom first" href="https://i-found.github.io/">首页</a></li>
@@ -1084,11 +1084,14 @@ if(!v||v.hidden||!v.getAttribute("src")) return;
 try{ v.currentTime=0; }catch(e){}
 var p=v.play(); if(p&&p.catch){ p.catch(function(){}); }
 }
-/* ---- 播放按钮统一显示逻辑：默认不常显，鼠标进来才出现；移开后原地停 3 秒，
-   再用 2 秒渐隐（最多 5 秒彻底消失），外圈那圈蓝粉光环跟着一起转、一起散 ---- */
-function bindHoverRing(host){
-var holdT=null, fadeT=null;
+/* ---- 播放按钮统一显示逻辑：默认不常显，鼠标凑到按钮附近才出现；移开后原地停 3 秒，
+   再用 2 秒渐隐（最多 5 秒彻底消失），外圈那圈蓝粉光环跟着一起转、一起散。
+   触发范围收在按钮自己身上（半径 HOVER_R），不再整张卡片/整块封面都算 —— 否则鼠标随便划过去就误触。 */
+var HOVER_R=30;
+function bindHoverRing(host, getCenter){
+var holdT=null, fadeT=null, armed=false;
 function show(){
+  armed=false;
   clearTimeout(holdT); clearTimeout(fadeT);
   host.classList.remove("play-fading");
   host.classList.add("play-visible");
@@ -1103,19 +1106,36 @@ function hide(){
   },3000);
 }
 function reset(){
+  armed=false;
   clearTimeout(holdT); clearTimeout(fadeT);
   host.classList.remove("play-visible","play-fading");
 }
-host.addEventListener("mousemove",show);
-host.addEventListener("mouseleave",hide);
+host.addEventListener("mousemove",function(ev){
+  var c=getCenter();
+  if(!c) return;
+  var dx=ev.clientX-c.x, dy=ev.clientY-c.y;
+  if(dx*dx+dy*dy<=HOVER_R*HOVER_R){ show(); return; }
+  if(!armed){ armed=true; hide(); }        // 已经离开按钮范围，只启动一次计时
+});
+host.addEventListener("mouseleave",function(){ armed=false; hide(); });
 return {show:show,hide:hide,reset:reset};
 }
-/* 详情封面：所有介绍卡片都用这套显隐 */
+/* 详情封面：所有介绍卡片都用这套显隐，热区就是封面正中间那个按钮 */
 var coverWrap=document.querySelector(".home-detail-cover-wrap");
-var coverRing=coverWrap?bindHoverRing(coverWrap):null;
+var coverRing=coverWrap?bindHoverRing(coverWrap,function(){
+  var r=coverWrap.getBoundingClientRect();
+  return {x:r.x+r.width/2, y:r.y+r.height/2};
+}):null;
 function resetPlayRing(){ if(coverRing) coverRing.reset(); }
-/* 首页每张卡片的播放按钮：同一套逻辑（doyoudo 那块 .only-bookmark 不是这个类型，单独不做） */
-document.querySelectorAll(".bookmark3, .bookmark4").forEach(function(card){ bindHoverRing(card); });
+/* 首页每张卡片：以卡片里那个小按钮的圆心为准（doyoudo 那块 .only-bookmark 不是这个类型，不做） */
+document.querySelectorAll(".bookmark3, .bookmark4").forEach(function(card){
+bindHoverRing(card,function(){
+  var m=card.querySelector(".meplayer-container-mini");
+  if(!m) return null;
+  var r=m.getBoundingClientRect();
+  return {x:r.x+r.width/2, y:r.y+r.height/2};
+});
+});
 /* 真用手指/触控笔操作时，给 body 打个标记，让按钮退回常显；
    用鼠标（哪怕是带触摸屏的笔记本）完全不受影响 */
 window.addEventListener("pointerdown", function(ev){
