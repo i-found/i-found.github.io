@@ -889,8 +889,8 @@ border-radius: 10px;
 .Navi-Bar .nav-search{position:absolute; right:0; top:10px; width:40px; height:40px; z-index:8; transition:width .25s ease;}
 .Navi-Bar .nav-search.open{width:360px;}
 .Navi-Bar .nav-search-toggle{position:absolute; right:5px; top:5px; width:30px; height:30px; border:none; background:transparent; display:flex; align-items:center; justify-content:center; padding:0; cursor:pointer; z-index:2;}
-.Navi-Bar .nav-search-toggle svg{width:28px; height:28px; stroke:#FF5252;}
-.Navi-Bar .nav-search-toggle:hover svg{stroke:#FF8B8B;}
+.Navi-Bar .nav-search-toggle svg{width:28px; height:28px; stroke:#FF8B8B;}
+.Navi-Bar .nav-search-toggle:hover svg{stroke:#FF5252;}
 .Navi-Bar .nav-search input{position:absolute; right:40px; top:0; width:320px; height:40px; padding:0 16px; border:2px solid #e0e0e0; border-radius:20px; font-size:15px; outline:none; background:#fff; box-sizing:border-box; opacity:0; pointer-events:none; transition:opacity .2s ease;}
 .Navi-Bar .nav-search.open input{opacity:1; pointer-events:auto; border-color:#FF5252;}
 .Navi-Bar .nav-search input:focus{border-color:#FF5252; box-shadow:0 0 0 3px rgba(255,82,82,0.12);}
