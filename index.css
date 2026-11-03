@@ -890,6 +890,9 @@ border-radius: 10px;
 .home-detail[hidden]{display:none;}
 .home-detail-cover-wrap{float:left; width:360px; height:200px; margin-right:28px; position:relative; border-radius:16px; overflow:hidden;}
 .home-detail-cover{width:100%; height:100%; object-fit:cover; display:block;}
+/* 详情封面用动态视频壁纸铺在封面图上面；图片留着兜底，视频没加载出来时仍有画面。
+   pointer-events:none 是为了不挡住中间的播放按钮（.container1）。 */
+.home-detail-video{position:absolute; left:0; top:0; width:100%; height:100%; object-fit:cover; display:block; pointer-events:none; background:center/cover no-repeat;}
 
 .home-detail-text{overflow:hidden;}
 .home-detail-text h3{font-size:26px; margin-bottom:6px;}

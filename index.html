@@ -135,7 +135,7 @@
     <script type="text/javascript" src="js/SmoothScroll.js?v=dc3721b7"></script>
     <link rel="stylesheet" href="./dist/meplayer.css?v=af1ac3be">
     <link rel="stylesheet" href="main.css?v=9d556d4a">
-    <link rel="stylesheet" href="index.css?v=e9e8c740">
+    <link rel="stylesheet" href="index.css?v=892f8ec3">
     <link rel="stylesheet" type="text/css"media="screen and (max-width:1080px)"href="tinyScreen.css?v=19ca5be7" />
     <link rel="icon" href="./img/ico.png?v=c6aeb3b5" type="image/x-icon">
   </head>
@@ -151,6 +151,7 @@
 			<button type="button" class="home-close" id="homeClose" aria-label="关闭介绍">✕</button>
 			<div class="home-detail-cover-wrap">
 				<img class="home-detail-cover" id="homeDetailCover" src="" alt="">
+				<video class="home-detail-video" id="homeDetailVideo" src="./vid/corgi-detail.mp4?v=fc60a459" poster="./vid/corgi-detail.jpg?v=d5e7a5f1" muted loop playsinline preload="none" aria-hidden="true"></video>
 				<div class="container1 detail-player-wrap" data-detail-index="0" hidden><div class="detailMusic0"></div></div><div class="container1 detail-player-wrap" data-detail-index="1" hidden><div class="detailMusic1"></div></div><div class="container1 detail-player-wrap" data-detail-index="2" hidden><div class="detailMusic2"></div></div><div class="container1 detail-player-wrap" data-detail-index="3" hidden><div class="detailMusic3"></div></div><div class="container1 detail-player-wrap" data-detail-index="4" hidden><div class="detailMusic4"></div></div><div class="container1 detail-player-wrap" data-detail-index="5" hidden><div class="detailMusic5"></div></div><div class="container1 detail-player-wrap" data-detail-index="6" hidden><div class="detailMusic6"></div></div><div class="container1 detail-player-wrap" data-detail-index="7" hidden><div class="detailMusic7"></div></div><div class="container1 detail-player-wrap" data-detail-index="8" hidden><div class="detailMusic8"></div></div><div class="container1 detail-player-wrap" data-detail-index="9" hidden><div class="detailMusic9"></div></div><div class="container1 detail-player-wrap" data-detail-index="10" hidden><div class="detailMusic10"></div></div><div class="container1 detail-player-wrap" data-detail-index="11" hidden><div class="detailMusic11"></div></div><div class="container1 detail-player-wrap" data-detail-index="12" hidden><div class="detailMusic12"></div></div><div class="container1 detail-player-wrap" data-detail-index="13" hidden><div class="detailMusic13"></div></div><div class="container1 detail-player-wrap" data-detail-index="14" hidden><div class="detailMusic14"></div></div><div class="container1 detail-player-wrap" data-detail-index="15" hidden><div class="detailMusic15"></div></div><div class="container1 detail-player-wrap" data-detail-index="16" hidden><div class="detailMusic16"></div></div><div class="container1 detail-player-wrap" data-detail-index="17" hidden><div class="detailMusic17"></div></div>
 			</div>
 			<div class="home-detail-text">
@@ -1029,12 +1030,23 @@ currentHomeKey=key;
 document.body.classList.add("home-detail-open");
 showDetailPlayer(key);
 detail.hidden=false;
+playHomeVideo();
 scrollBelowNav(detail);
 setTimeout(syncPlayersBySrc,0);
 }
-function closeHome(){  document.body.classList.remove("home-detail-open"); detail.hidden=true; window.scrollTo({top:0,behavior:"smooth"}); setTimeout(syncPlayersBySrc,0); }
+/* 详情封面上的动态壁纸：只在卡片展开时播放，关掉就暂停，别让它一直占着解码器 */
+function playHomeVideo(){
+var v=document.getElementById("homeDetailVideo"); if(!v) return;
+try{ v.currentTime=0; }catch(e){}
+var p=v.play(); if(p&&p.catch){ p.catch(function(){}); }
+}
+function pauseHomeVideo(){
+var v=document.getElementById("homeDetailVideo"); if(!v) return;
+v.pause();
+}
+function closeHome(){  pauseHomeVideo(); document.body.classList.remove("home-detail-open"); detail.hidden=true; window.scrollTo({top:0,behavior:"smooth"}); setTimeout(syncPlayersBySrc,0); }
 function flash(el){ if(!el) return; document.querySelectorAll(".search-hit").forEach(function(n){n.classList.remove("search-hit");}); el.classList.add("search-hit"); setTimeout(function(){el.classList.remove("search-hit");},600); }
-function goCard(key){ document.body.classList.remove("home-detail-open"); detail.hidden=true; var card=homeCards[key]; if(card&&card.el){ scrollBelowNav(card.el); flash(card.el); } }
+function goCard(key){ pauseHomeVideo(); document.body.classList.remove("home-detail-open"); detail.hidden=true; var card=homeCards[key]; if(card&&card.el){ scrollBelowNav(card.el); flash(card.el); } }
 function goDetail(key){ openHome(key); setTimeout(function(){ var target=document.getElementById("homeDetailIntro"); if(target){ target.scrollIntoView({behavior:"smooth",block:"center"}); flash(target); } },350); }
 var searchInput=document.getElementById("homeSearchInput"), searchBox=document.getElementById("homeSearchResults");
 function addMark(el,text,q){ var lo=text.toLowerCase(), ql=q.toLowerCase(), ix=lo.indexOf(ql); if(ix<0){ el.textContent=text; return; } el.appendChild(document.createTextNode(text.slice(0,ix))); var m=document.createElement("mark"); m.textContent=text.slice(ix,ix+q.length); el.appendChild(m); el.appendChild(document.createTextNode(text.slice(ix+q.length))); }
