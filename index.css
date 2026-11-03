@@ -925,6 +925,23 @@ border-radius: 10px;
    pointer-events:none 是为了不挡住中间的播放按钮（.container1）。 */
 .home-detail-video{position:absolute; left:0; top:0; width:100%; height:100%; object-fit:cover; display:block; pointer-events:none; background:center/cover no-repeat;}
 .home-detail-video[hidden]{display:none;}
+/* 封面右下角的全屏按钮：通用的「点击放大」四角箭头，比双击可靠得多。
+   只有配了动态壁纸的卡片才出现（没壁纸的进不了全屏，摆个按钮只会让人点了没反应）。 */
+.home-detail-zoom{
+position:absolute; right:10px; bottom:10px; width:34px; height:34px; padding:0; z-index:3;
+display:none; align-items:center; justify-content:center; box-sizing:border-box;
+border:0; border-radius:10px; cursor:pointer; color:#fff; background:rgba(0,0,0,.42);
+-webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+opacity:0; transform:translateY(4px);
+transition:opacity .24s ease, transform .24s ease, background .2s ease;
+}
+.home-detail-cover-wrap.has-wallpaper .home-detail-zoom{display:flex;}
+.home-detail-cover-wrap:hover .home-detail-zoom,
+.home-detail-zoom:focus-visible{opacity:1; transform:translateY(0);}
+.home-detail-zoom:hover{background:rgba(0,0,0,.66);}
+.home-detail-zoom:active{transform:scale(.92);}
+.home-detail-zoom:focus-visible{outline:2px solid #FF8B8B; outline-offset:2px;}
+.home-detail-zoom svg{width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
 
 .home-detail-text{overflow:hidden;}
 .home-detail-text h3{font-size:26px; margin-bottom:6px;}
@@ -1005,7 +1022,16 @@ to{opacity:0; transform:scale(1.26); filter:blur(3px);}
    于是双击进全屏时视频通常还没缓冲完，就得黑屏现下几十兆 —— 那一下就是「卡」。
    visibility:hidden 的元素仍然参与加载，预缓冲能正常跑。 */
 .screensaver[hidden]{display:block; visibility:hidden; pointer-events:none;}
-.screensaver-video{position:absolute; left:0; top:0; width:100%; height:100%; object-fit:cover; display:block; background:#000;}
+/* 静态单帧垫最底下：封面图只有几十 KB、跟着页面一起到，进全屏的那一刻就有清晰画面；
+   视频叠在上面、默认透明，等 canplay 再淡入。整个过程是「先看图，再换成动」的接力，
+   不会出现黑屏干等 2MB 视频下完的情况（音乐页随机背景用的也是这个思路）。 */
+.screensaver-poster{position:absolute; left:0; top:0; width:100%; height:100%; object-fit:cover; display:block;}
+.screensaver-video{position:absolute; left:0; top:0; width:100%; height:100%; object-fit:cover; display:block; background:#000;
+  opacity:0; transition:opacity .8s ease;}
+.screensaver-video.is-ready{opacity:1;}
+@media (prefers-reduced-motion:reduce){
+  .screensaver-video{transition-duration:.01s;}
+}
 /* 柔和暗角：一层压在时钟背后保证可读，一层把四角压暗，全程不碰文字颜色 */
 .screensaver-scrim{position:absolute; inset:0; pointer-events:none;
   background:
@@ -1159,3 +1185,5 @@ transition:opacity 1.8s cubic-bezier(.4,0,.2,1), transform 2s cubic-bezier(.4,0,
 body.touch-mode .bookmark3 .container1,
 body.touch-mode .bookmark4 .container1,
 body.touch-mode .home-detail-cover-wrap .container1{opacity:.75; visibility:visible;}
+/* 触摸设备没有 hover，全屏按钮得常显，否则永远看不见也点不到 */
+body.touch-mode .home-detail-zoom{opacity:1; transform:none;}

@@ -135,7 +135,7 @@
     <script type="text/javascript" src="js/SmoothScroll.js?v=dc3721b7"></script>
     <link rel="stylesheet" href="./dist/meplayer.css?v=af1ac3be">
     <link rel="stylesheet" href="main.css?v=9d556d4a">
-    <link rel="stylesheet" href="index.css?v=b25cb13d">
+    <link rel="stylesheet" href="index.css?v=c9d905dc">
     <link rel="stylesheet" type="text/css"media="screen and (max-width:1080px)"href="tinyScreen.css?v=19ca5be7" />
     <link rel="icon" href="./img/ico.png?v=c6aeb3b5" type="image/x-icon">
   </head>
@@ -152,6 +152,9 @@
 			<div class="home-detail-cover-wrap">
 				<img class="home-detail-cover" id="homeDetailCover" src="" alt="">
 				<video class="home-detail-video" id="homeDetailVideo" muted loop playsinline preload="none" aria-hidden="true" hidden></video>
+				<button type="button" class="home-detail-zoom" id="homeDetailZoom" aria-label="全屏观看动态壁纸" title="全屏观看">
+					<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5"/></svg>
+				</button>
 				<div class="container1 detail-player-wrap" data-detail-index="0" hidden><div class="detailMusic0"></div></div><div class="container1 detail-player-wrap" data-detail-index="1" hidden><div class="detailMusic1"></div></div><div class="container1 detail-player-wrap" data-detail-index="2" hidden><div class="detailMusic2"></div></div><div class="container1 detail-player-wrap" data-detail-index="3" hidden><div class="detailMusic3"></div></div><div class="container1 detail-player-wrap" data-detail-index="4" hidden><div class="detailMusic4"></div></div><div class="container1 detail-player-wrap" data-detail-index="5" hidden><div class="detailMusic5"></div></div><div class="container1 detail-player-wrap" data-detail-index="6" hidden><div class="detailMusic6"></div></div><div class="container1 detail-player-wrap" data-detail-index="7" hidden><div class="detailMusic7"></div></div><div class="container1 detail-player-wrap" data-detail-index="8" hidden><div class="detailMusic8"></div></div><div class="container1 detail-player-wrap" data-detail-index="9" hidden><div class="detailMusic9"></div></div><div class="container1 detail-player-wrap" data-detail-index="10" hidden><div class="detailMusic10"></div></div><div class="container1 detail-player-wrap" data-detail-index="11" hidden><div class="detailMusic11"></div></div><div class="container1 detail-player-wrap" data-detail-index="12" hidden><div class="detailMusic12"></div></div><div class="container1 detail-player-wrap" data-detail-index="13" hidden><div class="detailMusic13"></div></div><div class="container1 detail-player-wrap" data-detail-index="14" hidden><div class="detailMusic14"></div></div><div class="container1 detail-player-wrap" data-detail-index="15" hidden><div class="detailMusic15"></div></div><div class="container1 detail-player-wrap" data-detail-index="16" hidden><div class="detailMusic16"></div></div><div class="container1 detail-player-wrap" data-detail-index="17" hidden><div class="detailMusic17"></div></div>
 			</div>
 			<div class="home-detail-text">
@@ -185,7 +188,7 @@
       </a>
 
       <!-- 站点版本号：每次推送 +1，刷新后看这里就能确定是不是最新版本 -->
-      <span class="site-version" id="siteVersion">V1.10.14</span>
+      <span class="site-version" id="siteVersion">V1.10.15</span>
 
       <ul>
         <li><a class="buttom first" href="https://i-found.github.io/">首页</a></li>
@@ -813,6 +816,7 @@
 
 <!-- 全屏壁纸（屏保）模式：双击有动态壁纸的介绍封面进入，Esc 或再双击退出 -->
 <div class="screensaver" id="screensaver" hidden>
+  <img class="screensaver-poster" id="screensaverPoster" alt="" aria-hidden="true">
   <video class="screensaver-video" id="screensaverVideo" muted loop playsinline preload="auto" aria-hidden="true"></video>
   <div class="screensaver-scrim"></div>
   <div class="screensaver-overlay">
@@ -929,6 +933,7 @@
 (function(){
 var detail=document.getElementById("homeDetail");
 var ssClickTimer=null;          /* 详情封面单击/双击共用：双击时用来掐掉第一下 click 的播放切换 */
+var ssClickSuppressUntil=0;     /* 双击进屏保后，第二下 click 紧跟在后，别让它顺手把歌切一下 */
 var homeIntros=[
 "以雨后站台为意象，写一段单向奔赴最后无疾而终的感情，嗓音温柔克制，是 Uu 早期受到关注的作品之一。",
 "翻唱自陈奕迅的经典，十年时间让感情从熟悉变成陌生，南妮的女声版本唱得更柔和，收录在专辑《唱醉你》中。",
@@ -1016,6 +1021,7 @@ var wheelHost=btn.closest(".container1")||btn;
 wheelHost.addEventListener("click",function(ev){
 ev.stopImmediatePropagation(); ev.preventDefault();
 clearTimeout(ssClickTimer);
+if(Date.now()<ssClickSuppressUntil) return;   /* 这一下属于「双击进全屏」的后半截，不切歌 */
 ssClickTimer=setTimeout(function(){
   if(main.paused){ var p=main.play(); if(p&&p.catch) p.catch(function(){}); } else { main.pause(); }
 },230);
@@ -1176,6 +1182,7 @@ v.pause();
 try{ if(document.fonts&&document.fonts.load) document.fonts.load('normal 100px "X-点黑"'); }catch(e){}
 var ssBox=document.getElementById("screensaver");
 var ssVideo=document.getElementById("screensaverVideo");
+var ssPosterEl=document.getElementById("screensaverPoster");
 var ssTimeEl=document.getElementById("ssTime");
 var ssDateEl=document.getElementById("ssDate");
 var ssHintEl=document.getElementById("ssHint");
@@ -1276,23 +1283,39 @@ ssTimeEl.style.transform=Math.abs(dx)>0.2?"translateX("+(-dx).toFixed(2)+"px)":"
 if(document.fonts&&document.fonts.ready){
   document.fonts.ready.then(function(){ if(ssClockReady) alignScreensaverTime(); });
 }
+function ssReveal(){
+if(ssVideo) ssVideo.classList.add("is-ready");
+}
+/* 屏保首帧：本地封面图先铺满，视频能播了再淡入盖上去——跟音乐页随机背景是同一个思路。
+   图片只有几十 KB、跟着页面一起到，所以进全屏第一眼永远是清晰画面，
+   不会黑着等 2MB 视频下完（慢网下那一下就是「点了没反应」的感觉）。 */
+function setScreensaverFrame(wp){
+if(ssPosterEl&&wp.fullPoster) ssPosterEl.src=wp.fullPoster;
+if(!ssVideo) return;
+ssVideo.classList.remove("is-ready");
+if(ssVideo.getAttribute("data-src")!==wp.full){
+  ssVideo.setAttribute("data-src",wp.full);
+  ssVideo.src=wp.full;
+  if(wp.fullPoster) ssVideo.poster=wp.fullPoster;
+}
+ssVideo.removeEventListener("canplay",ssReveal);
+ssVideo.addEventListener("canplay",ssReveal);
+if(ssVideo.readyState>=3) ssReveal();     // 详情页已经预缓冲好了，直接显示，不用再等事件
+}
 function openScreensaver(){
 var c=homeCards[currentHomeKey]; if(!c) return;
 var wp=homeWallpapers[c.title]; if(!wp||!wp.full||!ssBox||!ssVideo) return;
 clearTimeout(ssClickTimer);              // 双击的第一下 click 会被顶掉，别去切播放
+ssClickSuppressUntil=Date.now()+520;     // 双击的后半截 click 同样不该切歌
 pauseHomeVideo();                       // 详情页这份先停，别和全屏这份抢解码器
 resetPlayRing();
+setScreensaverFrame(wp);                 // 先把静态单帧铺上，同步生效
 ssBox.hidden=false;
 void ssBox.offsetWidth;                 // 先落一次布局，下面马上要拿它进全屏
 /* 全屏请求必须趁用户手势还新鲜时发出去。原来排在视频 play() 之后，
    大视频（最大近 20MB）一开播就抢主线程，请求常被拖到激活失效，表现就是"点很多次才进一次" */
 var req=ssBox.requestFullscreen||ssBox.webkitRequestFullscreen;
 if(req){ try{ var r=req.call(ssBox); if(r&&r.catch) r.catch(function(){}); }catch(e){} }
-if(ssVideo.getAttribute("data-src")!==wp.full){
-  ssVideo.setAttribute("data-src",wp.full);
-  ssVideo.src=wp.full;
-  if(wp.fullPoster) ssVideo.poster=wp.fullPoster;
-}
 clearScreensaverHint();          // 刚进来不显示提示，等有操作再说
 ssClockReady=false;              // 首次落位不播切换动画
 tickScreensaverClock();
@@ -1330,15 +1353,39 @@ if(ev.key===" "||ev.code==="Space"){
   toggleDetailPlayback();
 }
 },true);
+/* 双击判定自己算，不再用浏览器原生 dblclick。
+   原生 dblclick 跟随系统的「双击速度」（很多机器只认 300ms 内、鼠标抖动也算失败），
+   手稍慢一点浏览器就只派发两次普通 click，表现就是「双击好几次才进得去一次」。
+   这里按 pointerdown 计时：550ms 内、同一小块区域内再来一下就认，容错大得多。 */
+function bindDoubleTap(el,fn){
+var last=0, lx=0, ly=0;
+el.addEventListener("pointerdown",function(ev){
+  if(ev.button!==0) return;                              // 只认左键与触摸
+  var now=Date.now();
+  if(now-last<550 && Math.abs(ev.clientX-lx)<44 && Math.abs(ev.clientY-ly)<44){
+    last=0; fn(ev); return;                              // 复位，别让三连击再触发一次
+  }
+  last=now; lx=ev.clientX; ly=ev.clientY;
+},{passive:true});
+}
 if(ssBox){
-ssBox.addEventListener("dblclick",closeScreensaver);
+bindDoubleTap(ssBox,function(){ closeScreensaver(); });
 ssBox.addEventListener("mousemove",bumpScreensaverHint);
 }
 if(coverWrap){
-coverWrap.addEventListener("dblclick",function(ev){
+bindDoubleTap(coverWrap,function(){
   var c=homeCards[currentHomeKey]; if(!c) return;
   if(!homeWallpapers[c.title]) return;   // 只有配了动态壁纸的卡片才响应
-  ev.preventDefault();
+  openScreensaver();
+});
+}
+/* 右下角全屏按钮：单击就进，不用再赌双击。pointerdown 拦住是为了别冒泡到封面
+   的双击计时里，否则连点两下按钮会重复触发一次 openScreensaver。 */
+var zoomBtn=document.getElementById("homeDetailZoom");
+if(zoomBtn){
+zoomBtn.addEventListener("pointerdown",function(ev){ ev.stopPropagation(); });
+zoomBtn.addEventListener("click",function(ev){
+  ev.preventDefault(); ev.stopPropagation();
   openScreensaver();
 });
 }
