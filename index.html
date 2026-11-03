@@ -135,7 +135,7 @@
     <script type="text/javascript" src="js/SmoothScroll.js?v=dc3721b7"></script>
     <link rel="stylesheet" href="./dist/meplayer.css?v=af1ac3be">
     <link rel="stylesheet" href="main.css?v=9d556d4a">
-    <link rel="stylesheet" href="index.css?v=9f291d1d">
+    <link rel="stylesheet" href="index.css?v=2dfdeb29">
     <link rel="stylesheet" type="text/css"media="screen and (max-width:1080px)"href="tinyScreen.css?v=19ca5be7" />
     <link rel="icon" href="./img/ico.png?v=c6aeb3b5" type="image/x-icon">
   </head>
@@ -185,7 +185,7 @@
       </a>
 
       <!-- 站点版本号：每次推送 +1，刷新后看这里就能确定是不是最新版本 -->
-      <span class="site-version" id="siteVersion">V1.10.09</span>
+      <span class="site-version" id="siteVersion">V1.10.10</span>
 
       <ul>
         <li><a class="buttom first" href="https://i-found.github.io/">首页</a></li>
@@ -1159,7 +1159,7 @@ var ssVideo=document.getElementById("screensaverVideo");
 var ssTimeEl=document.getElementById("ssTime");
 var ssDateEl=document.getElementById("ssDate");
 var ssHintEl=document.getElementById("ssHint");
-var ssTimer=null, ssHintTimer=null;
+var ssTimer=null, ssHintTimer=null, ssDateCache="";
 function pad2(n){ return n<10?"0"+n:""+n; }
 /* 底部那行提示：平时不显示，只有动了鼠标或敲了键才亮 3 秒，然后自己渐隐 */
 function bumpScreensaverHint(){
@@ -1207,7 +1207,18 @@ if(ssTimeEl){
   var chars=pad2(d.getHours())+pad2(d.getMinutes());
   for(var i=0;i<ssSlots.length;i++) setScreensaverDigit(ssSlots[i],chars.charAt(i));
 }
-if(ssDateEl) ssDateEl.textContent=d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日 星期"+"日一二三四五六".charAt(d.getDay());
+if(ssDateEl){
+  var dtxt=d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日 星期"+"日一二三四五六".charAt(d.getDay());
+  if(dtxt!==ssDateCache){          // 日期一天才变一次，文本没变就不重建
+    ssDateCache=dtxt;
+    var dhtml="";
+    for(var di=0;di<dtxt.length;di++){
+      var dc=dtxt.charAt(di);
+      dhtml+='<span class="ss-dch">'+(dc===" "?"&nbsp;":dc)+"</span>";
+    }
+    ssDateEl.innerHTML=dhtml;
+  }
+}
 ssClockReady=true;
 }
 function openScreensaver(){
