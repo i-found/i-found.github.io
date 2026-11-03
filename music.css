@@ -286,9 +286,13 @@ a{
 }
 
 
-.btn img:hover{
+.btn img{
 	opacity: 60%;
+	transition: opacity .2s ease;
+}
 
+.btn img:hover{
+	opacity: 100%;
 }
 
 
