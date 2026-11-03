@@ -91,6 +91,17 @@ margin: 0px;
           font-display: block;
 }
 
+/* 屏保日期用的江城圆体。原字体 14.8MB，日期只用得上「0-9 年月日星期一二三四五六」这二十几个字，
+   子集化后 3KB，跟一张图标差不多大。font-display 用 block 是为了和上面的时间一致：
+   进屏保时先不画日期、等字体到位一次画全，免得看到「宋体 → 圆体」跳一下。 */
+@font-face {
+    font-family: 'JiangChengYuanDate';
+          src: url('./font/JiangChengYuan-subset.woff2') format('woff2');
+          font-weight: normal;
+          font-style: normal;
+          font-display: block;
+}
+
 .test-font1{
 
   color:pink;
@@ -1072,6 +1083,7 @@ to{opacity:0; transform:scale(1.26); filter:blur(3px);}
    这样整行的视觉范围（首字左缘~末字右缘）就等于盒子的范围，flex 居中即按真实字形居中，
    不再依赖 letter-spacing 的行尾空白和字体度量——换字体/换系统都不会再偏。 */
 .screensaver-date{font-size:clamp(14px,1.5vw,19px); color:var(--ss-fg-dim);
+  font-family:'JiangChengYuanDate',"PingFang SC","Microsoft YaHei",sans-serif;
   text-shadow:var(--ss-shadow-dim);
   display:flex; align-items:center; justify-content:center;}
 .ss-dch{flex:0 0 auto; margin-right:.34em;}
