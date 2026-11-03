@@ -979,7 +979,7 @@ to{opacity:0; transform:scale(1.26); filter:blur(3px);}
   --ss-fg:#fff;                              /* 时间主色 */
   --ss-fg-dim:rgba(255,255,255,.86);         /* 日期/次要文字 */
   --ss-fg-hint:rgba(255,255,255,.6);         /* 底部提示 */
-  --ss-shadow:0 4px 40px rgba(0,0,0,.5);     /* 时间阴影 */
+  --ss-shadow:0 5px 22px rgba(0,0,0,.42);    /* 时间阴影（用 drop-shadow 画，避开逐位裁切的方框） */
   --ss-shadow-dim:0 2px 18px rgba(0,0,0,.6);
   --ss-scrim-core:rgba(0,0,0,.30);           /* 时钟背后那团柔和压暗（保证可读） */
   --ss-scrim-edge:rgba(0,0,0,.45);           /* 四角暗角 */
@@ -995,9 +995,12 @@ to{opacity:0; transform:scale(1.26); filter:blur(3px);}
 }
 .screensaver-overlay{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
   gap:10px; color:var(--ss-fg); text-align:center; pointer-events:none; user-select:none;}
+/* 阴影必须挂在整块时间上（drop-shadow 只跟随可见像素），
+   不能给每个数字单独 text-shadow：数字格 overflow:hidden 会把 40px 的阴影裁成方块，看着就是一层灰底。 */
 .screensaver-time{font-size:clamp(64px,10vw,150px); font-weight:200; line-height:1; letter-spacing:.02em;
-  text-shadow:var(--ss-shadow); font-variant-numeric:tabular-nums;
-  display:flex; align-items:center; justify-content:center;}
+  font-variant-numeric:tabular-nums;
+  display:flex; align-items:center; justify-content:center;
+  filter:drop-shadow(var(--ss-shadow));}
 /* 每位数字一个裁切格：旧数字往上带模糊淡出，新数字从下面顶上，像翻表一样一位一位换 */
 .ss-slot{position:relative; display:inline-block; width:.58em; height:1em; overflow:hidden;}
 .ss-slot>span{position:absolute; left:0; top:0; width:100%; text-align:center; line-height:1;
