@@ -185,7 +185,7 @@
       </a>
 
       <!-- 站点版本号：每次推送 +1，刷新后看这里就能确定是不是最新版本 -->
-      <span class="site-version" id="siteVersion">V1.10.10</span>
+      <span class="site-version" id="siteVersion">V1.10.11</span>
 
       <ul>
         <li><a class="buttom first" href="https://i-found.github.io/">首页</a></li>
@@ -928,6 +928,7 @@
 <script type="text/javascript">
 (function(){
 var detail=document.getElementById("homeDetail");
+var ssClickTimer=null;          /* 详情封面单击/双击共用：双击时用来掐掉第一下 click 的播放切换 */
 var homeIntros=[
 "以雨后站台为意象，写一段单向奔赴最后无疾而终的感情，嗓音温柔克制，是 Uu 早期受到关注的作品之一。",
 "翻唱自陈奕迅的经典，十年时间让感情从熟悉变成陌生，南妮的女声版本唱得更柔和，收录在专辑《唱醉你》中。",
@@ -1010,9 +1011,14 @@ var btn=det.querySelector(".meplayer-control-play"); if(!btn) return;
    伪元素盖在圆上，click 的 target 会变成 .container1 而不是按钮本身，
    所以播放/暂停与滚轮统一挂在 .container1 上，点在热区任意位置都能用。 */
 var wheelHost=btn.closest(".container1")||btn;
+/* 单击先延迟 230ms 再判定播放/暂停：双击进全屏时，第一下 click 不该顺手把歌停了。
+   第二下 click 会重设定时器、dblclick 再清一次，最终只保留"进全屏"一个动作 */
 wheelHost.addEventListener("click",function(ev){
 ev.stopImmediatePropagation(); ev.preventDefault();
-if(main.paused){ var p=main.play(); if(p&&p.catch) p.catch(function(){}); } else { main.pause(); }
+clearTimeout(ssClickTimer);
+ssClickTimer=setTimeout(function(){
+  if(main.paused){ var p=main.play(); if(p&&p.catch) p.catch(function(){}); } else { main.pause(); }
+},230);
 },true);
 /* 插件的滚轮调音量挂在它自己的 click 处理里，上面的 stopImmediatePropagation 把它拦掉了，
    所以详情页按钮滚轮没用、只会滚页面。这里补一份等价实现：滚轮调主播放器音量并阻止页面滚动。 */
@@ -1082,6 +1088,17 @@ if(v.getAttribute("data-src")!==wp.src){
 }
 v.hidden=false;
 coverWrap.classList.add("has-wallpaper");
+preloadScreensaverVideo(wp);
+}
+/* 详情一打开就把全屏那份视频预热起来：只挂 src 让它在后台慢慢缓冲（不播放、不出声），
+   等用户双击时基本已就绪，不会一进全屏才开始下几十兆、卡半天 */
+function preloadScreensaverVideo(wp){
+if(!ssVideo||!wp||!wp.full) return;
+if(ssVideo.getAttribute("data-src")===wp.full) return;
+ssVideo.setAttribute("data-src",wp.full);
+ssVideo.preload="auto";
+ssVideo.src=wp.full;
+if(wp.fullPoster) ssVideo.poster=wp.fullPoster;
 }
 /* 详情封面上的动态壁纸：只在卡片展开时播放，关掉就暂停，别让它一直占着解码器 */
 function playHomeVideo(){
@@ -1219,26 +1236,58 @@ if(ssDateEl){
     ssDateEl.innerHTML=dhtml;
   }
 }
+alignScreensaverTime();
 ssClockReady=true;
+}
+/* 数字的墨迹宽度并不一样（DIN 的 "1" 只有 "8/4" 的一半宽），四个等宽槽居中排下来，
+   整行的视觉重心会往宽数字那边偏，日期看着就像歪了。这里量一次真实墨迹外接框，
+   把整块时钟平移回正中——跟字体无关，换成任何字体都不会再歪。 */
+var ssAlignCtx=null;
+function alignScreensaverTime(){
+if(!ssTimeEl||!ssSlots.length) return;
+if(!ssAlignCtx) ssAlignCtx=document.createElement("canvas").getContext("2d");
+var cs=getComputedStyle(ssTimeEl);
+ssAlignCtx.font=(cs.fontStyle||"normal")+" "+(cs.fontWeight||"normal")+" "+cs.fontSize+" "+cs.fontFamily;
+var box=ssTimeEl.getBoundingClientRect(); if(!box.width) return;
+var mid=box.left+box.width/2;
+var left=Infinity, right=-Infinity;
+for(var i=0;i<ssSlots.length;i++){
+  var sp=ssSlots[i].querySelector(".ss-cur"); if(!sp) continue;
+  var ch=(sp.textContent||"").trim(); if(!ch) continue;
+  var m=ssAlignCtx.measureText(ch);
+  var r=ssSlots[i].getBoundingClientRect();
+  var d=(m.actualBoundingBoxRight-m.actualBoundingBoxLeft-m.width)/2;   // 墨迹中心相对槽中心的偏移
+  var h=(m.actualBoundingBoxRight+m.actualBoundingBoxLeft)/2;           // 墨迹半宽
+  var c=r.left+r.width/2+d;
+  if(c-h<left) left=c-h;
+  if(c+h>right) right=c+h;
+}
+if(!isFinite(left)||!isFinite(right)) return;
+var dx=(left+right)/2-mid;
+ssTimeEl.style.transform=Math.abs(dx)>0.2?"translateX("+(-dx).toFixed(2)+"px)":"";
 }
 function openScreensaver(){
 var c=homeCards[currentHomeKey]; if(!c) return;
 var wp=homeWallpapers[c.title]; if(!wp||!wp.full||!ssBox||!ssVideo) return;
+clearTimeout(ssClickTimer);              // 双击的第一下 click 会被顶掉，别去切播放
 pauseHomeVideo();                       // 详情页这份先停，别和全屏这份抢解码器
 resetPlayRing();
+ssBox.hidden=false;
+void ssBox.offsetWidth;                 // 先落一次布局，下面马上要拿它进全屏
+/* 全屏请求必须趁用户手势还新鲜时发出去。原来排在视频 play() 之后，
+   大视频（最大近 20MB）一开播就抢主线程，请求常被拖到激活失效，表现就是"点很多次才进一次" */
+var req=ssBox.requestFullscreen||ssBox.webkitRequestFullscreen;
+if(req){ try{ var r=req.call(ssBox); if(r&&r.catch) r.catch(function(){}); }catch(e){} }
 if(ssVideo.getAttribute("data-src")!==wp.full){
   ssVideo.setAttribute("data-src",wp.full);
   ssVideo.src=wp.full;
   if(wp.fullPoster) ssVideo.poster=wp.fullPoster;
 }
-ssBox.hidden=false;
 clearScreensaverHint();          // 刚进来不显示提示，等有操作再说
 ssClockReady=false;              // 首次落位不播切换动画
 tickScreensaverClock();
 clearInterval(ssTimer); ssTimer=setInterval(tickScreensaverClock,1000);
 var p=ssVideo.play(); if(p&&p.catch) p.catch(function(){});
-var req=ssBox.requestFullscreen||ssBox.webkitRequestFullscreen;
-if(req){ try{ var r=req.call(ssBox); if(r&&r.catch) r.catch(function(){}); }catch(e){} }
 }
 function closeScreensaver(){
 if(!ssBox||ssBox.hidden) return;
