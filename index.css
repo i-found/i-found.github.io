@@ -995,33 +995,20 @@ to{opacity:0; transform:scale(1.26); filter:blur(3px);}
 }
 .screensaver-overlay{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
   gap:10px; color:var(--ss-fg); text-align:center; pointer-events:none; user-select:none;}
-/* 整块时间：翻页钟那种深色数字牌 + 白色粗数字，下方小小的时间单位标签。
-   数字牌自己带阴影，所以这里不再给文字画投影（也就不会再有被裁成灰底方块的问题）。 */
-.screensaver-time{font-size:clamp(58px,8.4vw,126px); line-height:1;
-  font-family:'DIN Alternate','Helvetica Neue',Arial,sans-serif; font-weight:600;
+/* 整块时间：只换了字体（机械感更强的 DIN 系粗体），布局与之前一致。
+   阴影挂在整块上用 drop-shadow，因为数字格 overflow:hidden 会把 text-shadow 裁成灰底方块。 */
+.screensaver-time{font-size:clamp(64px,10vw,150px); line-height:1; letter-spacing:.02em;
+  font-family:'Bahnschrift','DIN Alternate','DIN Condensed','Helvetica Neue',Arial,sans-serif;
+  font-weight:600;
   font-variant-numeric:tabular-nums;
-  display:flex; align-items:flex-start; justify-content:center; gap:.07em;}
-.ss-group{display:flex; flex-wrap:wrap; justify-content:center; column-gap:.07em;}
-.ss-label{flex:0 0 100%; margin-top:.12em; text-align:center; font-size:.115em; font-weight:600;
-  letter-spacing:.26em; color:rgba(255,255,255,.85); text-shadow:0 1px 8px rgba(0,0,0,.6);}
-/* 每位数字一块牌：旧数字往上带模糊淡出，新数字从下面顶上，像翻表一样一位一位换 */
-.ss-slot{position:relative; display:block; width:.78em; height:1.12em; overflow:hidden;
-  border-radius:.11em;
-  background:linear-gradient(#242424 0%,#1b1b1b 48%,#141414 52%,#0f0f0f 100%);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.07), inset 0 .06em 0 rgba(255,255,255,.05),
-             0 .06em .2em rgba(0,0,0,.55);}
-/* 中间那道翻页缝 + 上半部分的高光，做出折页的立体感 */
-.ss-slot::before{content:''; position:absolute; left:0; right:0; top:50%; height:1px; z-index:3;
-  background:rgba(0,0,0,.62);}
-.ss-slot::after{content:''; position:absolute; left:0; right:0; top:0; height:50%; z-index:2; pointer-events:none;
-  background:linear-gradient(rgba(255,255,255,.07),rgba(255,255,255,0));}
+  display:flex; align-items:center; justify-content:center;
+  filter:drop-shadow(var(--ss-shadow));}
+/* 每位数字一个裁切格：旧数字往上带模糊淡出，新数字从下面顶上，像翻表一样一位一位换 */
+.ss-slot{position:relative; display:inline-block; width:.62em; height:1em; overflow:hidden;}
 .ss-slot>span{position:absolute; left:0; top:0; width:100%; height:100%; z-index:1;
   display:flex; align-items:center; justify-content:center; line-height:1; color:var(--ss-fg);
   will-change:transform,opacity,filter;}
-/* 冒号换成两个圆点，跟翻页钟一致 */
-.ss-colon{display:flex; flex-direction:column; justify-content:center; align-items:center; gap:.26em;
-  height:1.12em; padding:0 .01em;}
-.ss-colon i{display:block; width:.1em; height:.1em; border-radius:50%; background:var(--ss-fg);}
+.ss-colon{padding:0 .02em;}
 .ss-slot .ss-out{animation:ss-digit-out .52s cubic-bezier(.45,0,.25,1) forwards;}
 .ss-slot .ss-in{animation:ss-digit-in .52s cubic-bezier(.45,0,.25,1) forwards;}
 @keyframes ss-digit-out{
