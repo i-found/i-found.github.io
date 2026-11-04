@@ -187,7 +187,7 @@
       </a>
 
       <!-- 站点版本号：每次推送 +1，刷新后看这里就能确定是不是最新版本 -->
-      <span class="site-version" id="siteVersion">V1.10.23</span>
+      <span class="site-version" id="siteVersion">V1.10.24</span>
 
       <ul>
         <li><a class="buttom first" href="https://i-found.github.io/">首页</a></li>
@@ -1265,9 +1265,9 @@ ssVideo.classList.add("is-ready");        // 视频层淡入
 ssBox.classList.remove("is-loading");     // 首帧去模糊
 ssBox.classList.add("is-playing");        // 首帧图退场，之后只留视频在合成
 }
-/* 进屏保的第一眼：拿卡片自己在首页的那张封面当模糊底图。
-   它刚才还在列表里画着，一定在内存里，所以这一步是同步的 —— 全屏落下时不会先黑一下再出图。
-   紧接着才去请求这条壁纸的静帧（模糊着换图，接缝看不出来），视频能播了再由 ssReveal 接管。 */
+/* 进屏保的第一眼：直接铺这条壁纸抽出来的静帧，模糊着等视频。
+   不用卡片自己的封面图过渡——那本来就是详情页的东西，全屏里出现是串画面。
+   静帧还没解码完的那几百毫秒是黑底，模糊 16px 下几乎看不出来，也不会有「换了张图」的错觉。 */
 function openScreensaver(){
 var c=homeCards[currentHomeKey]; if(!c) return;
 var wp=hwCur; if(!wp||!wp.src||!ssBox||!ssVideo) return;
@@ -1275,27 +1275,20 @@ clearTimeout(ssClickTimer);              // 双击的第一下 click 会被顶�
 ssClickSuppressUntil=Date.now()+520;     // 双击的后半截 click 同样不该切歌
 resetPlayRing();
 
-/* ① 同步铺上模糊底图（用的是已经在内存里的卡片封面） */
-if(ssPosterEl) ssPosterEl.src=c.cover||"";
-if(c.cover) ssBox.style.backgroundImage='url("'+c.cover+'")';
+/* ① 铺静帧。img 先摘掉旧源再挂新源：否则它会一直画着上一次那条壁纸的静帧，
+   直到新图下载完才换——正是「进全屏第一眼是别的视频」的老毛病。 */
+if(ssBox&&wp.poster) ssBox.style.backgroundImage='url("'+wp.poster+'")';
+if(ssPosterEl){
+  ssPosterEl.removeAttribute("src");
+  if(wp.poster) ssPosterEl.src=wp.poster;
+}
 ssVideo.classList.remove("is-ready");
 ssBox.classList.remove("is-playing");
 ssBox.classList.add("is-loading");
 ssEnterAt=Date.now();
 clearTimeout(ssRevealTimer);
 
-/* ② 静帧真正到手后替换（此时整屏还是模糊的，换图看不出接缝） */
-if(wp.poster){
-  var pre=new Image();
-  pre.onload=function(){
-    if(!ssBox||ssBox.hidden||ssBox.classList.contains("is-playing")) return;
-    if(ssPosterEl) ssPosterEl.src=wp.poster;
-    ssBox.style.backgroundImage='url("'+wp.poster+'")';
-  };
-  pre.src=wp.poster;
-}
-
-/* ③ 视频挂源开播；canplay 之后由 ssReveal 去模糊、淡入 */
+/* ② 视频挂源开播；canplay 之后由 ssReveal 去模糊、淡入 */
 ssVideo.pause();
 if(ssVideo.getAttribute("data-src")!==wp.src){
   ssVideo.setAttribute("data-src",wp.src);
