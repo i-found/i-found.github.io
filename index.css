@@ -1036,12 +1036,14 @@ to{opacity:0; transform:scale(1.26); filter:blur(3px);}
    视频叠在上面、默认透明，等 canplay 再淡入。整个过程是「先看图，再换成动」的接力，
    不会出现黑屏干等 2MB 视频下完的情况（音乐页随机背景用的也是这个思路）。 */
 .screensaver-poster{position:absolute; left:0; top:0; width:100%; height:100%; object-fit:cover; display:block;
-  transform:scale(1.02); transform-origin:center;
-  transition:opacity .7s ease, filter .95s ease, transform 1.2s ease;}
+  transition:opacity .7s ease, filter .95s ease;}
+/* 静帧、背景图、视频三层的几何必须完全一致：同一个盒子、同样 object-fit:cover、
+   谁都不带 transform。之前静帧挂着 scale(1.02)，比视频大 2%，接管的那一刻画面会缩一下，
+   看着就是「从图到视频有个缩放过渡」。 */
 /* 视频还没到：直接就是那张清晰首帧，不糊、不推近。
    全屏落下来第一眼等于「先看到这一帧照片」，视频缓冲好再淡入接管，
-   中间没有任何模糊过渡，观感和直接打开一张图一致。 */
-.screensaver.is-loading .screensaver-poster{filter:none; transform:scale(1.02);}
+   中间没有任何过渡，观感和直接打开一张图一致。 */
+.screensaver.is-loading .screensaver-poster{filter:none;}
 /* 视频接管后把首帧图摘掉，少一层全屏合成 */
 .screensaver.is-playing .screensaver-poster{opacity:0;}
 .screensaver-video{position:absolute; left:0; top:0; width:100%; height:100%; object-fit:cover; display:block;
