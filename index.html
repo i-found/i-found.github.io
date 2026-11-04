@@ -135,7 +135,7 @@
     <script type="text/javascript" src="js/SmoothScroll.js?v=dc3721b7"></script>
     <link rel="stylesheet" href="./dist/meplayer.css?v=af1ac3be">
     <link rel="stylesheet" href="main.css?v=9d556d4a">
-    <link rel="stylesheet" href="index.css?v=580eda96">
+    <link rel="stylesheet" href="index.css?v=29a4fcda">
     <link rel="stylesheet" type="text/css"media="screen and (max-width:1080px)"href="tinyScreen.css?v=19ca5be7" />
     <link rel="icon" href="./img/ico.png?v=c6aeb3b5" type="image/x-icon">
   </head>
@@ -187,7 +187,7 @@
       </a>
 
       <!-- 站点版本号：每次推送 +1，刷新后看这里就能确定是不是最新版本 -->
-      <span class="site-version" id="siteVersion">V1.10.24</span>
+      <span class="site-version" id="siteVersion">V1.10.25</span>
 
       <ul>
         <li><a class="buttom first" href="https://i-found.github.io/">首页</a></li>
@@ -1086,6 +1086,16 @@ showDetailPlayer(key);
 detail.hidden=false;
 scrollBelowNav(detail);
 setTimeout(syncPlayersBySrc,0);
+/* 静默预热这条壁纸的静帧（约 170KB）。只预热图、不碰视频：
+   不预热的话第一次点全屏要现下这张图，那段时间是黑底，
+   正是「第一次进全屏黑一下」的来源；视频仍然只在全屏才请求。 */
+setTimeout(function(){ preloadSsPoster(hwCur); },600);
+}
+function preloadSsPoster(wp){
+if(!wp||!wp.poster) return;
+if(preloadSsPoster.done===wp.poster) return;
+preloadSsPoster.done=wp.poster;
+(new Image()).src=wp.poster;
 }
 /* ---- 播放按钮统一显示逻辑：默认不常显，鼠标凑到按钮附近才出现；移开后原地停 3 秒，
    再用 2 秒渐隐（最多 5 秒彻底消失），外圈那圈蓝粉光环跟着一起转、一起散。
@@ -1257,17 +1267,20 @@ var ssEnterAt=0;      // 本次进屏保的时刻，用来给「模糊→清晰�
 var ssRevealTimer=null;
 function ssReveal(){
 if(!ssBox||ssBox.hidden||!ssVideo) return;
-/* 视频太快就绪时（本地缓存命中）也先让模糊首帧停一下：
-   否则「按下全屏」和「画面变了」是同一帧，看起来像直接闪了一下，不像过渡。 */
+/* 视频来得快时也让模糊静帧停一下：
+   否则「按下全屏」和「画面变了」是同一帧，看着像闪了一下，不像过渡。 */
 var wait=420-(Date.now()-ssEnterAt);
 if(wait>0){ clearTimeout(ssRevealTimer); ssRevealTimer=setTimeout(ssReveal,wait); return; }
 ssVideo.classList.add("is-ready");        // 视频层淡入
-ssBox.classList.remove("is-loading");     // 首帧去模糊
-ssBox.classList.add("is-playing");        // 首帧图退场，之后只留视频在合成
+ssBox.classList.remove("is-loading");     // 静帧去模糊
+ssBox.classList.add("is-playing");        // 静帧退场，之后只留视频在合成
 }
-/* 进屏保的第一眼：直接铺这条壁纸抽出来的静帧，模糊着等视频。
-   不用卡片自己的封面图过渡——那本来就是详情页的东西，全屏里出现是串画面。
-   静帧还没解码完的那几百毫秒是黑底，模糊 16px 下几乎看不出来，也不会有「换了张图」的错觉。 */
+/* 进屏保。
+   两种情况分开走，别混：
+   · 这条视频已经整条缓冲好（同一次详情里第二次点全屏）→ 直接出动态视频，
+     什么都不挡。再演一遍「静帧→视频」等于把已经就绪的画面盖起来，纯属添乱。
+   · 还没加载 → 铺静帧、模糊 16px 当加载占位，canplay 后去模糊 + 淡入。
+   两种情况都不会用卡片自己的封面图过渡，那是详情页的东西，出现在全屏就是串画面。 */
 function openScreensaver(){
 var c=homeCards[currentHomeKey]; if(!c) return;
 var wp=hwCur; if(!wp||!wp.src||!ssBox||!ssVideo) return;
@@ -1275,35 +1288,55 @@ clearTimeout(ssClickTimer);              // 双击的第一下 click 会被顶�
 ssClickSuppressUntil=Date.now()+520;     // 双击的后半截 click 同样不该切歌
 resetPlayRing();
 
-/* ① 铺静帧。img 先摘掉旧源再挂新源：否则它会一直画着上一次那条壁纸的静帧，
-   直到新图下载完才换——正是「进全屏第一眼是别的视频」的老毛病。 */
-if(ssBox&&wp.poster) ssBox.style.backgroundImage='url("'+wp.poster+'")';
-if(ssPosterEl){
-  ssPosterEl.removeAttribute("src");
-  if(wp.poster) ssPosterEl.src=wp.poster;
-}
-ssVideo.classList.remove("is-ready");
-ssBox.classList.remove("is-playing");
-ssBox.classList.add("is-loading");
+/* 已经可播：readyState>=3 说明能连续播，且必须还是同一条片子 */
+var cached=ssVideo.getAttribute("data-src")===wp.src&&ssVideo.readyState>=3;
+
 ssEnterAt=Date.now();
 clearTimeout(ssRevealTimer);
+ssBox.classList.remove("is-loading","is-playing");
+ssBox.classList.toggle("is-instant",cached);
+ssVideo.classList.remove("is-ready");
 
-/* ② 视频挂源开播；canplay 之后由 ssReveal 去模糊、淡入 */
-ssVideo.pause();
-if(ssVideo.getAttribute("data-src")!==wp.src){
-  ssVideo.setAttribute("data-src",wp.src);
-  ssVideo.src=wp.src;
+if(cached){
+  /* 直接上视频：静帧、背景图都撤掉，别留一层半透明的东西在前面 */
+  ssBox.style.backgroundImage="";
+  if(ssPosterEl) ssPosterEl.removeAttribute("src");
+}else{
+  /* 加载占位：静帧先铺满。img 必须先摘旧源再挂新源，
+     否则会一直画着上一条壁纸的静帧，直到新图下载完——正是「第一眼是别的视频」的老毛病。 */
+  if(wp.poster) ssBox.style.backgroundImage='url("'+wp.poster+'")';
+  if(ssPosterEl){
+    ssPosterEl.removeAttribute("src");
+    if(wp.poster) ssPosterEl.src=wp.poster;
+  }
+  ssBox.classList.add("is-loading");
 }
-ssVideo.preload="auto";
-if(wp.poster) ssVideo.poster=wp.poster;
-ssVideo.removeEventListener("canplay",ssReveal);
-ssVideo.addEventListener("canplay",ssReveal);
-if(ssVideo.readyState>=3) ssReveal();
 
+/* hidden 必须在 ssReveal 之前放开：它一进门就判 hidden，
+   否则「已经缓冲好、当场 reveal」这条快速通道会被自己挡掉（第二次进全屏卡在模糊静帧的元凶） */
 ssBox.hidden=false;
 void ssBox.offsetWidth;                 // 先落一次布局，下面马上要拿它进全屏
+
+ssVideo.pause();
+if(cached){
+  /* 源不变、数据都在，只补上淡入状态 */
+  ssVideo.preload="auto";
+  ssVideo.classList.add("is-ready");
+  ssBox.classList.add("is-playing");
+}else{
+  if(ssVideo.getAttribute("data-src")!==wp.src){
+    ssVideo.setAttribute("data-src",wp.src);
+    ssVideo.src=wp.src;
+  }
+  ssVideo.preload="auto";
+  if(wp.poster) ssVideo.poster=wp.poster;
+  ssVideo.removeEventListener("canplay",ssReveal);
+  ssVideo.addEventListener("canplay",ssReveal);
+  if(ssVideo.readyState>=3) ssReveal();
+}
+
 /* 全屏请求必须趁用户手势还新鲜时发出去。原来排在视频 play() 之后，
-   大视频（最大近 20MB）一开播就抢主线程，请求常被拖到激活失效，表现就是"点很多次才进一次" */
+   大视频一开播就抢主线程，请求常被拖到激活失效，表现就是"点很多次才进一次" */
 var req=ssBox.requestFullscreen||ssBox.webkitRequestFullscreen;
 if(req){ try{ var r=req.call(ssBox); if(r&&r.catch) r.catch(function(){}); }catch(e){} }
 clearScreensaverHint();          // 刚进来不显示提示，等有操作再说
@@ -1315,14 +1348,20 @@ var p=ssVideo.play(); if(p&&p.catch) p.catch(function(){});
 function closeScreensaver(){
 if(!ssBox||ssBox.hidden) return;
 clearInterval(ssTimer); ssTimer=null;
+clearTimeout(ssRevealTimer);
 clearScreensaverHint();
 if(ssVideo) ssVideo.pause();
 ssBox.hidden=true;
+/* 屏保层整块收起：静帧、模糊状态一起清掉，别让它们跟着回详情页 */
+ssBox.classList.remove("is-loading","is-playing","is-instant");
+if(ssPosterEl) ssPosterEl.removeAttribute("src");
 if(document.fullscreenElement||document.webkitFullscreenElement){
   var ex=document.exitFullscreen||document.webkitExitFullscreen;
   if(ex){ try{ var r=ex.call(document); if(r&&r.catch) r.catch(function(){}); }catch(e){} }
 }
-/* 退回详情页，小图还是那张静态首帧（和全屏首帧是同一张图），不用再做什么 */
+/* 退回详情页：小图必须还原成卡片自己的封面，不能被壁纸静帧顶掉 */
+var cc=homeCards[currentHomeKey];
+if(cc) setDetailCover(cc);
 }
 document.addEventListener("fullscreenchange",function(){ if(!document.fullscreenElement) closeScreensaver(); });
 document.addEventListener("webkitfullscreenchange",function(){ if(!document.webkitFullscreenElement) closeScreensaver(); });

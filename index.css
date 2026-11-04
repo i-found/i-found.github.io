@@ -1049,6 +1049,9 @@ to{opacity:0; transform:scale(1.26); filter:blur(3px);}
 .screensaver-video{position:absolute; left:0; top:0; width:100%; height:100%; object-fit:cover; display:block;
   opacity:0; transition:opacity .8s ease;}
 .screensaver-video.is-ready{opacity:1;}
+/* 视频早已缓冲好时（同一次详情里第二次点全屏）：不淡入，直接出现。
+   否则会先露出半透明的视频底，看起来像又闪了一下黑 */
+.screensaver.is-instant .screensaver-video{transition:none;}
 @media (prefers-reduced-motion:reduce){
   .screensaver-video{transition-duration:.01s;}
   .screensaver-poster{transition-duration:.01s;}
