@@ -9,6 +9,8 @@
    本来就是 1080p 及以下的保持原样。帧率一律保持原始，不抽帧。
 4. 音轨一律去掉（DROP_AUDIO=True）。壁纸是无声播放的，音频轨纯属浪费体积。
 5. 统一 H.264 High / yuv420p / faststart，保证浏览器边下边播。
+6. 封面（vid/*.jpg）一律截视频第一帧，严格 -ss 0，不允许带任何偏移。
+   全屏落下来先显示这张图、视频再从 0 秒开播，差一帧就会看到跳变。
 ====================================================================
 
 用法：
@@ -109,9 +111,11 @@ def transcode(src, out, label):
 
 
 def poster(mp4, jpg, w, h, square=False):
+    """封面必须严格取视频第一帧，禁止 -ss。
+    全屏时先显示这张图、紧接着视频从 0 秒开播，两者只要不是同一帧就会跳一下。"""
     vf = 'crop=ih:ih,scale=%d:%d' % (w, h) if square else \
          'scale=%d:%d:force_original_aspect_ratio=increase,crop=%d:%d' % (w, h, w, h)
-    subprocess.run(['ffmpeg', '-y', '-v', 'error', '-ss', '1', '-i', mp4, '-frames:v', '1',
+    subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', mp4, '-frames:v', '1',
                     '-vf', vf, '-q:v', '2', jpg], capture_output=True)
 
 
