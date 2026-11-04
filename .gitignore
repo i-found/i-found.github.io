@@ -1,3 +1,8 @@
 # font-spider 做字体子集化时留下的原始 TTF 缓存。
 # 页面只引用子集化后的 eot/woff/woff2，这些源文件既不部署也不需要进仓库。
 .font-spider/
+
+# 推送/转码时产生的临时日志与一次性脚本，不部署也不进仓库。
+_pb.*
+_push_batches.py
+_transcode_*.log
