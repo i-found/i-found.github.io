@@ -27,8 +27,8 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 EXTS = "mp4|jpe?g|png|webp|gif|js|css"
 MEDIA_EXTS = "mp4|jpe?g|png|webp|gif"
 
-# <script src="x.js"> / <link href="x.css"> / <img src="x.png">
-ATTR_REF = re.compile(r'\b(src|href)="([^"?]+\.(?:%s))(?:\?[^"]*)?"' % EXTS)
+# <script src="x.js"> / <link href="x.css"> / <img src="x.png"> / <video poster="x.jpg">
+ATTR_REF = re.compile(r'\b(src|href|poster)="([^"?]+\.(?:%s))(?:\?[^"]*)?"' % EXTS)
 # 写在 JS 字符串里的资源： "vid/x.mp4" / "./vid/x.mp4" / "../../vid/x.jpg" / "Albums/…/img/x.png"
 STR_REF = re.compile(r'"((?:\./|\.\./)*(?:vid|img|Albums)/[^"?]+\.(?:%s))(?:\?[^"]*)?"' % MEDIA_EXTS)
 
