@@ -135,7 +135,7 @@
     <script type="text/javascript" src="js/SmoothScroll.js?v=dc3721b7"></script>
     <link rel="stylesheet" href="./dist/meplayer.css?v=af1ac3be">
     <link rel="stylesheet" href="main.css?v=9d556d4a">
-    <link rel="stylesheet" href="index.css?v=87ed3fa6">
+    <link rel="stylesheet" href="index.css?v=6c4316e5">
     <link rel="stylesheet" type="text/css"media="screen and (max-width:1080px)"href="tinyScreen.css?v=19ca5be7" />
     <link rel="icon" href="./img/ico.png?v=c6aeb3b5" type="image/x-icon">
   </head>
@@ -188,7 +188,7 @@
       </a>
 
       <!-- 站点版本号：每次推送 +1，刷新后看这里就能确定是不是最新版本 -->
-      <span class="site-version" id="siteVersion">V1.10.19</span>
+      <span class="site-version" id="siteVersion">V1.10.20</span>
 
       <ul>
         <li><a class="buttom first" href="https://i-found.github.io/">首页</a></li>
@@ -1088,17 +1088,36 @@ resetPlayRing();
 var wp=homeWallpapers[title];
 if(!wp){
   v.pause(); v.hidden=true; v.removeAttribute("data-src");
+  /* 顺手把源也清掉：这张卡没有壁纸，没必要让上一条的最后一帧留在解码器里，
+     下次切回有壁纸的卡时还得靠它去顶帧，容易再露一次旧画面。 */
+  v.classList.remove("is-ready");
+  v.removeAttribute("src");
+  if(v.load) v.load();
   coverWrap.classList.remove("has-wallpaper");
   return;
 }
 if(v.getAttribute("data-src")!==wp.src){
+  /* 换源这三步的顺序不能乱，否则小图上会先看见上一首的画面：
+     1) 先撤 is-ready —— 视频层马上透明，露出下面那张 img（已经是新卡的首帧图）；
+     2) 先换 poster，再清源 —— 万一浏览器在 readyState 归零那一刻还要画 poster，画的已经是新的；
+     3) removeAttribute + load() 把解码器里上一首的最后一帧真正丢掉。
+        只改 src 的话，浏览器会继续渲染旧帧，直到新视频解出第一帧；
+        网络慢的时候那就是好几秒，正好是「小图还是上个视频」的时长。 */
+  v.pause();
+  v.classList.remove("is-ready");
+  v.poster=wp.poster||"";
+  v.removeAttribute("src");
+  if(v.load) v.load();
   v.setAttribute("data-src",wp.src);
   v.src=wp.src;
-  v.poster=wp.poster||"";
 }
 v.hidden=false;
 coverWrap.classList.add("has-wallpaper");
 preloadScreensaverVideo(wp);
+/* 新视频解出第一帧再淡入。同一首重进时已经有帧，直接显示，不会闪。
+   用 onloadeddata 赋值而不是 addEventListener：重复加载时自动顶替，不会越挂越多。 */
+if(v.readyState>=2) v.classList.add("is-ready");
+else v.onloadeddata=function(){ v.classList.add("is-ready"); };
 }
 /* 详情一打开就把全屏那份视频挂上，但只取 metadata（文件头几千字节）。
    高清版单条已经到 13MB，详情页就 auto 拉全套会把带宽全占掉、还拖慢用户压根没打算看的内容；
@@ -1119,7 +1138,12 @@ function playHomeVideo(){
 var v=document.getElementById("homeDetailVideo");
 if(!v||v.hidden||!v.getAttribute("src")) return;
 try{ v.currentTime=0; }catch(e){}
-var p=v.play(); if(p&&p.catch){ p.catch(function(){}); }
+var p=v.play();
+if(p&&p.then){
+  /* play() 兑现就说明已经有帧在跑了，补一次 is-ready 当兜底：
+     免得某些浏览器不派 loadeddata（比如直接从缓存出帧），视频层一直透明。 */
+  p.then(function(){ if(!v.hidden) v.classList.add("is-ready"); }).catch(function(){});
+}else if(p&&p.catch){ p.catch(function(){}); }
 }
 /* ---- 播放按钮统一显示逻辑：默认不常显，鼠标凑到按钮附近才出现；移开后原地停 3 秒，
    再用 2 秒渐隐（最多 5 秒彻底消失），外圈那圈蓝粉光环跟着一起转、一起散。
