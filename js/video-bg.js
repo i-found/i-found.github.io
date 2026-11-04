@@ -107,4 +107,35 @@
     window.videoBgPool=videoBgPool;
     window.videoBgBySong=videoBgBySong;
     window.videoBgTotalSongs=videoBgTotalSongs;
+
+    /* ---- 背景视频循环兜底 ----
+       浏览器自带的 loop 在「视频还没下载完就开始播」时（第一次进页面最常见，
+       一条背景十几 MB），播到结尾有时会停在最后一帧不再回绕，退出页面重新进来
+       （文件已经在缓存里）才恢复正常。
+       这里在播到结尾前 0.4 秒主动把进度拉回 0，让回绕发生在已经缓冲好的区间里；
+       再补一个 stalled / ended 兜底，保证任何情况下都会重新开始。 */
+    function guardBgVideoLoop(){
+        var v=document.getElementById("bgVideoEl");
+        if(!v||v.__loopGuard){ return; }
+        v.__loopGuard=1;
+        function rewind(){
+            try{ v.currentTime=0; }catch(e){}
+            var p=v.play();
+            if(p&&p.catch){ p.catch(function(){}); }
+        }
+        v.addEventListener("timeupdate",function(){
+            var d=v.duration;
+            if(d&&d>1&&v.currentTime>=d-0.4){ rewind(); }
+        });
+        v.addEventListener("stalled",function(){
+            var d=v.duration;
+            if(d&&v.currentTime>=d-0.6){ rewind(); }
+        });
+        v.addEventListener("ended",rewind);
+    }
+    if(document.readyState==="loading"){
+        document.addEventListener("DOMContentLoaded",guardBgVideoLoop);
+    }else{
+        guardBgVideoLoop();
+    }
 })();
