@@ -135,7 +135,7 @@
     <script type="text/javascript" src="js/SmoothScroll.js?v=dc3721b7"></script>
     <link rel="stylesheet" href="./dist/meplayer.css?v=af1ac3be">
     <link rel="stylesheet" href="main.css?v=9d556d4a">
-    <link rel="stylesheet" href="index.css?v=c05d1be2">
+    <link rel="stylesheet" href="index.css?v=580eda96">
     <link rel="stylesheet" type="text/css"media="screen and (max-width:1080px)"href="tinyScreen.css?v=19ca5be7" />
     <link rel="icon" href="./img/ico.png?v=c6aeb3b5" type="image/x-icon">
   </head>
@@ -187,7 +187,7 @@
       </a>
 
       <!-- 站点版本号：每次推送 +1，刷新后看这里就能确定是不是最新版本 -->
-      <span class="site-version" id="siteVersion">V1.10.22</span>
+      <span class="site-version" id="siteVersion">V1.10.23</span>
 
       <ul>
         <li><a class="buttom first" href="https://i-found.github.io/">首页</a></li>
@@ -1055,17 +1055,13 @@ bindDetailButtons();
    小图只显示它的首帧图；视频留到点全屏才加载播放。
    池子见 js/home-wallpapers.js，加素材只改那一个文件。 */
 var hwCur=null;
-/* 详情小图的封面。必须双缓冲：直接改 img.src 时，浏览器会一直画着上一张，
-   直到新图下载完才换——网慢的时候表现就是「切到下一首，小图还是上一首的画面」。
-   所以先用首页卡片那张封面垫上（它上一秒还在列表里画着，一定在内存里），
-   新首帧图预加载完再替换，全程不会有一帧显示旧内容。 */
-function setDetailCover(c,wp){
+/* 详情小图的封面：始终是卡片自己在首页用的那张图。
+   壁纸的静帧和视频都留到进全屏那一刻才请求，详情页阶段一个字节都不多下。
+   双缓冲保留着——先用真在内存里的这张垫住，避免切卡时短暂画着上一首的封面。 */
+function setDetailCover(c){
 var im=document.getElementById("homeDetailCover"); if(!im||!c) return;
-var target=(wp&&wp.poster)?wp.poster:c.cover;
-if(!target) return;
+var target=c.cover; if(!target) return;
 if(im.getAttribute("src")===target) return;
-var fallback=c.cover||"";
-if(fallback&&fallback!==target&&im.getAttribute("src")!==fallback) im.src=fallback;
 var key=currentHomeKey;
 var pre=new Image();
 pre.onload=function(){
@@ -1083,27 +1079,13 @@ document.getElementById("homeDetailMeta").textContent=c.singer+" · "+c.date;
 document.getElementById("homeDetailIntro").textContent=c.intro;
 document.getElementById("homeDetailPlay").setAttribute("data-card",key);
 currentHomeKey=key;
-setDetailCover(c,hwCur);
+setDetailCover(c);
 if(coverWrap) coverWrap.classList.toggle("has-wallpaper",!!hwCur);
 document.body.classList.add("home-detail-open");
 showDetailPlayer(key);
 detail.hidden=false;
-preloadScreensaverVideo(hwCur);
 scrollBelowNav(detail);
 setTimeout(syncPlayersBySrc,0);
-}
-/* 详情一打开就把全屏那条视频挂上，但只取 metadata（文件头几千字节）。
-   每个视频两三个 MB，详情页就 auto 拉全套会把带宽全占掉、还拖慢用户压根没打算看的内容；
-   只读头能让进全屏后的起播快一点，又不影响详情页本身。真正下载等进全屏再说。 */
-function preloadScreensaverVideo(wp){
-if(!ssVideo||!wp||!wp.src) return;
-/* 首帧图也一起预热：它同时是卡片小图，本来就是这张，这里只是保证进全屏那一刻已在内存里 */
-if(wp.poster) (new Image()).src=wp.poster;
-if(ssVideo.getAttribute("data-src")===wp.src) return;
-ssVideo.setAttribute("data-src",wp.src);
-ssVideo.preload="metadata";
-ssVideo.src=wp.src;
-if(wp.poster) ssVideo.poster=wp.poster;
 }
 /* ---- 播放按钮统一显示逻辑：默认不常显，鼠标凑到按钮附近才出现；移开后原地停 3 秒，
    再用 2 秒渐隐（最多 5 秒彻底消失），外圈那圈蓝粉光环跟着一起转、一起散。
@@ -1271,43 +1253,60 @@ ssTimeEl.style.transform=Math.abs(dx)>0.2?"translateX("+(-dx).toFixed(2)+"px)":"
 if(document.fonts&&document.fonts.ready){
   document.fonts.ready.then(function(){ if(ssClockReady) alignScreensaverTime(); });
 }
+var ssEnterAt=0;      // 本次进屏保的时刻，用来给「模糊→清晰」留一个最短展示时间
+var ssRevealTimer=null;
 function ssReveal(){
-if(ssVideo) ssVideo.classList.add("is-ready");
+if(!ssBox||ssBox.hidden||!ssVideo) return;
+/* 视频太快就绪时（本地缓存命中）也先让模糊首帧停一下：
+   否则「按下全屏」和「画面变了」是同一帧，看起来像直接闪了一下，不像过渡。 */
+var wait=420-(Date.now()-ssEnterAt);
+if(wait>0){ clearTimeout(ssRevealTimer); ssRevealTimer=setTimeout(ssReveal,wait); return; }
+ssVideo.classList.add("is-ready");        // 视频层淡入
+ssBox.classList.remove("is-loading");     // 首帧去模糊
+ssBox.classList.add("is-playing");        // 首帧图退场，之后只留视频在合成
 }
-/* 屏保首帧：本地封面图先铺满，视频能播了再淡入盖上去——跟音乐页随机背景是同一个思路。
-   图片只有几十 KB、跟着页面一起到，所以进全屏第一眼永远是清晰画面，
-   不会黑着等 2MB 视频下完（慢网下那一下就是「点了没反应」的感觉）。 */
-function setScreensaverFrame(wp){
-if(ssPosterEl&&wp.poster) ssPosterEl.src=wp.poster;
-/* 容器本身也铺同一张图当底：img 刚换 src 时可能还没解码完，
-   背景层直接从缓存里画，不会露出那一下黑底 */
-if(ssBox&&wp.poster) ssBox.style.backgroundImage='url("'+wp.poster+'")';
-if(!ssVideo) return;
-ssVideo.classList.remove("is-ready");
-if(ssVideo.getAttribute("data-src")!==wp.src){
-  /* 换一条就重新挂源；视频层此刻是透明的（is-ready 已撤），上面盖着首帧图，
-     所以上一条的最后一帧没有机会露出来。 */
-  ssVideo.pause();
-  ssVideo.setAttribute("data-src",wp.src);
-  ssVideo.preload="auto";
-  ssVideo.src=wp.src;
-  if(wp.poster) ssVideo.poster=wp.poster;
-}else if(ssVideo.preload!=="auto"){
-  /* 详情页只读过文件头，这里才请它把整条拉下来。属性变更会让浏览器按新策略续传，
-     已经下过的部分走缓存，不会从零开始。 */
-  ssVideo.preload="auto";
-}
-ssVideo.removeEventListener("canplay",ssReveal);
-ssVideo.addEventListener("canplay",ssReveal);
-if(ssVideo.readyState>=3) ssReveal();     // 详情页已经预缓冲好了，直接显示，不用再等事件
-}
+/* 进屏保的第一眼：拿卡片自己在首页的那张封面当模糊底图。
+   它刚才还在列表里画着，一定在内存里，所以这一步是同步的 —— 全屏落下时不会先黑一下再出图。
+   紧接着才去请求这条壁纸的静帧（模糊着换图，接缝看不出来），视频能播了再由 ssReveal 接管。 */
 function openScreensaver(){
 var c=homeCards[currentHomeKey]; if(!c) return;
 var wp=hwCur; if(!wp||!wp.src||!ssBox||!ssVideo) return;
 clearTimeout(ssClickTimer);              // 双击的第一下 click 会被顶掉，别去切播放
 ssClickSuppressUntil=Date.now()+520;     // 双击的后半截 click 同样不该切歌
 resetPlayRing();
-setScreensaverFrame(wp);                 // 先把静态单帧铺上，同步生效
+
+/* ① 同步铺上模糊底图（用的是已经在内存里的卡片封面） */
+if(ssPosterEl) ssPosterEl.src=c.cover||"";
+if(c.cover) ssBox.style.backgroundImage='url("'+c.cover+'")';
+ssVideo.classList.remove("is-ready");
+ssBox.classList.remove("is-playing");
+ssBox.classList.add("is-loading");
+ssEnterAt=Date.now();
+clearTimeout(ssRevealTimer);
+
+/* ② 静帧真正到手后替换（此时整屏还是模糊的，换图看不出接缝） */
+if(wp.poster){
+  var pre=new Image();
+  pre.onload=function(){
+    if(!ssBox||ssBox.hidden||ssBox.classList.contains("is-playing")) return;
+    if(ssPosterEl) ssPosterEl.src=wp.poster;
+    ssBox.style.backgroundImage='url("'+wp.poster+'")';
+  };
+  pre.src=wp.poster;
+}
+
+/* ③ 视频挂源开播；canplay 之后由 ssReveal 去模糊、淡入 */
+ssVideo.pause();
+if(ssVideo.getAttribute("data-src")!==wp.src){
+  ssVideo.setAttribute("data-src",wp.src);
+  ssVideo.src=wp.src;
+}
+ssVideo.preload="auto";
+if(wp.poster) ssVideo.poster=wp.poster;
+ssVideo.removeEventListener("canplay",ssReveal);
+ssVideo.addEventListener("canplay",ssReveal);
+if(ssVideo.readyState>=3) ssReveal();
+
 ssBox.hidden=false;
 void ssBox.offsetWidth;                 // 先落一次布局，下面马上要拿它进全屏
 /* 全屏请求必须趁用户手势还新鲜时发出去。原来排在视频 play() 之后，
