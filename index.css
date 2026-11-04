@@ -932,15 +932,8 @@ border-radius: 10px;
 .home-detail[hidden]{display:none;}
 .home-detail-cover-wrap{float:left; width:360px; height:200px; margin-right:28px; position:relative; border-radius:16px; overflow:hidden;}
 .home-detail-cover{width:100%; height:100%; object-fit:cover; display:block;}
-/* 详情封面用动态视频壁纸铺在封面图上面；图片留着兜底，视频没加载出来时仍有画面。
-   pointer-events:none 是为了不挡住中间的播放按钮（.container1）。 */
-.home-detail-video{position:absolute; left:0; top:0; width:100%; height:100%; object-fit:cover; display:block; pointer-events:none; background:center/cover no-repeat;
-/* 换卡时视频层先透明，等 is-ready（新视频解出第一帧）淡入。
-   下面那层 img 就是同一张首帧图，所以盖不盖上去几乎看不出差别，
-   但能保证「上一个视频的尾巴」绝不会在换卡瞬间露出来。 */
-opacity:0; transition:opacity .26s ease;}
-.home-detail-video.is-ready{opacity:1;}
-.home-detail-video[hidden]{display:none;}
+/* 卡片小图只放静态首帧（.home-detail-cover），动态视频只在全屏里播，
+   所以这里不再有覆盖在图片上的 video 层。 */
 /* 封面右下角的全屏按钮：通用的「点击放大」四角箭头，比双击可靠得多。
    只有配了动态壁纸的卡片才出现（没壁纸的进不了全屏，摆个按钮只会让人点了没反应）。 */
 .home-detail-zoom{

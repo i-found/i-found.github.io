@@ -101,7 +101,7 @@ def run_once():
             changed.append(os.path.relpath(fp, ROOT))
 
     # 这几处把媒体路径写在 JS 字符串里，属性正则扫不到
-    for rel in ("index.html", "js/video-bg.js", "music.html"):
+    for rel in ("index.html", "js/video-bg.js", "js/home-wallpapers.js", "music.html"):
         fp = os.path.join(ROOT, *rel.split("/"))
         if os.path.isfile(fp):
             t = stamp(fp, STR_REF, False)
