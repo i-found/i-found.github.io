@@ -23,26 +23,26 @@
 (function(){
     /* ---- 视频池：只在末尾追加，不要打乱顺序（封面圆图与视频一一对应） ---- */
     var videoBgPool=[
-        {src:"../../vid/dark-night.mp4?v=9b0f0d68", poster:"../../vid/dark-night.jpg?v=bd340811", cover:"../../vid/dark-night-disc.jpg?v=f7965580"},
-        {src:"../../vid/within-monochrome.mp4?v=c82322ef", poster:"../../vid/within-monochrome.jpg?v=2e42f748", cover:"../../vid/within-monochrome-disc.jpg?v=293b2934"},
-        {src:"../../vid/seaside-rain.mp4?v=48cc6b1a", poster:"../../vid/seaside-rain.jpg?v=d4dc9541", cover:"../../vid/seaside-rain-disc.jpg?v=feaaa837"},
-        {src:"../../vid/dark-leaf.mp4?v=7fe49af1", poster:"../../vid/dark-leaf.jpg?v=bceaee91", cover:"../../vid/dark-leaf-disc.jpg?v=35acfd40"},
-        {src:"../../vid/misty-valley.mp4?v=01baa17e", poster:"../../vid/misty-valley.jpg?v=693b1939", cover:"../../vid/misty-valley-disc.jpg?v=b15b951b"},
-        {src:"../../vid/girl-ame-13.mp4?v=4b1a4eec", poster:"../../vid/girl-ame-13.jpg?v=bffb32e2", cover:"../../vid/girl-ame-13-disc.jpg?v=4faf6ec6"},
-        {src:"../../vid/firewatch-tower.mp4?v=33ebffaa", poster:"../../vid/firewatch-tower.jpg?v=60f80758", cover:"../../vid/firewatch-tower-disc.jpg?v=0cba4256"},
-        {src:"../../vid/sandblack.mp4?v=77586158", poster:"../../vid/sandblack.jpg?v=21756e91", cover:"../../vid/sandblack-disc.jpg?v=25ea734d"},
-        {src:"../../vid/temporal-acceleration.mp4?v=61d64f20", poster:"../../vid/temporal-acceleration.jpg?v=af219e70", cover:"../../vid/temporal-acceleration-disc.jpg?v=61cf2675"},
-        {src:"../../vid/anime-girl-night.mp4?v=213b434f", poster:"../../vid/anime-girl-night.jpg?v=14d09311", cover:"../../vid/anime-girl-night-disc.jpg?v=5b3fe246"},
-        {src:"../../vid/moon-touch.mp4?v=20891fde", poster:"../../vid/moon-touch.jpg?v=805e992c", cover:"../../vid/moon-touch-disc.jpg?v=3a198459"},
-        {src:"../../vid/endless-pain.mp4?v=4bc8253e", poster:"../../vid/endless-pain.jpg?v=ff25a891", cover:"../../vid/endless-pain-disc.jpg?v=fe5261ee"},
-        {src:"../../vid/beyoud.mp4?v=ac23876e", poster:"../../vid/beyoud.jpg?v=608aa10b", cover:"../../vid/beyoud-disc.jpg?v=0e07ccb5"},
-        {src:"../../vid/a-curse-paper-lily.mp4?v=4cf6d6e9", poster:"../../vid/a-curse-paper-lily.jpg?v=0f92a022", cover:"../../vid/a-curse-paper-lily-disc.jpg?v=ecd26bca"}
+        {src:"../../vid/dark-night.mp4?v=3ebfe0ce", poster:"../../vid/dark-night.jpg?v=92c00aea", cover:"../../vid/dark-night-disc.jpg?v=901a89cf"},
+        {src:"../../vid/within-monochrome.mp4?v=e25e9cf6", poster:"../../vid/within-monochrome.jpg?v=23a96e14", cover:"../../vid/within-monochrome-disc.jpg?v=e33d7e3b"},
+        {src:"../../vid/seaside-rain.mp4?v=90b42300", poster:"../../vid/seaside-rain.jpg?v=f6daec50", cover:"../../vid/seaside-rain-disc.jpg?v=454d9a13"},
+        {src:"../../vid/dark-leaf.mp4?v=19b93635", poster:"../../vid/dark-leaf.jpg?v=427eb3e2", cover:"../../vid/dark-leaf-disc.jpg?v=2f43cb13"},
+        {src:"../../vid/misty-valley.mp4?v=35b6f30d", poster:"../../vid/misty-valley.jpg?v=9c79bbd9", cover:"../../vid/misty-valley-disc.jpg?v=99eb34a3"},
+        {src:"../../vid/girl-ame-13.mp4?v=5f4b1403", poster:"../../vid/girl-ame-13.jpg?v=9be60547", cover:"../../vid/girl-ame-13-disc.jpg?v=9b45e1a4"},
+        {src:"../../vid/firewatch-tower.mp4?v=e9b35b48", poster:"../../vid/firewatch-tower.jpg?v=90f589e1", cover:"../../vid/firewatch-tower-disc.jpg?v=edda6048"},
+        {src:"../../vid/sandblack.mp4?v=9d6f359c", poster:"../../vid/sandblack.jpg?v=c4352450", cover:"../../vid/sandblack-disc.jpg?v=82749946"},
+        {src:"../../vid/temporal-acceleration.mp4?v=61a2262d", poster:"../../vid/temporal-acceleration.jpg?v=ad714809", cover:"../../vid/temporal-acceleration-disc.jpg?v=567d885f"},
+        {src:"../../vid/anime-girl-night.mp4?v=6dfa4daa", poster:"../../vid/anime-girl-night.jpg?v=bf057ef6", cover:"../../vid/anime-girl-night-disc.jpg?v=953f5efa"},
+        {src:"../../vid/moon-touch.mp4?v=1a33bf38", poster:"../../vid/moon-touch.jpg?v=d16251ef", cover:"../../vid/moon-touch-disc.jpg?v=197ae5a3"},
+        {src:"../../vid/endless-pain.mp4?v=d8b0de07", poster:"../../vid/endless-pain.jpg?v=3e090354", cover:"../../vid/endless-pain-disc.jpg?v=26c2f071"},
+        {src:"../../vid/beyoud.mp4?v=5a5bd938", poster:"../../vid/beyoud.jpg?v=d5f56f4a", cover:"../../vid/beyoud-disc.jpg?v=b025db7b"},
+        {src:"../../vid/a-curse-paper-lily.mp4?v=bad01e69", poster:"../../vid/a-curse-paper-lily.jpg?v=b6787453", cover:"../../vid/a-curse-paper-lily-disc.jpg?v=26b571ca"}
     ];
 
     /* ---- 专属背景：按歌名锁定视频，进到这首歌必出，不参与上面的随机池 ----
        键是播放页 data 里的 song 字段（要与歌名完全一致） */
     var videoBgBySong={
-        "内线": {src:"../../vid/feihua-rumeng.mp4?v=99af6fc4", poster:"../../vid/feihua-rumeng.jpg?v=45fcfd05", cover:"../../vid/feihua-rumeng-disc.jpg?v=dc6e6b60"}
+        "内线": {src:"../../vid/feihua-rumeng.mp4?v=a0ccd869", poster:"../../vid/feihua-rumeng.jpg?v=3f70d0d0", cover:"../../vid/feihua-rumeng-disc.jpg?v=864da60e"}
     };
 
     /* 专属视频自动从随机池剔除（同 src 视为同一条）：
