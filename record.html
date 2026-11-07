@@ -139,7 +139,7 @@
     <script type="text/javascript" src="js/SmoothScroll.js?v=dc3721b7"></script>
     <link rel="stylesheet" href="./dist/meplayer.css?v=af1ac3be">
     <link rel="stylesheet" href="main.css?v=9d556d4a">
-    <link rel="stylesheet" href="index.css?v=f7ec072a">
+    <link rel="stylesheet" href="index.css?v=d83eee60">
     <link rel="stylesheet" type="text/css"media="screen and (max-width:1080px)"href="tinyScreen.css?v=19ca5be7" />
     <link rel="icon" href="./img/ico.png?v=c6aeb3b5" type="image/x-icon">
   </head>
@@ -499,10 +499,45 @@ li.search { position: relative; }
 .sr-context { font-size: 13px; color: #888; line-height: 1.5; margin: 2px 0 0; max-height: 42px; overflow: hidden; }
 .sr-context mark, .sr-field mark { background: #ffe082; color: #333; }
 .sr-empty { padding: 12px 14px; color: #999; font-size: 14px; margin: 0; }
-/* 跳转后给目标加光圈，600ms 后移除，靠过渡慢慢淡出 */
-.record-card, .record-title, .record-text, .record-time { transition: box-shadow .32s ease; }
-.record-card.search-hit { box-shadow: 0 0 0 3px #FF6B81, 0 4px 15px rgba(255,71,87,0.25); }
-.record-title.search-hit, .record-text.search-hit, .record-time.search-hit { box-shadow: 0 0 0 3px #FF8B8B; border-radius: 4px; }
+/* 搜索定位：命中的字段本身变粉，描边交给 .locate-ring（与音乐页同一套动效） */
+.record-title.search-hit { color: #FF8B8B; }
+.record-text.search-hit, .record-time.search-hit { background: #fff0f0; border-radius: 6px; }
+/* 蓝粉渐变描边绕定位目标转一圈后淡出 */
+@property --ringAng { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+.locate-ring {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border: 3px solid transparent;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 20;
+  background: conic-gradient(from var(--ringAng), #5AA9FF, #FF8B8B, #5AA9FF) border-box;
+  -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  animation: ringSpin 1s linear 1, ringFade .3s ease .95s 1 forwards;
+}
+@keyframes ringSpin { from { --ringAng: 0deg; } to { --ringAng: 360deg; } }
+@keyframes ringFade { to { opacity: 0; } }
+/* 描边要相对定位的容器，否则会跑到页面左上角 */
+.record-title, .record-text, .record-time, .record-images { position: relative; }
+.record-images { border-radius: 8px; }
+
+/* 搜索历史：标题行 + 清空 */
+.sr-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 14px 5px; font-size: 12px; color: #aaa;
+}
+.sr-clear {
+  border: none; background: none; padding: 2px 2px; margin: 0;
+  color: #FF8B8B; font-size: 12px; font-family: inherit; cursor: pointer;
+}
+.sr-clear:hover { text-decoration: underline; }
 .record-card {
   background: #fafafa;
   border-radius: 8px;
@@ -1803,6 +1838,81 @@ li.search { position: relative; }
     activeSearchIndex = -1;
   }
 
+  /* ================= 搜索历史 =================
+     存在 localStorage：最多 10 条、最新在前、重复的提前。
+     只有清除浏览器数据才会消失。 */
+  var SEARCH_HISTORY_KEY = 'suihe_search_history';
+  var searchHistoryTimer = null;
+
+  function getSearchHistory() {
+    try {
+      var list = JSON.parse(localStorage.getItem(SEARCH_HISTORY_KEY) || '[]');
+      if (!Array.isArray(list)) return [];
+      return list.filter(function(w) { return typeof w === 'string' && w.trim(); }).slice(0, 10);
+    } catch (e) { return []; }
+  }
+
+  function saveSearchHistory(word) {
+    word = (word || '').trim();
+    if (!word) return;
+    var list = getSearchHistory().filter(function(w) { return w !== word; });
+    list.unshift(word);
+    try { localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(list.slice(0, 10))); } catch (e) {}
+  }
+
+  /* 搜索框为空时展示：最近 10 条 + 清空按钮 */
+  function renderSearchHistory() {
+    var list = getSearchHistory();
+    recordSearchResults.innerHTML = '';
+    currentSearchRows = [];
+    activeSearchIndex = -1;
+    if (!list.length) { recordSearchResults.hidden = true; return; }
+
+    var head = document.createElement('div');
+    head.className = 'sr-head';
+    var title = document.createElement('span');
+    title.textContent = '最近搜索';
+    var clear = document.createElement('button');
+    clear.type = 'button';
+    clear.className = 'sr-clear';
+    clear.textContent = '清空';
+    clear.addEventListener('click', function(e) {
+      e.stopPropagation();
+      try { localStorage.removeItem(SEARCH_HISTORY_KEY); } catch (e2) {}
+      renderSearchHistory();
+      searchInput.focus();
+    });
+    head.appendChild(title);
+    head.appendChild(clear);
+    recordSearchResults.appendChild(head);
+
+    list.forEach(function(word, ix) {
+      currentSearchRows.push({ word: word, isHistory: true });
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'sr-item';
+      var top = document.createElement('div');
+      top.className = 'sr-top';
+      var f = document.createElement('span');
+      f.className = 'sr-field';
+      f.textContent = word;
+      top.appendChild(f);
+      b.appendChild(top);
+      b.addEventListener('click', function(e) {
+        /* 这里会重建结果面板、当前按钮被移出文档，
+           冒泡到 document 时 contains(target) 已是 false，会被误判成「点了外部」而关掉面板 */
+        e.stopPropagation();
+        searchInput.value = word;
+        saveSearchHistory(word);
+        renderSearch(word);
+        searchInput.focus();
+      });
+      b.addEventListener('mouseenter', function() { setActiveSearch(ix); });
+      recordSearchResults.appendChild(b);
+    });
+    recordSearchResults.hidden = false;
+  }
+
   /* ================= 图片文字识别（百度 OCR） =================
      记录图片存在 R2 的 records-images 桶，浏览器直接读像素会被 CORS 拦，
      所以远程图只传 URL 让百度服务器去抓；本地备份是 dataURL 就直接传 base64。 */
@@ -1948,7 +2058,7 @@ li.search { position: relative; }
   }
 
   function renderSearch(q) {
-    if (!q) { hideSearchResults(); return; }
+    if (!q) { renderSearchHistory(); return; }
     var lower = q.toLowerCase(), rows = [];
     records.forEach(function(r) {
       var dateText = formatTime(r.time || r.id);
@@ -1999,7 +2109,7 @@ li.search { position: relative; }
       addMark(ctx, r.context, q);
       b.appendChild(top);
       b.appendChild(ctx);
-      b.addEventListener('click', function() { goRecordField(r.id, r.field, r.isImage); });
+      b.addEventListener('click', function() { saveSearchHistory(q); goRecordField(r.id, r.field, r.isImage); });
       b.addEventListener('mouseenter', function() { setActiveSearch(ix); });
       recordSearchResults.appendChild(b);
     });
@@ -2007,12 +2117,23 @@ li.search { position: relative; }
     setActiveSearch(0);
   }
 
+  /* 定位动效：给目标套一圈蓝粉渐变描边，转一圈后淡出（与音乐页一致） */
+  function ring(box) {
+    if (!box) return;
+    var old = box.querySelector('.locate-ring');
+    if (old && old.parentNode) old.parentNode.removeChild(old);
+    var sp = document.createElement('span');
+    sp.className = 'locate-ring';
+    box.appendChild(sp);
+    setTimeout(function() { if (sp.parentNode) sp.parentNode.removeChild(sp); }, 1400);
+  }
+
   function flashRecord(el) {
     if (!el) return;
-    el.classList.remove('search-hit');
-    void el.offsetWidth;
+    document.querySelectorAll('.search-hit').forEach(function(n) { n.classList.remove('search-hit'); });
     el.classList.add('search-hit');
-    setTimeout(function() { el.classList.remove('search-hit'); }, 600);
+    ring(el);
+    setTimeout(function() { el.classList.remove('search-hit'); }, 2400);
   }
 
   function goRecordField(id, field, isImage) {
@@ -2034,8 +2155,15 @@ li.search { position: relative; }
   }
 
   if (searchInput) {
-    searchInput.addEventListener('input', function() { renderSearch(searchInput.value.trim()); });
-    searchInput.addEventListener('focus', function() { if (searchInput.value.trim()) renderSearch(searchInput.value.trim()); });
+    searchInput.addEventListener('input', function() {
+      var q = searchInput.value.trim();
+      renderSearch(q);
+      /* 停手 900ms 才记进历史，免得把打字过程中的半截词也存进去 */
+      clearTimeout(searchHistoryTimer);
+      if (q) searchHistoryTimer = setTimeout(function() { saveSearchHistory(q); }, 900);
+    });
+    /* 空着聚焦也要渲染一次：这时面板显示的是历史，不是空白 */
+    searchInput.addEventListener('focus', function() { renderSearch(searchInput.value.trim()); });
     searchInput.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') {
         hideSearchResults();
@@ -2047,7 +2175,8 @@ li.search { position: relative; }
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
         e.preventDefault();
         var qk = searchInput.value.trim();
-        if (!qk) return;
+        /* 空输入时也允许上下键在历史里走 */
+        if (!qk && !currentSearchRows.length) return;
         if (recordSearchResults.hidden || !recordSearchResults.querySelector('.sr-item')) renderSearch(qk);
         var cnt = recordSearchResults.querySelectorAll('.sr-item').length;
         if (!cnt) return;
@@ -2058,7 +2187,17 @@ li.search { position: relative; }
       if (e.key === 'Enter') {
         e.preventDefault();
         var q = searchInput.value.trim();
-        if (!q) return;
+        /* 输入框空着时，回车等于「用历史里的第一条再搜一次」 */
+        if (!q) {
+          var h = currentSearchRows[activeSearchIndex] || currentSearchRows[0];
+          if (h && h.isHistory) {
+            searchInput.value = h.word;
+            saveSearchHistory(h.word);
+            renderSearch(h.word);
+          }
+          return;
+        }
+        saveSearchHistory(q);
         if (!currentSearchRows.length) renderSearch(q);
         var r = currentSearchRows[activeSearchIndex] || currentSearchRows[0];
         if (!r) return;

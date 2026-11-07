@@ -137,7 +137,7 @@
     <script type="text/javascript" src="js/SmoothScroll.js?v=dc3721b7"></script>
     <link rel="stylesheet" href="./dist/meplayer.css?v=af1ac3be">
     <link rel="stylesheet" href="main.css?v=9d556d4a">
-    <link rel="stylesheet" href="index.css?v=f7ec072a">
+    <link rel="stylesheet" href="index.css?v=d83eee60">
     <link rel="stylesheet" type="text/css"media="screen and (max-width:1080px)"href="tinyScreen.css?v=19ca5be7" />
     <link rel="icon" href="./img/ico.png?v=c6aeb3b5" type="image/x-icon">
   </head>
@@ -189,7 +189,7 @@
       </a>
 
       <!-- 站点版本号：每次推送 +1，刷新后看这里就能确定是不是最新版本 -->
-      <span class="site-version" id="siteVersion">V1.10.46</span>
+      <span class="site-version" id="siteVersion">V1.10.47</span>
 
       <ul>
         <li><a class="buttom first" href="https://i-found.github.io/">首页</a></li>
@@ -1415,7 +1415,14 @@ zoomBtn.addEventListener("click",function(ev){
 });
 }
 function closeHome(){  resetPlayRing(); document.body.classList.remove("home-detail-open"); detail.hidden=true; window.scrollTo({top:0,behavior:"smooth"}); setTimeout(syncPlayersBySrc,0); }
-function flash(el){ if(!el) return; document.querySelectorAll(".search-hit").forEach(function(n){n.classList.remove("search-hit");}); el.classList.add("search-hit"); setTimeout(function(){el.classList.remove("search-hit");},600); }
+/* 定位动效：给目标套一圈蓝粉渐变描边，转一圈后淡出（与音乐页一致） */
+function ring(box){
+  if(!box) return;
+  var old=box.querySelector(".locate-ring"); if(old&&old.parentNode) old.parentNode.removeChild(old);
+  var sp=document.createElement("span"); sp.className="locate-ring"; box.appendChild(sp);
+  setTimeout(function(){ if(sp.parentNode) sp.parentNode.removeChild(sp); },1400);
+}
+function flash(el){ if(!el) return; document.querySelectorAll(".search-hit").forEach(function(n){n.classList.remove("search-hit");}); el.classList.add("search-hit"); ring(el); setTimeout(function(){el.classList.remove("search-hit");},2400); }
 function goCard(key){ resetPlayRing(); document.body.classList.remove("home-detail-open"); detail.hidden=true; var card=homeCards[key]; if(card&&card.el){ scrollBelowNav(card.el); flash(card.el); } }
 function goDetail(key){ openHome(key); setTimeout(function(){ var target=document.getElementById("homeDetailIntro"); if(target){ target.scrollIntoView({behavior:"smooth",block:"center"}); flash(target); } },350); }
 var searchInput=document.getElementById("homeSearchInput"), searchBox=document.getElementById("homeSearchResults");
