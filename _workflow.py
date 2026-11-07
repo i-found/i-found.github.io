@@ -55,6 +55,7 @@ Cloudflare REST API 写桶。和记录页上传记录是同一个思路：本地
 断点续跑：转码结果记录在 _workflow_state.json（不进仓库）。只有「源没动 + 画质参数没变」
 才会跳过，所以改了 PROFILES 之后重新跑会老老实实全部重转。
 """
+import concurrent.futures as futures
 import glob
 import hashlib
 import json
@@ -63,6 +64,8 @@ import re
 import subprocess
 import sys
 import tempfile
+import threading
+import time
 import urllib.parse
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -647,31 +650,75 @@ def _upload_worker(session, env, key, path, dry):
     return True
 
 
-def _upload_api(session, env, key, path, dry):
-    """直传 Cloudflare REST API 写 R2：PUT /accounts/<id>/r2/buckets/<bucket>/objects/<key>。"""
+def _md5(path):
+    """整文件 md5（R2 单段上传的 etag 就是它，用来判断远端内容是否已是最新）。"""
+    h = hashlib.md5()
+    with open(path, 'rb') as fh:
+        for chunk in iter(lambda: fh.read(1 << 20), b''):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def _api_list(session, env, prefix):
+    """列出桶里某前缀下的对象 -> {key: (size, etag)}，etag 就是单段上传内容的 md5。"""
+    url = ('https://api.cloudflare.com/client/v4/accounts/%s/r2/buckets/%s/objects'
+           % (env[ENV_ACCOUNT_ID], R2_BUCKET))
+    h = {'Authorization': 'Bearer ' + env[ENV_API_TOKEN]}
+    out, cursor = {}, None
+    while True:
+        params = {'prefix': prefix + '/', 'per_page': 1000}
+        if cursor:
+            params['cursor'] = cursor
+        r = session.get(url, headers=h, params=params, timeout=60)
+        if r.status_code != 200:
+            print('列对象失败 %s: %s' % (r.status_code, (r.text or '')[:160]))
+            return None
+        d = r.json()
+        for o in d.get('result') or []:
+            out[o.get('key')] = (o.get('size') or 0, (o.get('etag') or '').strip('"'))
+        cursor = (d.get('result_info') or {}).get('cursor')
+        if not d.get('result') or not cursor:
+            break
+    return out
+
+
+def _upload_api(session, env, key, path):
+    """直传 Cloudflare REST API 写 R2：PUT /accounts/<id>/r2/buckets/<bucket>/objects/<key>。
+
+    家宽上行 + Cloudflare 边缘偶尔会写超时，所以单个文件重试 3 次、逐次退避；
+    R2 的 PUT 是原子的，失败重传不会留下半个对象。
+    """
     url = ('https://api.cloudflare.com/client/v4/accounts/%s/r2/buckets/%s/objects/%s'
            % (env[ENV_ACCOUNT_ID], R2_BUCKET, key))
     with open(path, 'rb') as fh:
         body = fh.read()
-    if dry:
-        print('  [dry] PUT  %s  %6.2f MB' % (url, len(body) / 1048576))
-        return True
-    r = session.put(url,
-                    headers={'Authorization': 'Bearer ' + env[ENV_API_TOKEN],
-                             'Content-Type': 'video/mp4'},
-                    data=body, timeout=(15, 900))
-    if r.status_code not in (200, 201):
-        print('  %-34s 失败 %s %s' % (key, r.status_code, (r.text or '')[:160]))
-        return False
-    print('  %-34s OK   %6.2f MB' % (key, len(body) / 1048576))
-    return True
+    last = ''
+    for attempt in range(3):
+        try:
+            r = session.put(url,
+                            headers={'Authorization': 'Bearer ' + env[ENV_API_TOKEN],
+                                     'Content-Type': 'video/mp4'},
+                            data=body, timeout=(15, 900))
+            if r.status_code in (200, 201):
+                print('  %-34s OK   %6.2f MB%s'
+                      % (key, len(body) / 1048576, '' if attempt == 0 else '（重试%d次）' % attempt))
+                return True
+            last = '%s %s' % (r.status_code, (r.text or '')[:120])
+            if 400 <= r.status_code < 500:      # 鉴权/参数错，重试没用
+                break
+        except Exception as e:                  # 连接被重置、写超时等
+            last = '%s: %s' % (type(e).__name__, str(e)[:100])
+        time.sleep(3 * (attempt + 1))
+    print('  %-34s 失败 %s' % (key, last))
+    return False
 
 
-def upload(dry=False, only=None):
+def upload(dry=False, only=None, jobs=4, force=False):
     """5) 把 vid/*.mp4 传到 Cloudflare R2（纯 HTTP，不装客户端）。
 
     ?v= 用的是本地文件 md5，只有「R2 上的字节 == 本地文件」时才成立，
     所以顺序是 转码 -> 上传 -> 打号(stamp) -> 版本号 -> push。
+    api 模式会先按 etag（内容 md5）比对，内容一样的直接跳过，只传变化的。
     """
     try:
         import requests
@@ -694,21 +741,68 @@ def upload(dry=False, only=None):
     files = sorted(glob.glob(os.path.join(VID, '*.mp4')))
     if only:
         files = [f for f in files if os.path.splitext(os.path.basename(f))[0] in only]
-    print('上传 %d 个 mp4 -> R2 桶 %s/%s（模式 %s%s）'
-          % (len(files), R2_BUCKET, UPLOAD_PREFIX, mode, '，dry-run' if dry else ''))
 
     session = requests.Session()
-    fn = _upload_worker if mode == 'worker' else _upload_api
-    ok = fail = 0
-    for f in files:
-        key = '%s/%s' % (UPLOAD_PREFIX, os.path.basename(f))
-        if fn(session, env, key, f, dry):
-            ok += 1
-        else:
-            fail += 1
+    todo = []
+    skipped = 0
 
-    print('完成: 成功 %d，失败 %d' % (ok, fail))
+    if mode == 'api' and not force:
+        remote = _api_list(session, env, UPLOAD_PREFIX)
+        if remote is None:
+            return 1
+        for f in files:
+            key = '%s/%s' % (UPLOAD_PREFIX, os.path.basename(f))
+            size, etag = remote.get(key, (0, ''))
+            if size == os.path.getsize(f) and etag and etag == _md5(f):
+                skipped += 1
+                continue
+            todo.append(f)
+    else:
+        todo = list(files)
+
+    total = sum(os.path.getsize(f) for f in todo)
+    print('R2 桶 %s/%s（模式 %s%s）：待传 %d 个 / %.1f MB，内容未变的跳过 %d 个'
+          % (R2_BUCKET, UPLOAD_PREFIX, mode, '，dry-run' if dry else '',
+             len(todo), total / 1048576, skipped))
+
+    if dry:
+        for f in todo:
+            print('  [dry] %-34s %6.2f MB' % ('%s/%s' % (UPLOAD_PREFIX, os.path.basename(f)),
+                                             os.path.getsize(f) / 1048576))
+        return 0
+
+    ok = fail = 0
+    done_bytes = [0]
+    lock = threading.Lock()
+
+    def one(f):
+        key = '%s/%s' % (UPLOAD_PREFIX, os.path.basename(f))
+        try:
+            if mode == 'worker':
+                good = _upload_worker(session, env, key, f, False)
+            else:
+                good = _upload_api(session, env, key, f)
+        except Exception as e:                  # 单个文件出错不能拖垮整批
+            print('  %-34s 异常 %s: %s' % (key, type(e).__name__, str(e)[:100]))
+            good = False
+        with lock:
+            if good:
+                done_bytes[0] += os.path.getsize(f)
+        return good
+
+    with futures.ThreadPoolExecutor(max_workers=max(1, jobs)) as pool:
+        for good in pool.map(one, todo):
+            if good:
+                ok += 1
+            else:
+                fail += 1
+            if (ok + fail) % 5 == 0 or (ok + fail) == len(todo):
+                print('  进度 %d/%d，已传 %.0f/%.0f MB'
+                      % (ok + fail, len(todo), done_bytes[0] / 1048576, total / 1048576))
+
+    print('完成: 成功 %d，失败 %d，跳过 %d' % (ok, fail, skipped))
     if fail:
+        print('重跑一次会只补失败的那些（etag 比对会自动跳过已成功的）')
         return 1
     print('接着跑 python _workflow.py stamp && python _workflow.py push "..."')
     return 0
@@ -794,7 +888,9 @@ def main(argv):
         bump(show='show' in opts)
         return 0
     if cmd == 'upload':
-        return upload(dry='dry-run' in opts, only=set(args[1:]) or None)
+        return upload(dry='dry-run' in opts, only=set(args[1:]) or None,
+                      jobs=int(opts.get('jobs')) if str(opts.get('jobs', '')).isdigit() else 4,
+                      force='force' in opts)
     if cmd == 'release':
         return release(args[1:], name)
     if cmd == 'push':
