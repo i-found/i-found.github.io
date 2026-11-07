@@ -104,6 +104,9 @@
 		</section>
 
 			<script type="text/javascript" src="js/jquery-3.1.1.min.js?v=e071abda"></script>
+			<!-- 拼音搜索：tianmao / tm 也能搜到「天猫」 -->
+			<script type="text/javascript" src="js/pinyin-data.js?v=ccab0a6c"></script>
+			<script type="text/javascript" src="js/pinyin.js?v=54e83b5c"></script>
 			<script type="text/javascript">
 			var $a=$(".buttons a");
 			var $s=$(".buttons span");
@@ -440,7 +443,8 @@
 			}
 			function goRow(r){ if(!r) return; if(r.kind==="card") goCard(r.key,r.field); else if(r.kind==="song") goTrack(r.key,r.track,r.field); else goDetail(r.key,r.track,r.field); }
 			var searchInput=document.getElementById("albumSearchInput"), searchBox=document.getElementById("albumSearchResults");
-			function addMark(el,text,q){ var lo=text.toLowerCase(), ql=q.toLowerCase(), ix=lo.indexOf(ql); if(ix<0){ el.textContent=text; return; } el.appendChild(document.createTextNode(text.slice(0,ix))); var m=document.createElement("mark"); m.textContent=text.slice(ix,ix+q.length); el.appendChild(m); el.appendChild(document.createTextNode(text.slice(ix+q.length))); }
+			/* 高亮：汉字直接命中，或拼音命中（tianmao / tm），都把命中的那截包进 <mark> */
+			function addMark(el,text,q){ var hit=window.PinyinMatch?PinyinMatch.find(text,q):null; if(!hit){ el.textContent=text; return; } el.appendChild(document.createTextNode(text.slice(0,hit.start))); var m=document.createElement("mark"); m.textContent=text.slice(hit.start,hit.end); el.appendChild(m); el.appendChild(document.createTextNode(text.slice(hit.end))); }
 			var currentSearchRows=[], activeSearchIndex=-1;
 			/* 键盘上下键在结果间移动：视觉等同鼠标悬停，Enter 打开当前高亮项 */
 			function setActiveSearch(i){
@@ -457,20 +461,21 @@
 				if(!q){ searchBox.hidden=true; searchBox.innerHTML=""; currentSearchRows=[]; activeSearchIndex=-1; return; }
 				var lower=q.toLowerCase(), rows=[];
 				/* 索引按“位置”逐条列出：同一段文字出现在卡片 / 详情 / 单曲浮层里，就各出一条，互不替代 */
+				/* 匹配统一走 PinyinMatch：汉字按原文，纯字母再试全拼和首字母 */
 				Object.keys(albumData).forEach(function(key){
 					var a=albumData[key], meta=a.singer+" · "+a.tracks.length+" 首 · "+a.date;
 					/* ① 专辑卡片上的字段 */
-					if(a.title.toLowerCase().indexOf(lower)>=0) rows.push({key:key,kind:"card",field:"专辑名",label:a.title,context:meta});
-					if((a.singer+" · "+a.tracks.length+" 首").toLowerCase().indexOf(lower)>=0) rows.push({key:key,kind:"card",field:"歌手 · 曲目数",label:a.singer+" · "+a.tracks.length+" 首",context:"《"+a.title+"》 · "+a.date});
+					if(PinyinMatch.hit(a.title,q)) rows.push({key:key,kind:"card",field:"专辑名",label:a.title,context:meta});
+					if(PinyinMatch.hit(a.singer+" · "+a.tracks.length+" 首",q)) rows.push({key:key,kind:"card",field:"歌手 · 曲目数",label:a.singer+" · "+a.tracks.length+" 首",context:"《"+a.title+"》 · "+a.date});
 					if(a.date.toLowerCase().indexOf(lower)>=0) rows.push({key:key,kind:"card",field:"发行日期",label:a.date,context:"《"+a.title+"》 · "+a.singer+" · "+a.tracks.length+" 首"});
 					/* ② 专辑详情卡片上的字段 */
-					if(a.title.toLowerCase().indexOf(lower)>=0) rows.push({key:key,kind:"detail",field:"专辑名",label:a.title,context:"专辑详情标题 · "+meta});
-					if((a.singer+" · "+a.tracks.length+" 首 · "+a.date).toLowerCase().indexOf(lower)>=0) rows.push({key:key,kind:"detail",field:"歌手 · 日期",label:a.singer+" · "+a.tracks.length+" 首 · "+a.date,context:"《"+a.title+"》详情信息行"});
-					var ii=a.intro.toLowerCase().indexOf(lower);
-					if(ii>=0) rows.push({key:key,kind:"detail",field:"专辑介绍",label:"提到“"+q+"”",context:(ii>20?"…":"")+a.intro.slice(Math.max(0,ii-20),ii+q.length+20)+(ii+q.length+20<a.intro.length?"…":"")});
+					if(PinyinMatch.hit(a.title,q)) rows.push({key:key,kind:"detail",field:"专辑名",label:a.title,context:"专辑详情标题 · "+meta});
+					if(PinyinMatch.hit(a.singer+" · "+a.tracks.length+" 首 · "+a.date,q)) rows.push({key:key,kind:"detail",field:"歌手 · 日期",label:a.singer+" · "+a.tracks.length+" 首 · "+a.date,context:"《"+a.title+"》详情信息行"});
+					var ih=PinyinMatch.find(a.intro,q);
+					if(ih){ var s0=Math.max(0,ih.start-20), e0=Math.min(a.intro.length,ih.end+20); rows.push({key:key,kind:"detail",field:"专辑介绍",label:"提到“"+a.intro.slice(ih.start,ih.end)+"”",context:(s0>0?"…":"")+a.intro.slice(s0,e0)+(e0<a.intro.length?"…":"")}); }
 					/* ③ 曲目行（详情里）与单曲介绍浮层标题（浮层里）——同一首歌两处都算 */
 					a.tracks.forEach(function(t,idx){
-						if(t.toLowerCase().indexOf(lower)<0) return;
+						if(!PinyinMatch.hit(t,q)) return;
 						var nb=[], iv=(a.intros&&a.intros[t])||"";
 						if(idx>0) nb.push("上一首《"+a.tracks[idx-1]+"》");
 						if(idx<a.tracks.length-1) nb.push("下一首《"+a.tracks[idx+1]+"》");
@@ -480,9 +485,10 @@
 					});
 					/* ④ 每首歌的介绍文案 */
 					Object.keys(a.intros||{}).forEach(function(nm){
-						var it=a.intros[nm]||"", j=it.toLowerCase().indexOf(lower), ti=a.tracks.indexOf(nm);
-						if(j<0||ti<0) return;
-						rows.push({key:key,kind:"song",track:ti,field:"歌曲介绍",label:nm,context:(j>20?"…":"")+it.slice(Math.max(0,j-20),j+q.length+20)+(j+q.length+20<it.length?"…":"")});
+						var it=a.intros[nm]||"", ih2=PinyinMatch.find(it,q), ti=a.tracks.indexOf(nm);
+						if(!ih2||ti<0) return;
+						var s1=Math.max(0,ih2.start-20), e1=Math.min(it.length,ih2.end+20);
+						rows.push({key:key,kind:"song",track:ti,field:"歌曲介绍",label:nm,context:(s1>0?"…":"")+it.slice(s1,e1)+(e1<it.length?"…":"")});
 					});
 				});
 				currentSearchRows=rows;

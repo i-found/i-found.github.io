@@ -137,6 +137,9 @@
     }
     </script>
     <script type="text/javascript" src="js/SmoothScroll.js?v=dc3721b7"></script>
+    <!-- 拼音搜索：tianmao / tm 也能搜到「天猫」 -->
+    <script type="text/javascript" src="js/pinyin-data.js?v=ccab0a6c"></script>
+    <script type="text/javascript" src="js/pinyin.js?v=54e83b5c"></script>
     <link rel="stylesheet" href="./dist/meplayer.css?v=af1ac3be">
     <link rel="stylesheet" href="main.css?v=9d556d4a">
     <link rel="stylesheet" href="index.css?v=d83eee60">
@@ -1803,20 +1806,22 @@ li.search { position: relative; }
   var recordSearchResults = document.getElementById('recordSearchResults');
   var currentSearchRows = [], activeSearchIndex = -1;
 
+  /* 高亮：汉字直接命中，或拼音命中（tianmao / tm），都把命中的那截包进 <mark> */
   function addMark(el, text, q) {
-    var lo = (text || '').toLowerCase(), ql = q.toLowerCase(), ix = lo.indexOf(ql);
-    if (ix < 0) { el.textContent = text; return; }
-    el.appendChild(document.createTextNode(text.slice(0, ix)));
+    text = text || '';
+    var hit = window.PinyinMatch ? PinyinMatch.find(text, q) : null;
+    if (!hit) { el.textContent = text; return; }
+    el.appendChild(document.createTextNode(text.slice(0, hit.start)));
     var m = document.createElement('mark');
-    m.textContent = text.slice(ix, ix + q.length);
+    m.textContent = text.slice(hit.start, hit.end);
     el.appendChild(m);
-    el.appendChild(document.createTextNode(text.slice(ix + q.length)));
+    el.appendChild(document.createTextNode(text.slice(hit.end)));
   }
 
   function excerpt(text, q, pad) {
-    var lo = text.toLowerCase(), ix = lo.indexOf(q.toLowerCase());
-    if (ix < 0) return text.slice(0, 60) + (text.length > 60 ? '…' : '');
-    var s = Math.max(0, ix - pad), e = Math.min(text.length, ix + q.length + pad);
+    var hit = window.PinyinMatch ? PinyinMatch.find(text, q) : null;
+    if (!hit) return text.slice(0, 60) + (text.length > 60 ? '…' : '');
+    var s = Math.max(0, hit.start - pad), e = Math.min(text.length, hit.end + pad);
     return (s > 0 ? '…' : '') + text.slice(s, e) + (e < text.length ? '…' : '');
   }
 
@@ -2059,30 +2064,30 @@ li.search { position: relative; }
 
   function renderSearch(q) {
     if (!q) { renderSearchHistory(); return; }
-    var lower = q.toLowerCase(), rows = [];
+    /* 匹配统一走 PinyinMatch：汉字按原文，纯字母再试全拼和首字母 */
+    var rows = [];
     records.forEach(function(r) {
       var dateText = formatTime(r.time || r.id);
       var textSrc = r.text || '';
       var ocrSrc = r.ocrText || '';
       /* 四类各出一条：标题 / 正文 / 图片（图片里识别出的文字）/ 日期 */
-      if (r.title && r.title.toLowerCase().indexOf(lower) >= 0) {
+      if (r.title && PinyinMatch.hit(r.title, q)) {
         rows.push({ id: r.id, field: '标题', label: r.title, context: dateText });
       }
-      if (textSrc && textSrc.toLowerCase().indexOf(lower) >= 0) {
+      if (textSrc && PinyinMatch.hit(textSrc, q)) {
         rows.push({ id: r.id, field: '正文', label: textSrc, context: excerpt(textSrc, q, 20) });
       }
-      if (ocrSrc && ocrSrc.toLowerCase().indexOf(lower) >= 0) {
-        var dateHit = dateText && dateText.toLowerCase().indexOf(lower) >= 0;
+      if (ocrSrc && PinyinMatch.hit(ocrSrc, q)) {
         rows.push({
           id: r.id,
           field: '图片',
           /* 整段 OCR 文字塞进首行会撑爆面板，只截一小段 */
           label: excerpt(ocrSrc, q, 12),
-          context: dateHit ? '' : dateText,
+          context: dateText,
           isImage: true
         });
       }
-      if (dateText && dateText.toLowerCase().indexOf(lower) >= 0) {
+      if (dateText && dateText.toLowerCase().indexOf(q.toLowerCase()) >= 0) {
         rows.push({ id: r.id, field: '日期', label: dateText, context: r.title || (r.text || '').slice(0, 24) });
       }
     });
@@ -2117,22 +2122,36 @@ li.search { position: relative; }
     setActiveSearch(0);
   }
 
-  /* 定位动效：给目标套一圈蓝粉渐变描边，转一圈后淡出（与音乐页一致） */
-  function ring(box) {
+  /* 定位动效：给目标套一圈蓝粉渐变描边，转一圈后淡出（与音乐页一致）
+     anchor 用来说明「光圈该压在谁身上」：<img> 塞不进子元素，
+     所以描边挂在图片容器里、按图片自身的矩形定位，正好贴着图片边框 */
+  function ring(box, anchor) {
     if (!box) return;
     var old = box.querySelector('.locate-ring');
     if (old && old.parentNode) old.parentNode.removeChild(old);
     var sp = document.createElement('span');
     sp.className = 'locate-ring';
+    if (anchor && anchor !== box) {
+      var br = box.getBoundingClientRect(), ar = anchor.getBoundingClientRect();
+      /* 图片还没加载出来（宽高为 0）就退回整块容器 */
+      if (ar.width && ar.height) {
+        var cs = getComputedStyle(box);
+        sp.style.left = (ar.left - br.left - box.clientLeft - parseFloat(cs.paddingLeft || 0)) + 'px';
+        sp.style.top = (ar.top - br.top - box.clientTop - parseFloat(cs.paddingTop || 0)) + 'px';
+        sp.style.width = ar.width + 'px';
+        sp.style.height = ar.height + 'px';
+        sp.style.borderRadius = getComputedStyle(anchor).borderRadius || '6px';
+      }
+    }
     box.appendChild(sp);
     setTimeout(function() { if (sp.parentNode) sp.parentNode.removeChild(sp); }, 1400);
   }
 
-  function flashRecord(el) {
+  function flashRecord(el, anchor) {
     if (!el) return;
     document.querySelectorAll('.search-hit').forEach(function(n) { n.classList.remove('search-hit'); });
     el.classList.add('search-hit');
-    ring(el);
+    ring(el, anchor);
     setTimeout(function() { el.classList.remove('search-hit'); }, 2400);
   }
 
@@ -2145,13 +2164,16 @@ li.search { position: relative; }
     var card = document.getElementById('record-' + id);
     if (!card) return;
     card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    var target = card;
+    var target = card, anchor = null;
     if (field === '标题') target = card.querySelector('.record-title') || card;
-    /* 命中来自图片里的文字时，光圈落在图片上而不是正文 */
-    else if (field === '图片' || isImage) target = card.querySelector('.record-images') || card;
+    /* 命中来自图片里的文字时，光圈只框住图片本身，而不是整块图片容器 */
+    else if (field === '图片' || isImage) {
+      var wrap = card.querySelector('.record-images');
+      if (wrap) { target = wrap; anchor = wrap.querySelector('.record-image'); }
+    }
     else if (field === '正文') target = card.querySelector('.record-text') || card;
     else if (field === '日期') target = card.querySelector('.record-time') || card;
-    flashRecord(target);
+    flashRecord(target, anchor);
   }
 
   if (searchInput) {

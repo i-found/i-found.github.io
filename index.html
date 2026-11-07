@@ -189,7 +189,7 @@
       </a>
 
       <!-- 站点版本号：每次推送 +1，刷新后看这里就能确定是不是最新版本 -->
-      <span class="site-version" id="siteVersion">V1.10.47</span>
+      <span class="site-version" id="siteVersion">V1.10.48</span>
 
       <ul>
         <li><a class="buttom first" href="https://i-found.github.io/">首页</a></li>
@@ -931,6 +931,9 @@
     <script src="main.js?v=b2a400e4"></script>
     <!-- 介绍页卡片的随机壁纸池（只给首帧图 + 全屏视频用） -->
     <script src="js/home-wallpapers.js?v=322c59b7"></script>
+    <!-- 拼音搜索：tianmao / tm 也能搜到「天猫」 -->
+    <script src="js/pinyin-data.js?v=ccab0a6c"></script>
+    <script src="js/pinyin.js?v=54e83b5c"></script>
 
 <script type="text/javascript">
 (function(){
@@ -1426,18 +1429,20 @@ function flash(el){ if(!el) return; document.querySelectorAll(".search-hit").for
 function goCard(key){ resetPlayRing(); document.body.classList.remove("home-detail-open"); detail.hidden=true; var card=homeCards[key]; if(card&&card.el){ scrollBelowNav(card.el); flash(card.el); } }
 function goDetail(key){ openHome(key); setTimeout(function(){ var target=document.getElementById("homeDetailIntro"); if(target){ target.scrollIntoView({behavior:"smooth",block:"center"}); flash(target); } },350); }
 var searchInput=document.getElementById("homeSearchInput"), searchBox=document.getElementById("homeSearchResults");
-function addMark(el,text,q){ var lo=text.toLowerCase(), ql=q.toLowerCase(), ix=lo.indexOf(ql); if(ix<0){ el.textContent=text; return; } el.appendChild(document.createTextNode(text.slice(0,ix))); var m=document.createElement("mark"); m.textContent=text.slice(ix,ix+q.length); el.appendChild(m); el.appendChild(document.createTextNode(text.slice(ix+q.length))); }
+/* 高亮：汉字直接命中，或拼音命中（tianmao / tm），都把命中的那截包进 <mark> */
+function addMark(el,text,q){ var hit=window.PinyinMatch?PinyinMatch.find(text,q):null; if(!hit){ el.textContent=text; return; } el.appendChild(document.createTextNode(text.slice(0,hit.start))); var m=document.createElement("mark"); m.textContent=text.slice(hit.start,hit.end); el.appendChild(m); el.appendChild(document.createTextNode(text.slice(hit.end))); }
 var currentSearchRows=[];
 function renderSearch(q){
 if(!q){ searchBox.hidden=true; searchBox.innerHTML=""; return; }
-var lower=q.toLowerCase(), rows=[];
+/* 匹配统一走 PinyinMatch：汉字按原文，纯字母再试全拼和首字母 */
+var rows=[];
 homeCards.forEach(function(c,key){
 var meta=c.singer+" · "+c.date;
-if(c.title.toLowerCase().indexOf(lower)>=0) rows.push({key:key,kind:"card",field:"歌名",label:c.title,context:meta});
-if(c.singer.toLowerCase().indexOf(lower)>=0) rows.push({key:key,kind:"card",field:"歌手",label:c.singer,context:"《"+c.title+"》 · "+c.date});
+if(PinyinMatch.hit(c.title,q)) rows.push({key:key,kind:"card",field:"歌名",label:c.title,context:meta});
+if(PinyinMatch.hit(c.singer,q)) rows.push({key:key,kind:"card",field:"歌手",label:c.singer,context:"《"+c.title+"》 · "+c.date});
 if(c.date.indexOf(q)>=0) rows.push({key:key,kind:"card",field:"发行日期",label:c.date,context:"《"+c.title+"》 · "+c.singer});
-var ii=c.intro.indexOf(q);
-if(ii>=0) rows.push({key:key,kind:"detail",field:"介绍",label:"提到“"+q+"”",context:(ii>20?"…":"")+c.intro.slice(Math.max(0,ii-20),ii+q.length+20)+(ii+q.length+20<c.intro.length?"…":"")});
+var ih=PinyinMatch.find(c.intro,q);
+if(ih){ var s=Math.max(0,ih.start-20), e=Math.min(c.intro.length,ih.end+20); rows.push({key:key,kind:"detail",field:"介绍",label:"提到“"+c.intro.slice(ih.start,ih.end)+"”",context:(s>0?"…":"")+c.intro.slice(s,e)+(e<c.intro.length?"…":"")}); }
 });
 currentSearchRows=rows;
 searchBox.innerHTML="";
