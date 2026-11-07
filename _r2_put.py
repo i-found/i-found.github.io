@@ -70,7 +70,8 @@ def upload_one(path, key):
             print('    %-34s %5.1f%%  %.2f/%.2f MB' % (key, pct, n / 1048576.0, size / 1048576.0), flush=True)
 
     try:
-        s3.upload_file(path, BUCKET, key, Config=CFG, Callback=cb)
+        s3.upload_file(path, BUCKET, key, Config=CFG, Callback=cb,
+                       ExtraArgs={'ContentType': 'video/mp4'})
     except Exception as e:
         print('  %-34s FAIL %s' % (key, e), flush=True)
         return False
