@@ -6,3 +6,7 @@
 _pb.*
 _push_batches.py
 _transcode_*.log
+
+# 一次性的验证脚本与截图，验证完就删，不进仓库。
+_tmp_*
+_li_*
