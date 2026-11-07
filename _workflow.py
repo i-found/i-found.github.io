@@ -35,15 +35,21 @@ mp4 不进仓库（.gitignore），传到 Cloudflare R2，URL 形如
     https://media.meimei.qzz.io/vid/corgi-01.mp4?v=<本地文件 md5 前 8 位>
 这个 ?v= 以前靠手改，现在由第 3 步按本地文件哈希自动维护；本地没有对应文件时原样保留。
 
+上传走 rclone（`python _workflow.py upload`），需要先 `rclone config` 配好 R2 的 S3 remote，
+再把文件顶部的 UPLOAD_REMOTE / UPLOAD_BUCKET / UPLOAD_PREFIX 改成自己的名字。
+?v= 取的是本地文件哈希，只有「R2 上的字节 == 本地文件」时缓存击穿才准确，
+所以顺序固定为：转码 -> 上传 -> 打号 -> 版本号 -> push。
+
 ============================ 用 法 ============================
     python _workflow.py status             # 看当前画质策略 / 版本号 / 待提交文件
     python _workflow.py media              # 1) 转码全部视频
     python _workflow.py media 01 07        #    只转指定的 corgi 编号
     python _workflow.py posters            # 2) 重截全部封面
-    python _workflow.py stamp              # 3) 打版本号（本地 + R2）
-    python _workflow.py bump               # 4) 站点版本号 +1
-    python _workflow.py release            # 1~4 按顺序跑完，不提交
-    python _workflow.py push "提交说明"     # 5) 提交并推送（代理挂了自动改直连重试）
+    python _workflow.py upload             # 3) 把 vid/*.mp4 传上 R2（rclone，--dry-run 可预演）
+    python _workflow.py stamp              # 4) 打版本号（本地 + R2）
+    python _workflow.py bump               # 5) 站点版本号 +1
+    python _workflow.py release            # 1、2、4、5 按顺序跑完，不提交
+    python _workflow.py push "提交说明"     # 6) 提交并推送（代理挂了自动改直连重试）
 
 断点续跑：转码结果记录在 _workflow_state.json（不进仓库）。只有「源没动 + 画质参数没变」
 才会跳过，所以改了 PROFILES 之后重新跑会老老实实全部重转。
@@ -53,6 +59,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -115,7 +122,14 @@ ABS_REF = re.compile(r'%s/([^"\'?\s)]+?\.(?:%s))(?:\?v=[0-9a-f]+)?'
 # 需要扫 ?v= 的文件：所有 html + 所有 js
 STAMP_FILES = ('*.html', 'Albums/*/index.html', 'js/*.js')
 
-# ====================== 5. 素材清单 ======================
+# ====================== 5. R2 上传 ======================
+# rclone 的 remote 名（`rclone config` 里自己起的）与桶名，按本机配置填。
+# 上传前会先校验 remote / 桶是否存在，名字不对会直接告诉你现有的是哪些。
+UPLOAD_REMOTE = 'r2'      # 例如 rclone config 里叫 r2 / r2media / cloudflare
+UPLOAD_BUCKET = 'media'   # R2 桶名
+UPLOAD_PREFIX = 'vid'     # 桶内前缀：本地 vid/x.mp4 -> <桶>/vid/x.mp4
+
+# ====================== 6. 素材清单 ======================
 # 壁纸视频：_corgi_map.txt 每行「编号 \t 源文件名」
 CORGI_MAP = os.path.join(ROOT, '_corgi_map.txt')
 
@@ -574,7 +588,64 @@ def bump(show=False):
 
 
 # ======================================================================
-# 5) 发布
+# 5) 上传 R2
+# ======================================================================
+def _rclone():
+    exe = shutil.which('rclone')
+    if not exe:
+        print('没找到 rclone。装好后 `rclone config` 选 Amazon S3 -> Cloudflare R2，'
+              '填 Access Key / Secret / 账号 ID，再把本文件顶部的 '
+              'UPLOAD_REMOTE / UPLOAD_BUCKET 改成你配的名字。')
+    return exe
+
+
+def upload(force=False, dry=False):
+    """5) 把 vid/*.mp4 传到 Cloudflare R2。
+
+    ?v= 用的是本地文件 md5，只有「传上去的字节 == 本地文件」时才成立，
+    所以顺序是 转码 -> 上传 -> 打号(stamp) -> 版本号 -> push。
+    """
+    exe = _rclone()
+    if not exe:
+        return 1
+
+    remotes = [x.strip().rstrip(':') for x in
+               (run([exe, 'listremotes'], check=False).stdout or '').splitlines() if x.strip()]
+    if UPLOAD_REMOTE not in remotes:
+        print('rclone 里没有名为 %r 的 remote，现有: %s'
+              % (UPLOAD_REMOTE, ', '.join(remotes) or '（空）'))
+        return 1
+
+    buckets = [x.strip().rstrip('/') for x in
+               (run([exe, 'lsf', UPLOAD_REMOTE + ':', '--dirs-only', '--max-depth', '1'],
+                    check=False).stdout or '').splitlines() if x.strip()]
+    if UPLOAD_BUCKET not in buckets:
+        print('桶 %r 不在 %s: 下面，现有: %s'
+              % (UPLOAD_BUCKET, UPLOAD_REMOTE, ', '.join(buckets) or '（空）'))
+        return 1
+
+    files = sorted(glob.glob(os.path.join(VID, '*.mp4')))
+    dst = '%s:%s/%s' % (UPLOAD_REMOTE, UPLOAD_BUCKET, UPLOAD_PREFIX)
+    print('上传 %d 个 mp4 -> %s%s' % (len(files), dst, '（dry-run）' if dry else ''))
+
+    cmd = [exe, 'copy', VID, dst, '--include', '*.mp4',
+           '--transfers', '4', '--checkers', '8',
+           '--stats', '5s', '--stats-one-line']
+    if force:
+        cmd += ['--ignore-times']     # 文件名/体积没变也要重传（比如重编码后体积恰好相同）
+    if dry:
+        cmd += ['--dry-run', '-v']
+    # 不捕获输出：rclone 的进度条直接打在终端上
+    rc = subprocess.run(cmd).returncode
+    if rc != 0:
+        print('rclone 返回 %d，检查网络/凭据后重试' % rc)
+        return 1
+    print('上传完成。接着跑 python _workflow.py stamp && python _workflow.py bump && python _workflow.py push "..."')
+    return 0
+
+
+# ======================================================================
+# 6) 发布
 # ======================================================================
 def git(*args, check=False):
     return run(['git'] + list(args), check=check)
@@ -619,11 +690,12 @@ def push(msg):
 
 
 def release(only=None, name=None):
-    """1~4 一条龙，不提交。"""
+    """转码 + 封面 + 打号 + 版本号 一条龙，不提交、不上传。"""
     media(only, name)
     posters()
     stamp()
     bump()
+    print('本地准备完毕。剩下两步: python _workflow.py upload  →  python _workflow.py push "提交说明"')
     return 0
 
 
@@ -651,6 +723,8 @@ def main(argv):
     if cmd == 'bump':
         bump(show='show' in opts)
         return 0
+    if cmd == 'upload':
+        return upload(force='force' in opts, dry='dry-run' in opts)
     if cmd == 'release':
         return release(args[1:], name)
     if cmd == 'push':
