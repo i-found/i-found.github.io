@@ -448,6 +448,17 @@
 			/* 高亮：汉字直接命中，或拼音命中（tianmao / tm），都把命中的那截包进 <mark> */
 			function addMark(el,text,q){ var hit=window.PinyinMatch?PinyinMatch.find(text,q):null; if(!hit){ el.textContent=text; return; } el.appendChild(document.createTextNode(text.slice(0,hit.start))); var m=document.createElement("mark"); m.textContent=text.slice(hit.start,hit.end); el.appendChild(m); el.appendChild(document.createTextNode(text.slice(hit.end))); }
 			var currentSearchRows=[], activeSearchIndex=-1, searchHistoryTimer=null;
+			/* 收起搜索框：整个输入框淡出，内容一并清掉，下次点放大镜是空白的 */
+			function closeSearch(){
+				var nv=document.getElementById("navSearch");
+				if(nv) nv.classList.remove("open");
+				searchBox.hidden=true;
+				searchBox.innerHTML="";
+				searchInput.value="";
+				currentSearchRows=[];
+				activeSearchIndex=-1;
+				searchInput.blur();
+			}
 			/* 键盘上下键在结果间移动：视觉等同鼠标悬停，Enter 打开当前高亮项 */
 			function setActiveSearch(i){
 				var items=searchBox.querySelectorAll(".sr-item");
@@ -472,7 +483,7 @@
 				if(!r) return;
 				/* 历史词回车：回填并直接搜 */
 				if(r.isHistory){ searchInput.value=r.word; SearchHistory.save(r.word); renderSearch(r.word); return; }
-				searchBox.hidden=true; goRow(r);
+				closeSearch(); goRow(r);
 			}
 			function renderSearch(q){
 				if(!q){ renderSearchHistory(); return; }
@@ -539,9 +550,10 @@
 			/* 空着聚焦也要渲染一次：这时面板显示的是历史 */
 			searchInput.addEventListener("focus",function(){ renderSearch(searchInput.value.trim()); });
 			var navSearch=document.getElementById("navSearch"), navToggle=document.getElementById("navSearchToggle");
-			navToggle.addEventListener("click",function(ev){ ev.stopPropagation(); if(navSearch.classList.contains("open")){ if(!searchInput.value.trim()){ navSearch.classList.remove("open"); searchBox.hidden=true; } else { searchInput.focus(); } } else { navSearch.classList.add("open"); searchInput.focus(); renderSearch(searchInput.value.trim()); } });
+			/* 放大镜：开着就收起来；再次点开一律是空的输入框 + 历史列表 */
+			navToggle.addEventListener("click",function(ev){ ev.stopPropagation(); if(navSearch.classList.contains("open")){ closeSearch(); } else { navSearch.classList.add("open"); searchInput.value=""; searchInput.focus(); renderSearch(""); } });
 			searchInput.addEventListener("keydown",function(ev){
-				if(ev.key==="Escape"){ searchBox.hidden=true; searchInput.blur(); if(!searchInput.value.trim()) navSearch.classList.remove("open"); return; }
+				if(ev.key==="Escape"){ closeSearch(); return; }
 				if(ev.key==="ArrowDown"||ev.key==="ArrowUp"){
 					ev.preventDefault();
 					/* 空输入时也允许上下键在历史里走 */
@@ -562,7 +574,8 @@
 					openRow(currentSearchRows[activeSearchIndex]||currentSearchRows[0]);
 				}
 			});
-			document.addEventListener("click",function(ev){ if(!ev.target.closest(".nav-search")){ searchBox.hidden=true; if(!searchInput.value.trim()) navSearch.classList.remove("open"); } });
+			/* 点搜索框外面任何地方：整个搜索框收起并清空，不用先手动清内容 */
+			document.addEventListener("click",function(ev){ if(!ev.target.closest(".nav-search")) closeSearch(); });
 			document.querySelectorAll(".album-card").forEach(function(card){
 				card.addEventListener("click",function(ev){
 					if(ev.target.closest("a")) return; // 点“进入专辑”直接跳转，不展开

@@ -1382,12 +1382,8 @@ li.search { position: relative; }
   // 打开弹窗
   function openModal(recordId) {
     // 关闭搜索弹窗并清空搜索词，避免保存后记录被过滤
-    var searchPopup = document.getElementById('searchPopup');
-    var searchIconBtn = document.getElementById('searchIconBtn');
-    var searchInput = document.getElementById('searchBar');
-    if (searchPopup) searchPopup.classList.remove('open');
-    if (searchIconBtn) searchIconBtn.classList.remove('active');
-    if (searchInput) searchInput.value = '';
+    /* 关闭搜索弹窗并清空搜索词，避免保存后记录被过滤 */
+    closeSearchPopup();
 
     editingRecordId = recordId || null;
     var now = Date.now();
@@ -1793,29 +1789,37 @@ li.search { position: relative; }
   var searchPopup = document.getElementById('searchPopup');
   var searchIconBtn = document.getElementById('searchIconBtn');
   var searchInput = document.getElementById('searchBar');
+
+  /* 收起搜索框：整个弹出框收回去，内容一并清掉，下次点放大镜是空白的 */
+  function closeSearchPopup() {
+    if (searchPopup) searchPopup.classList.remove('open');
+    if (searchIconBtn) searchIconBtn.classList.remove('active');
+    hideSearchResults();
+    if (searchInput) { searchInput.value = ''; searchInput.blur(); }
+  }
+
   if (searchIconBtn) {
     searchIconBtn.addEventListener('click', function(e) {
       e.stopPropagation();
       var isOpen = searchPopup.classList.contains('open');
       if (isOpen) {
-        searchPopup.classList.remove('open');
-        searchIconBtn.classList.remove('active');
-        hideSearchResults();
+        closeSearchPopup();
       } else {
         searchPopup.classList.add('open');
         searchIconBtn.classList.add('active');
+        /* 每次打开都是空的输入框 + 历史列表 */
+        searchInput.value = '';
         searchInput.focus();
+        renderSearch('');
       }
     });
   }
-  // 点击外部关闭
+  // 点搜索框外面任何地方：整个搜索框收起并清空，不用先手动清内容
   document.addEventListener('click', function(e) {
-    if (searchPopup && searchIconBtn && searchPopup.classList.contains('open') &&
-        !searchPopup.contains(e.target) &&
-        !searchIconBtn.contains(e.target)) {
-      searchPopup.classList.remove('open');
-      searchIconBtn.classList.remove('active');
-      hideSearchResults();
+    if (!searchPopup || !searchIconBtn) return;
+    if (!searchPopup.classList.contains('open')) return;
+    if (!searchPopup.contains(e.target) && !searchIconBtn.contains(e.target)) {
+      closeSearchPopup();
     }
   });
   // ===== 搜索：与主页/音乐页一致（分类结果 + 上下键 + 光圈） =====
@@ -2118,10 +2122,7 @@ li.search { position: relative; }
   }
 
   function goRecordField(id, field, isImage) {
-    hideSearchResults();
-    searchPopup.classList.remove('open');
-    searchIconBtn.classList.remove('active');
-    searchInput.value = '';
+    closeSearchPopup();
     render();
     var card = document.getElementById('record-' + id);
     if (!card) return;
@@ -2150,10 +2151,7 @@ li.search { position: relative; }
     searchInput.addEventListener('focus', function() { renderSearch(searchInput.value.trim()); });
     searchInput.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') {
-        hideSearchResults();
-        searchPopup.classList.remove('open');
-        searchIconBtn.classList.remove('active');
-        searchInput.value = '';
+        closeSearchPopup();
         return;
       }
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
