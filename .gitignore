@@ -7,6 +7,13 @@ _pb.*
 _push_batches.py
 _transcode_*.log
 
+# _workflow.py 的转码断点续跑记录（记录每条成片对应的源文件 mtime 与画质参数指纹）。
+# 是本机状态，不进仓库；删掉它只会让下次重新转码。
+_workflow_state.json
+
+# Python 字节码缓存
+__pycache__/
+
 # 一次性的验证脚本与截图，验证完就删，不进仓库。
 _tmp_*
 _li_*
