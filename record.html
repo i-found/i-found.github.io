@@ -1696,7 +1696,10 @@ li.search { position: relative; }
             record.text = nextText;
             syncRecordImages(record, editingImages);   // 图片：已上传的沿用 URL，新图存 base64
             /* 图片换了，旧的识别结果作废，保存后重新识别 */
-            if (!sameImageList(imgsBefore, displayImages(record))) record.ocrText = '';
+            if (!sameImageList(imgsBefore, displayImages(record))) {
+              record.ocrText = '';
+              delete record.ocrAt;
+            }
             record.updatedTime = now;
             savedRecord = record;
           }
@@ -1964,22 +1967,26 @@ li.search { position: relative; }
     });
   }
 
-  /* 识别一条记录的所有图片，结果写进 record.ocrText（只存本地，云端不认这个字段） */
+  /* 识别一条记录的所有图片，结果写进 record.ocrText（只存本地，云端不认这个字段）
+     ocrAt 记「跑过了」的时刻：照片里没有文字也算跑过，否则这条永远被当成没识别，
+     左下角按钮就永远挂着。只有接口真出错（网络、额度、token）才不落这个标记。 */
   function ocrRecordImages(record) {
     var imgs = displayImages(record);
     if (!imgs.length) return Promise.resolve('');
+    var allOk = true;
     return getOcrToken().then(function(token) {
       var chain = Promise.resolve([]);
       imgs.forEach(function(src) {
         chain = chain.then(function(acc) {
           return ocrImageText(src, token).then(function(t) { acc.push(t); })
-            .catch(function() { acc.push(''); }).then(function() { return acc; });
+            .catch(function() { allOk = false; acc.push(''); }).then(function() { return acc; });
         });
       });
       return chain;
     }).then(function(list) {
       var txt = list.filter(function(x) { return x; }).join('\n').trim();
       if (txt) record.ocrText = txt;
+      if (allOk) record.ocrAt = Date.now();
       return txt;
     });
   }
@@ -1988,15 +1995,18 @@ li.search { position: relative; }
   function ensureOcr(record) {
     if (!record) return Promise.resolve('');
     if (record.ocrText) return Promise.resolve(record.ocrText);
+    if (record.ocrAt) return Promise.resolve('');   /* 识别过了，只是图里没文字 */
     return ocrRecordImages(record).then(function(t) {
-      if (t) saveToStorage();
+      if (t || record.ocrAt) saveToStorage();
       return t;
     }).catch(function() { return ''; });
   }
 
-  /* 有图但还没识别过的记录（一般只有历史数据或上次失败的，新记录保存时已自动识别） */
+  /* 有图、且从没成功跑过识别的记录（历史数据，或上次 token 过期 / 断网失败的） */
   function pendingOcrRecords(limit) {
-    var list = records.filter(function(r) { return !r.ocrText && displayImages(r).length; });
+    var list = records.filter(function(r) {
+      return !r.ocrText && !r.ocrAt && displayImages(r).length;
+    });
     return limit ? list.slice(0, limit) : list;
   }
 
@@ -2007,13 +2017,12 @@ li.search { position: relative; }
     btn.parentNode.classList.toggle('is-hidden', !pendingOcrRecords().length);
   }
 
-  /* 打开页面后把漏识别的静默补一次（一次会话只跑一趟，最多 5 条，不打扰） */
+  /* 打开页面后把漏识别的静默补一次（一次会话跑一趟，最多 5 条，不打扰） */
   function autoBackfillOcr() {
     if (ocrRunning) return;
     try { if (sessionStorage.getItem('suihe_ocr_backfill')) return; } catch (e) {}
     var todo = pendingOcrRecords(5);
     if (!todo.length) { updateOcrBtn(); return; }
-    try { sessionStorage.setItem('suihe_ocr_backfill', '1'); } catch (e) {}
     ocrRunning = true;
     var chain = Promise.resolve();
     todo.forEach(function(r) {
@@ -2021,15 +2030,19 @@ li.search { position: relative; }
     });
     chain.then(function() {
       ocrRunning = false;
+      /* 全补干净了才记「这次会话跑过」；失败了留着标记，下次刷新还能再试 */
+      if (!pendingOcrRecords().length) {
+        try { sessionStorage.setItem('suihe_ocr_backfill', '1'); } catch (e) {}
+      }
       updateOcrBtn();
       render();
-    }).catch(function() { ocrRunning = false; });
+    }).catch(function() { ocrRunning = false; updateOcrBtn(); });
   }
 
   /* 批量识别：只跑「有图片但还没识别过」的记录 */
   function ocrAllRecords() {
     if (ocrRunning) return;
-    var todo = records.filter(function(r) { return !r.ocrText && displayImages(r).length; });
+    var todo = pendingOcrRecords();
     if (!todo.length) {
       showSyncStatus('所有图片都已识别过 ✓', 'success');
       setTimeout(function() { showSyncStatus('', ''); }, 2500);
