@@ -1823,7 +1823,7 @@ li.search { position: relative; }
     }).then(function(d) {
       if (!d || !d.token) throw new Error(OCR_TOKEN_FILE + ' 里没有 token');
       var exp = d.expires_at ? d.expires_at * 1000 : Date.now() + 2592000000;
-      if (exp < Date.now()) throw new Error('识别授权已过期，请重新生成 ' + OCR_TOKEN_FILE);
+      if (exp < Date.now()) throw new Error('识别授权已过期，自动刷新任务今天会补上，稍后再点一次');
       try { localStorage.setItem(OCR_TOKEN_CACHE, JSON.stringify({ token: d.token, exp: exp })); } catch (e) {}
       return d.token;
     });
@@ -1847,7 +1847,7 @@ li.search { position: relative; }
     });
   }
 
-  function ocrImageText(src, token) {
+  function ocrImageText(src, token, retried) {
     return shrinkDataUrl(src).then(function(useSrc) {
       var body;
       if (/^data:/i.test(useSrc)) {
@@ -1865,6 +1865,16 @@ li.search { position: relative; }
         body: body
       });
     }).then(function(res) { return res.json(); }).then(function(d) {
+      /* token 失效（110/111）：丢掉本地缓存、重新读一次文件再试 */
+      if ((d.error_code === 110 || d.error_code === 111) && !retried) {
+        try { localStorage.removeItem(OCR_TOKEN_CACHE); } catch (e) {}
+        return getOcrToken().then(function(t) { return ocrImageText(src, t, true); });
+      }
+      /* 限流（18 = QPS 超限、130 = 并发超限）：歇一秒重试一次 */
+      if ((d.error_code === 18 || d.error_code === 130) && !retried) {
+        return new Promise(function(go) { setTimeout(go, 1200); })
+          .then(function() { return ocrImageText(src, token, true); });
+      }
       if (d.error_code) throw new Error(d.error_msg || ('OCR 错误码 ' + d.error_code));
       return (d.words_result || []).map(function(w) { return w.words; }).join('\n').trim();
     });
