@@ -1,8 +1,22 @@
-/* 搜索历史：首页 / 音乐页 / 记录页共用一份（localStorage 里同一个 key），
-   最多 10 条、最新在前、重复的提前。面板渲染也放在这里，
+/* 搜索历史：每个页面各存一份，互不串门。
+     在首页搜的词只留在首页的历史里，音乐页、记录页看不到；
+     隔离靠 key 的命名空间实现（suihe_search_history:index / :music / :record），
+     命名空间取自当前页面的文件名，不需要各页手动声明。
+   每条最多 10 条、最新在前、重复的提前；面板渲染也放在这里，
    免得三个页面各写一套、删除按钮和清空按钮的行为对不上。 */
 (function() {
-  var KEY = 'suihe_search_history', MAX = 10;
+  /* index.html / music.html / record.html → index / music / record */
+  function detectNs() {
+    var file = (location.pathname.split('/').pop() || '').toLowerCase();
+    return file.replace(/\.html?$/, '') || 'index';
+  }
+
+  var NS = detectNs();
+  var KEY = 'suihe_search_history:' + NS, MAX = 10;
+
+  /* 老版本三页共用一个 key（suihe_search_history），那份数据分不清是哪页搜的，
+     抄给任何一页都会让三页看起来又「串」了，直接丢掉，各页从零开始记。 */
+  try { localStorage.removeItem('suihe_search_history'); } catch (e) {}
 
   function get() {
     try {
@@ -128,8 +142,9 @@
     if (box) box.dataset.srMode = '';
   }
 
-  /* storage 事件只在「别的标签页」改动时触发：那边刚搜的词、刚删的词，
-     这边开着的历史面板立刻跟上，不用手动刷新 */
+  /* storage 事件只在「别的标签页」改动时触发：同一页面的另一个标签刚搜的词、
+     刚删的词，这边开着的历史面板立刻跟上，不用手动刷新。
+     key 里带了页面命名空间，所以别的页面怎么改都不会惊动这里。 */
   window.addEventListener('storage', function(e) {
     if (e.key !== KEY) return;
     for (var i = panels.length - 1; i >= 0; i--) {
@@ -142,6 +157,7 @@
   });
 
   window.SearchHistory = {
+    ns: NS,
     key: KEY,
     get: get,
     save: save,
