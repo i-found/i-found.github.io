@@ -58,6 +58,7 @@ Cloudflare REST API 写桶。和记录页上传记录是同一个思路：本地
 import concurrent.futures as futures
 import glob
 import hashlib
+import hmac
 import json
 import os
 import re
@@ -67,6 +68,7 @@ import tempfile
 import threading
 import time
 import urllib.parse
+from datetime import datetime, timezone
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 VID = os.path.join(ROOT, 'vid')
@@ -128,21 +130,35 @@ STAMP_FILES = ('*.html', 'Albums/*/index.html', 'js/*.js')
 # ====================== 5. R2 上传 ======================
 # 全部走 HTTP，不需要装任何东西（和记录页上传记录是同一个思路：只发请求，不装客户端）。
 #
-# 两种模式，按本机有哪个凭据自动选：
+# 三种模式，按本机有哪个凭据自动选（UPLOAD_MODE 写死则强制）：
 #   'worker' —— 站点 Worker 已经有 R2 绑定，给它加一条上传路由即可，凭据全在服务端，
 #               本地只放一个 X-Records-Key（和记录页 localStorage 里那个一样）。
-#   'api'    —— 直接调 Cloudflare REST API 写 R2，本地放 API Token（R2 写权限）。
+#   's3'     —— 走 R2 的 S3 兼容接口 + SigV4 分片上传（8MB 一块）。这是「家宽上行不稳、
+#               单次请求超过 ~20MB 就写超时」场景下的正解：每块几秒钟，永不超时。
+#               本地放 R2 S3 的 Access Key ID + Secret（R2 面板 -> Manage R2 API Tokens）。
+#   'api'    —— 直接调 Cloudflare REST API 写 R2（整块 PUT），本地放 API Token（R2 写权限）。
+#               小文件没问题，但大文件受上面的单请求限制，容易失败，已基本被 s3 取代。
 #
 # 凭据不要写进仓库：放环境变量，或放 _r2_secret.py（已在 .gitignore 里）。
-UPLOAD_MODE = 'auto'          # auto | worker | api
+UPLOAD_MODE = 'auto'          # auto | worker | s3 | api
 UPLOAD_WORKER_URL = 'https://meimei.qzz.io/api/upload'
 UPLOAD_PREFIX = 'vid'         # 桶内前缀：本地 vid/x.mp4 -> <桶>/vid/x.mp4
 R2_BUCKET = 'media'           # R2 桶名
+# 上传走哪条网络：'' 直连 / 'system' 跟随 Windows 系统代理 / 直接写 'http://127.0.0.1:端口'
+# 实测：直连上传到 Cloudflare 会在 20 秒左右写超时（链路上游卡死），
+# 走代理稳定在 1.5 MB/s 左右，所以默认跟随系统代理。
+UPLOAD_PROXY = 'system'
 
 # 环境变量名（_r2_secret.py 里同名变量也认）
 ENV_WORKER_KEY = 'SUIHE_RECORDS_KEY'   # 记录页用的那个 key
 ENV_ACCOUNT_ID = 'R2_ACCOUNT_ID'
 ENV_API_TOKEN = 'R2_API_TOKEN'
+ENV_S3_KEY = 'R2_S3_ACCESS_KEY_ID'     # R2 面板 -> Manage R2 API Tokens 生成的
+ENV_S3_SECRET = 'R2_S3_SECRET_ACCESS_KEY'
+
+S3_REGION = 'auto'            # R2 的 S3 端点 region 固定 auto
+S3_SERVICE = 's3'
+S3_CHUNK = 8 * 1024 * 1024    # 分片大小：8MB，每块几秒钟，稳稳避开单请求超时
 
 # ====================== 6. 素材清单 ======================
 # 壁纸视频：_corgi_map.txt 每行「编号 \t 源文件名」
@@ -622,10 +638,13 @@ def _secrets():
 
 
 def _pick_mode(env):
-    if UPLOAD_MODE in ('worker', 'api'):
+    if UPLOAD_MODE in ('worker', 's3', 'api'):
         return UPLOAD_MODE
     if env.get(ENV_WORKER_KEY):
         return 'worker'
+    # s3 优先于 api：分片上传能绕开家宽单请求 ~20MB 超时的坑
+    if env.get(ENV_S3_KEY) and env.get(ENV_S3_SECRET) and env.get(ENV_ACCOUNT_ID):
+        return 's3'
     if env.get(ENV_API_TOKEN) and env.get(ENV_ACCOUNT_ID):
         return 'api'
     return ''
@@ -693,12 +712,12 @@ def _upload_api(session, env, key, path):
     with open(path, 'rb') as fh:
         body = fh.read()
     last = ''
-    for attempt in range(3):
+    for attempt in range(5):
         try:
             r = session.put(url,
                             headers={'Authorization': 'Bearer ' + env[ENV_API_TOKEN],
                                      'Content-Type': 'video/mp4'},
-                            data=body, timeout=(15, 900))
+                            data=body, timeout=(20, 900))
             if r.status_code in (200, 201):
                 print('  %-34s OK   %6.2f MB%s'
                       % (key, len(body) / 1048576, '' if attempt == 0 else '（重试%d次）' % attempt))
@@ -708,12 +727,129 @@ def _upload_api(session, env, key, path):
                 break
         except Exception as e:                  # 连接被重置、写超时等
             last = '%s: %s' % (type(e).__name__, str(e)[:100])
-        time.sleep(3 * (attempt + 1))
+        time.sleep(5 * (2 ** attempt))          # 5/10/20/40 秒退避，家宽上行容易抖
     print('  %-34s 失败 %s' % (key, last))
     return False
 
 
-def upload(dry=False, only=None, jobs=4, force=False):
+# ---------------- S3 分片上传（SigV4，纯 Python，无需任何客户端） ----------------
+def _aws_sign(key, msg):
+    return hmac.new(key, msg.encode('utf-8'), hashlib.sha256).digest()
+
+
+def _aws_sigkey(secret, datestamp, region, service):
+    k = _aws_sign(('AWS4' + secret).encode('utf-8'), datestamp)
+    k = _aws_sign(k, region)
+    k = _aws_sign(k, service)
+    return _aws_sign(k, 'aws4_request')
+
+
+def _aws_enc(s):
+    return urllib.parse.quote(s, safe='-_.~')
+
+
+def _s3_request(session, env, method, path, query, body, headers=None):
+    """构造并发送一个 SigV4 签名的 S3 请求。
+
+    path  形如 /<bucket>/<key>；query 是 {name: value}，value 为 None 表示裸键（如 uploads）。
+    body  bytes 或 b''（HEAD/空体用 b''）。
+    """
+    host = '%s.r2.cloudflarestorage.com' % env[ENV_ACCOUNT_ID]
+    payload = body if body is not None else b''
+    payload_hash = hashlib.sha256(payload).hexdigest()
+
+    qitems = []
+    for k in sorted(query):
+        v = query[k]
+        qitems.append(_aws_enc(k) if v is None else '%s=%s' % (_aws_enc(k), _aws_enc(str(v))))
+    canonical_query = '&'.join(qitems)
+
+    hdrs = {'host': host, 'x-amz-content-sha256': payload_hash,
+            'x-amz-date': datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}
+    for k, v in (headers or {}).items():
+        hdrs[k.lower()] = v
+    signed_names = ';'.join(sorted(hdrs))
+    canonical_headers = ''.join('%s:%s\n' % (k, hdrs[k].strip()) for k in sorted(hdrs))
+
+    now = datetime.now(timezone.utc)
+    datestamp = now.strftime('%Y%m%d')
+    scope = '%s/%s/%s/aws4_request' % (datestamp, S3_REGION, S3_SERVICE)
+    canonical_request = '\n'.join([method, _aws_enc(path), canonical_query,
+                                   canonical_headers, signed_names, payload_hash])
+    string_to_sign = '\n'.join(['AWS4-HMAC-SHA256', hdrs['x-amz-date'], scope,
+                                hashlib.sha256(canonical_request.encode('utf-8')).hexdigest()])
+    sig = hmac.new(_aws_sigkey(env[ENV_S3_SECRET], datestamp, S3_REGION, S3_SERVICE),
+                   string_to_sign.encode('utf-8'), hashlib.sha256).hexdigest()
+    hdrs['authorization'] = ('AWS4-HMAC-SHA256 Credential=%s/%s, SignedHeaders=%s, Signature=%s'
+                             % (env[ENV_S3_KEY], scope, signed_names, sig))
+
+    url = 'https://%s%s' % (host, path)
+    if canonical_query:
+        url += '?' + canonical_query
+    return session.request(method, url, headers=hdrs, data=body, timeout=(20, 300))
+
+
+def _s3_head(session, env, key):
+    """HEAD 对象，返回 (size, etag)；不存在返回 (None, None)。"""
+    r = _s3_request(session, env, 'HEAD', '/%s/%s' % (R2_BUCKET, key), {}, b'')
+    if r.status_code in (200, 201):
+        return int(r.headers.get('Content-Length') or 0), (r.headers.get('ETag') or '').strip('"')
+    return None, None
+
+
+def _s3_multipart(session, env, key, path):
+    """S3 分片上传一个文件：8MB 一块，每块独立重试，彻底绕开单请求超时。"""
+    objpath = '/%s/%s' % (R2_BUCKET, key)
+    size = os.path.getsize(path)
+
+    # 1) 初始化
+    r = _s3_request(session, env, 'POST', objpath, {'uploads': None}, b'',
+                    {'content-type': 'video/mp4'})
+    if r.status_code not in (200, 201):
+        print('  %-34s 初始化分片失败 %s %s' % (key, r.status_code, (r.text or '')[:140]))
+        return False
+    m = re.search(r'<UploadId>([^<]+)</UploadId>', r.text)
+    if not m:
+        print('  %-34s 初始化分片失败：响应里没有 UploadId' % key)
+        return False
+    upload_id = m.group(1)
+
+    with open(path, 'rb') as fh:
+        data = fh.read()
+    n = max(1, (len(data) + S3_CHUNK - 1) // S3_CHUNK)
+    parts = []
+    for i in range(n):
+        chunk = data[i * S3_CHUNK:(i + 1) * S3_CHUNK]
+        pn = i + 1
+        etag = None
+        for attempt in range(6):
+            try:
+                rr = _s3_request(session, env, 'PUT', objpath,
+                                 {'partNumber': pn, 'uploadId': upload_id}, chunk)
+                if rr.status_code in (200, 201):
+                    etag = rr.headers.get('ETag', '')
+                    break
+            except Exception:
+                pass
+            time.sleep(2 * (attempt + 1))
+        if etag is None:
+            print('  %-34s 分片 %d/%d 失败，放弃' % (key, pn, n))
+            return False
+        parts.append((pn, etag))
+
+    xml = '<CompleteMultipartUpload>' + ''.join(
+        '<Part><PartNumber>%d</PartNumber><ETag>%s</ETag></Part>' % (pn, et)
+        for pn, et in parts) + '</CompleteMultipartUpload>'
+    r = _s3_request(session, env, 'POST', objpath, {'uploadId': upload_id},
+                    xml.encode('utf-8'), {'content-type': 'application/xml'})
+    if r.status_code not in (200, 201):
+        print('  %-34s 合并分片失败 %s %s' % (key, r.status_code, (r.text or '')[:160]))
+        return False
+    print('  %-34s OK   %6.2f MB（分片 %d）' % (key, size / 1048576, n))
+    return True
+
+
+def upload(dry=False, only=None, jobs=4, force=False, proxy=None):
     """5) 把 vid/*.mp4 传到 Cloudflare R2（纯 HTTP，不装客户端）。
 
     ?v= 用的是本地文件 md5，只有「R2 上的字节 == 本地文件」时才成立，
@@ -729,13 +865,17 @@ def upload(dry=False, only=None, jobs=4, force=False):
     env = _secrets()
     mode = _pick_mode(env)
     if not mode:
-        print('没有上传凭据。二选一：\n'
+        print('没有上传凭据。三选一：\n'
               '  A. 站点 Worker 加一条上传路由（它已经绑了 R2），然后把 key 放进来：\n'
               '       setx %s "<记录页那个 X-Records-Key>"\n'
-              '  B. 直接给 Cloudflare API 写 R2 的权限：\n'
-              '       setx %s "<账号ID>"  &  setx %s "<R2 写权限的 API Token>"\n'
+              '  B. 推荐：R2 面板 -> Manage R2 API Tokens 建一对 S3 密钥（Object Read & Write），\n'
+              '       我走分片上传，家宽再抖也稳。填进 _r2_secret.py：\n'
+              '       %s = "<Access Key ID>"   %s = "<Secret>"   %s = "<账号ID>"\n'
+              '  C. 直接给 Cloudflare API 写 R2（整块 PUT，大文件容易超时）：\n'
+              '       %s = "<账号ID>"   %s = "<R2 写权限的 API Token>"\n'
               '  也可以写进 _r2_secret.py（已在 .gitignore 里，不进仓库）。'
-              % (ENV_WORKER_KEY, ENV_ACCOUNT_ID, ENV_API_TOKEN))
+              % (ENV_WORKER_KEY, ENV_S3_KEY, ENV_S3_SECRET, ENV_ACCOUNT_ID,
+                 ENV_ACCOUNT_ID, ENV_API_TOKEN))
         return 1
 
     files = sorted(glob.glob(os.path.join(VID, '*.mp4')))
@@ -743,20 +883,39 @@ def upload(dry=False, only=None, jobs=4, force=False):
         files = [f for f in files if os.path.splitext(os.path.basename(f))[0] in only]
 
     session = requests.Session()
+    # requests 默认会读 Windows 系统代理（本机 10808 时好时坏，走它上传容易写超时），
+    # 所以默认直连；要跟随系统代理就把 UPLOAD_PROXY 设成 'system'，要指定就写 URL。
+    up = UPLOAD_PROXY if proxy is None else proxy
+    session.trust_env = (up == 'system')
+    if up and up != 'system':
+        session.proxies = {'http': up, 'https': up}
     todo = []
     skipped = 0
 
-    if mode == 'api' and not force:
-        remote = _api_list(session, env, UPLOAD_PREFIX)
-        if remote is None:
-            return 1
-        for f in files:
-            key = '%s/%s' % (UPLOAD_PREFIX, os.path.basename(f))
-            size, etag = remote.get(key, (0, ''))
-            if size == os.path.getsize(f) and etag and etag == _md5(f):
-                skipped += 1
-                continue
-            todo.append(f)
+    if not force:
+        if mode == 'api':
+            remote = _api_list(session, env, UPLOAD_PREFIX)
+            if remote is None:
+                return 1
+            for f in files:
+                key = '%s/%s' % (UPLOAD_PREFIX, os.path.basename(f))
+                size, etag = remote.get(key, (0, ''))
+                if size == os.path.getsize(f) and etag and etag == _md5(f):
+                    skipped += 1
+                    continue
+                todo.append(f)
+        elif mode == 's3':
+            # 只跳「体积一致且 etag==本地 md5」的对象（= 单段上传、内容肯定一致）。
+            # 分片上传的对象 etag 带 -N 后缀，这里不识别为相同，会重传——安全优先。
+            for f in files:
+                key = '%s/%s' % (UPLOAD_PREFIX, os.path.basename(f))
+                size, etag = _s3_head(session, env, key)
+                if size == os.path.getsize(f) and etag and etag == _md5(f):
+                    skipped += 1
+                    continue
+                todo.append(f)
+        else:
+            todo = list(files)
     else:
         todo = list(files)
 
@@ -780,6 +939,8 @@ def upload(dry=False, only=None, jobs=4, force=False):
         try:
             if mode == 'worker':
                 good = _upload_worker(session, env, key, f, False)
+            elif mode == 's3':
+                good = _s3_multipart(session, env, key, f)
             else:
                 good = _upload_api(session, env, key, f)
         except Exception as e:                  # 单个文件出错不能拖垮整批
@@ -889,8 +1050,9 @@ def main(argv):
         return 0
     if cmd == 'upload':
         return upload(dry='dry-run' in opts, only=set(args[1:]) or None,
-                      jobs=int(opts.get('jobs')) if str(opts.get('jobs', '')).isdigit() else 4,
-                      force='force' in opts)
+                      jobs=int(opts.get('jobs')) if str(opts.get('jobs', '')).isdigit() else 1,
+                      force='force' in opts,
+                      proxy=opts.get('proxy') if isinstance(opts.get('proxy'), str) else None)
     if cmd == 'release':
         return release(args[1:], name)
     if cmd == 'push':
