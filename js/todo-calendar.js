@@ -285,15 +285,88 @@
       + '</div>';
     document.body.appendChild(dayEl);
 
+    /* ---- 左滑露出「删除」：按住这一行往左拖，过一半松手就吸附打开 ---- */
+    var SW = 72;   /* 与 css 里 .todo-del 的宽度一致 */
+    var sw = { row: null, main: null, x0: 0, y0: 0, base: 0, dragging: false, suppressClick: false };
+
+    function setSwipe(row, open) {
+      var main = row.querySelector('.todo-row-main');
+      if (!main) return;
+      row.classList.toggle('is-open', open);
+      main.style.transform = open ? 'translateX(-' + SW + 'px)' : '';
+    }
+    function swipeCloseAll(except) {
+      var rows = dayEl.querySelectorAll('.todo-row.is-open');
+      for (var i = 0; i < rows.length; i++) {
+        if (rows[i] !== except) setSwipe(rows[i], false);
+      }
+    }
+
+    dayEl.addEventListener('pointerdown', function(ev) {
+      if (ev.button) return;                       /* 只认左键 / 触摸 */
+      var main = ev.target.closest('.todo-row-main');
+      if (!main) return;
+      var row = main.closest('.todo-row');
+      sw.row = row; sw.main = main;
+      sw.x0 = ev.clientX; sw.y0 = ev.clientY;
+      sw.base = row.classList.contains('is-open') ? -SW : 0;
+      sw.dragging = false;
+      swipeCloseAll(row);
+    });
+
+    window.addEventListener('pointermove', function(ev) {
+      if (!sw.main) return;
+      var dx = ev.clientX - sw.x0, dy = ev.clientY - sw.y0;
+      if (!sw.dragging) {
+        if (Math.abs(dx) < 8) return;
+        if (Math.abs(dx) <= Math.abs(dy)) return;  /* 竖向滑动交给列表滚动 */
+        sw.dragging = true;
+        sw.main.classList.add('dragging');
+      }
+      var x = sw.base + dx;
+      x = x > 0 ? 0 : (x < -SW ? -SW : x);
+      sw.main.style.transform = 'translateX(' + x + 'px)';
+      if (ev.cancelable) ev.preventDefault();
+    }, { passive: false });
+
+    function endSwipe() {
+      if (!sw.main) return;
+      var row = sw.row, main = sw.main;
+      main.classList.remove('dragging');
+      if (sw.dragging) {
+        var m = /-?[\d.]+/.exec(main.style.transform || '');
+        var cur = m ? parseFloat(m[0]) : 0;
+        setSwipe(row, cur < -SW / 2);
+        /* 滑完那一下松手会补一个 click，别让它把复选框勾上 */
+        sw.suppressClick = true;
+        setTimeout(function() { sw.suppressClick = false; }, 80);
+      }
+      sw.row = null; sw.main = null; sw.dragging = false;
+    }
+    window.addEventListener('pointerup', endSwipe);
+    window.addEventListener('pointercancel', endSwipe);
+
     dayEl.addEventListener('click', function(ev) {
+      if (sw.suppressClick) { ev.preventDefault(); return; }
       if (ev.target.closest('.todo-day-close')) { closeDay(); return; }
       if (!ev.target.closest('.todo-day-card')) { closeDay(); return; }
 
       var del = ev.target.closest('.todo-del');
       if (del) {
-        var row = del.closest('.todo-row');
-        removeItem(row.getAttribute('data-id'));
+        var delRow = del.closest('.todo-row');
+        removeItem(delRow.getAttribute('data-id'));
+        return;
       }
+
+      /* 已经滑开的行：点正文只是把它推回去，别顺手勾上 */
+      var main = ev.target.closest('.todo-row-main');
+      if (main && main.closest('.todo-row').classList.contains('is-open')) {
+        ev.preventDefault();
+        setSwipe(main.closest('.todo-row'), false);
+        return;
+      }
+      /* 点卡片其他地方，把滑开的行都收回去 */
+      if (!ev.target.closest('.todo-row')) swipeCloseAll();
     });
 
     dayEl.addEventListener('change', function(ev) {
@@ -339,11 +412,14 @@
       ul.innerHTML = '<li class="todo-empty">这一天还没有计划</li>';
       return;
     }
+    /* 每条左边是正文，右边的「删除」藏在下层，按住往左滑才露出来 */
     ul.innerHTML = list.map(function(x) {
       return '<li class="todo-row' + (x.done ? ' done' : '') + '" data-id="' + x.id + '">'
+        + '<button type="button" class="todo-del">删除</button>'
+        + '<div class="todo-row-main">'
         + '<input type="checkbox" class="todo-check"' + (x.done ? ' checked' : '') + '>'
         + '<span class="todo-text">' + esc(x.text) + '</span>'
-        + '<button type="button" class="todo-del" aria-label="删除">✕</button>'
+        + '</div>'
         + '</li>';
     }).join('');
   }

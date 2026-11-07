@@ -350,16 +350,35 @@
   padding: 0;
   list-style: none;
   overflow-y: auto;
+  overflow-x: hidden;
   min-height: 60px;
 }
+/* 一条计划：正文在下层之上，往左滑才露出底下的「删除」 */
 .todo-row {
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid #F7F7F7;
+  touch-action: pan-y;
+}
+.todo-row:last-child { border-bottom: 0; }
+.todo-row-main {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: flex-start;
   gap: 10px;
   padding: 11px 0;
-  border-bottom: 1px solid #F7F7F7;
+  background: #fff;
+  transition: transform .24s cubic-bezier(.2, .8, .2, 1);
+  will-change: transform;
+  touch-action: pan-y;
 }
-.todo-row:last-child { border-bottom: 0; }
+.todo-row-main.dragging {
+  transition: none;
+  cursor: grabbing;
+  user-select: none;
+  -webkit-user-select: none;
+}
 .todo-check {
   flex: 0 0 auto;
   width: 17px;
@@ -381,18 +400,25 @@
   text-decoration: line-through;
 }
 .todo-row .todo-del {
-  flex: 0 0 auto;
-  width: 24px;
-  height: 24px;
+  position: absolute;
+  z-index: 0;
+  top: 50%;
+  right: 0;
+  width: 72px;
+  height: 38px;
+  margin-top: -19px;
   border: 0;
-  border-radius: 50%;
-  background: transparent;
-  color: #D8D8D8;
-  font-size: 14px;
-  line-height: 1;
+  border-radius: 10px;
+  background: #FF5252;
+  font-family: "PingFangSC-Regular";
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: #fff;
   cursor: pointer;
+  transition: background .16s ease;
 }
-.todo-row .todo-del:hover { color: #FF5252; background: #FFF0F0; }
+.todo-row .todo-del:hover { background: #F04545; }
+.todo-row .todo-del:active { background: #E03A3A; }
 
 .todo-empty {
   padding: 22px 0;
