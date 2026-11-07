@@ -22,7 +22,7 @@ var mePlayer37 = mePlayer17;
 
 mePlayer({
   music: {
-    src: './Albums/others/我已经到了幻想尽头.m4a',
+    src: 'https://media.meimei.qzz.io/Albums/others/我已经到了幻想尽头.m4a',
     title: '我已经到了幻想尽头',
     author: '音阙诗听&昆玉',
     loop: true,
@@ -38,7 +38,7 @@ mePlayer({
 mePlayer1({
   theme: 'mini',
   music: {
-    src: './Albums/others/气象站台.m4a',
+    src: 'https://media.meimei.qzz.io/Albums/others/气象站台.m4a',
     title: '气象站台',
     author: 'UU',
     loop: true,
@@ -54,7 +54,7 @@ mePlayer1({
 mePlayer2({
   theme: 'mini',
   music: {
-    src: './Albums/others/红色高跟鞋.ogg',
+    src: 'https://media.meimei.qzz.io/Albums/others/红色高跟鞋.ogg',
     title: '西柚',
     author: 'UU',
     loop: true,
@@ -70,7 +70,7 @@ mePlayer2({
 mePlayer3({
   theme: 'mini',
   music: {
-    src: './Albums/others/潮汐-DJ.m4a',
+    src: 'https://media.meimei.qzz.io/Albums/others/潮汐-DJ.m4a',
     title: '潮汐(DJ版)',
     author: '傅梦彤',
     loop: true,
@@ -87,7 +87,7 @@ mePlayer3({
 mePlayer4({
   theme: 'mini',
   music: {
-    src: './Albums/others/一直很安静.mp3',
+    src: 'https://media.meimei.qzz.io/Albums/others/一直很安静.mp3',
     title: '一直很安静',
     author: '阿桑',
     loop: true,
@@ -104,7 +104,7 @@ mePlayer4({
 mePlayer5({
   theme: 'mini',
   music: {
-    src: './Albums/others/爱你.mp3',
+    src: 'https://media.meimei.qzz.io/Albums/others/爱你.mp3',
     title: '爱你f',
     author: '陈芳语',
     loop: true,
@@ -121,7 +121,7 @@ mePlayer5({
 mePlayer6({
   theme: 'mini',
   music: {
-    src: './Albums/others/白月光与朱砂痣.m4a',
+    src: 'https://media.meimei.qzz.io/Albums/others/白月光与朱砂痣.m4a',
     title: '白月光与朱砂痣',
     author: '大籽',
     loop: true,
@@ -139,7 +139,7 @@ mePlayer6({
 mePlayer7({
   theme: 'mini',
   music: {
-    src: './Albums/others/下一站天后.mp3',
+    src: 'https://media.meimei.qzz.io/Albums/others/下一站天后.mp3',
     title: '下一站天后',
     author: 'Twins',
     loop: true,
@@ -155,7 +155,7 @@ mePlayer7({
 mePlayer8({
   theme: 'mini',
   music: {
-    src: './Albums/others/IFoundMyself.mp3',
+    src: 'https://media.meimei.qzz.io/Albums/others/IFoundMyself.mp3',
     title: 'IFoundMyself',
     author: 'UU',
     loop: true,
@@ -171,7 +171,7 @@ mePlayer8({
 mePlayer9({
   theme: 'mini',
   music: {
-    src: './Albums/others/爱你-Live.m4a',
+    src: 'https://media.meimei.qzz.io/Albums/others/爱你-Live.m4a',
     title: '爱你 (Live)',
     author: '偶像练习生 第一季',
     loop: true,
@@ -188,7 +188,7 @@ mePlayer9({
 mePlayer10({
   theme: 'mini',
   music: {
-    src: './Albums/others/forya.m4a',
+    src: 'https://media.meimei.qzz.io/Albums/others/forya.m4a',
     title: 'for ya',
     author: '蒋小呢',
     loop: true,
@@ -204,7 +204,7 @@ mePlayer10({
 mePlayer11({
   theme: 'mini',
   music: {
-    src: './Albums/others/杏花弦外雨.m4a',
+    src: 'https://media.meimei.qzz.io/Albums/others/杏花弦外雨.m4a',
     title: '杏花弦外雨',
     author: 'CRITTY/司夏',
     loop: true,
@@ -222,7 +222,7 @@ mePlayer11({
 mePlayer12({
   theme: 'mini',
   music: {
-    src: './Albums/others/都怪我.m4a',
+    src: 'https://media.meimei.qzz.io/Albums/others/都怪我.m4a',
     title: '都怪我',
     author: '葛雨晴',
     loop: true,
@@ -239,7 +239,7 @@ mePlayer12({
 mePlayer13({
   theme: 'mini',
   music: {
-    src: './Albums/others/KissandCry.mp3',
+    src: 'https://media.meimei.qzz.io/Albums/others/KissandCry.mp3',
     title: 'Kiss and Cry',
     author: 'Ken Arai',
     loop: true,
@@ -257,7 +257,7 @@ mePlayer13({
 mePlayer14({
   theme: 'mini',
   music: {
-    src: './Albums/others/莫文蔚-盛夏的果实.mp3',
+    src: 'https://media.meimei.qzz.io/Albums/others/莫文蔚-盛夏的果实.mp3',
     title: '盛夏的果实',
     author: '莫文蔚',
     loop: true,
@@ -275,7 +275,7 @@ mePlayer14({
 mePlayer15({
   theme: 'mini',
   music: {
-    src: './Albums/others/胡夏&郁可唯-知否知否.mp3',
+    src: 'https://media.meimei.qzz.io/Albums/others/胡夏&郁可唯-知否知否.mp3',
     title: '知否知否',
     author: '胡夏&郁可唯',
     loop: true,
@@ -295,7 +295,7 @@ mePlayer15({
 mePlayer16({
   theme: 'mini',
   music: {
-    src: './Albums/others/音阙诗听&李佳思-雨水.mp3',
+    src: 'https://media.meimei.qzz.io/Albums/others/音阙诗听&李佳思-雨水.mp3',
     title: '雨水',
     author: '音阙诗听&李佳思',
     loop: true,
@@ -311,7 +311,7 @@ mePlayer16({
 mePlayer17({
   theme: 'mini',
   music: {
-    src: './Albums/others/菲菲公主-第57次取消发送.mp3',
+    src: 'https://media.meimei.qzz.io/Albums/others/菲菲公主-第57次取消发送.mp3',
     title: '第57次取消发送',
     author: '菲菲公主',
     loop: true,
@@ -327,7 +327,7 @@ mePlayer17({
 mePlayer18({
   theme: 'mini',
   music: {
-    src: './Albums/others/TheStar.mp3',
+    src: 'https://media.meimei.qzz.io/Albums/others/TheStar.mp3',
     title: 'TheStar',
     author: '音阙诗听,李佳思',
     loop: true,
@@ -342,7 +342,7 @@ mePlayer18({
 mePlayer19({
   theme: 'mini',
   music: {
-    src: './Albums/others/十年.m4a',
+    src: 'https://media.meimei.qzz.io/Albums/others/十年.m4a',
     title: '十年',
     author: '南妮',
     loop: true,
@@ -358,7 +358,7 @@ mePlayer19({
 mePlayer20({
   theme: 'mini',
   music: {
-    src: './Albums/others/气象站台.m4a',
+    src: 'https://media.meimei.qzz.io/Albums/others/气象站台.m4a',
     title: '气象站台',
     author: 'UU',
     loop: true,
@@ -372,7 +372,7 @@ mePlayer20({
 mePlayer21({
   theme: 'mini',
   music: {
-    src: './Albums/others/十年.m4a',
+    src: 'https://media.meimei.qzz.io/Albums/others/十年.m4a',
     title: '十年',
     author: '南妮',
     loop: true,
@@ -386,7 +386,7 @@ mePlayer21({
 mePlayer22({
   theme: 'mini',
   music: {
-    src: './Albums/others/红色高跟鞋.ogg',
+    src: 'https://media.meimei.qzz.io/Albums/others/红色高跟鞋.ogg',
     title: '红色高跟鞋',
     author: '西柚',
     loop: true,
@@ -400,7 +400,7 @@ mePlayer22({
 mePlayer23({
   theme: 'mini',
   music: {
-    src: './Albums/others/潮汐-DJ.m4a',
+    src: 'https://media.meimei.qzz.io/Albums/others/潮汐-DJ.m4a',
     title: '潮汐(DJ版)',
     author: '傅梦彤',
     loop: true,
@@ -414,7 +414,7 @@ mePlayer23({
 mePlayer24({
   theme: 'mini',
   music: {
-    src: './Albums/others/一直很安静.mp3',
+    src: 'https://media.meimei.qzz.io/Albums/others/一直很安静.mp3',
     title: '一直很安静',
     author: '阿桑',
     loop: true,
@@ -428,7 +428,7 @@ mePlayer24({
 mePlayer25({
   theme: 'mini',
   music: {
-    src: './Albums/others/爱你.mp3',
+    src: 'https://media.meimei.qzz.io/Albums/others/爱你.mp3',
     title: '爱你',
     author: '陈芳语',
     loop: true,
@@ -442,7 +442,7 @@ mePlayer25({
 mePlayer26({
   theme: 'mini',
   music: {
-    src: './Albums/others/白月光与朱砂痣.m4a',
+    src: 'https://media.meimei.qzz.io/Albums/others/白月光与朱砂痣.m4a',
     title: '白月光与朱砂痣',
     author: '大籽',
     loop: true,
@@ -456,7 +456,7 @@ mePlayer26({
 mePlayer27({
   theme: 'mini',
   music: {
-    src: './Albums/others/下一站天后.mp3',
+    src: 'https://media.meimei.qzz.io/Albums/others/下一站天后.mp3',
     title: '下一站天后',
     author: 'Twins',
     loop: true,
@@ -470,7 +470,7 @@ mePlayer27({
 mePlayer28({
   theme: 'mini',
   music: {
-    src: './Albums/others/IFoundMyself.mp3',
+    src: 'https://media.meimei.qzz.io/Albums/others/IFoundMyself.mp3',
     title: 'I Found Myself',
     author: 'ZEFEAR,Teya Flow',
     loop: true,
@@ -484,7 +484,7 @@ mePlayer28({
 mePlayer29({
   theme: 'mini',
   music: {
-    src: './Albums/others/爱你-Live.m4a',
+    src: 'https://media.meimei.qzz.io/Albums/others/爱你-Live.m4a',
     title: '爱你(Live)',
     author: '董又霖,陆定昊,黄新淳,林彦俊',
     loop: true,
@@ -498,7 +498,7 @@ mePlayer29({
 mePlayer30({
   theme: 'mini',
   music: {
-    src: './Albums/others/forya.m4a',
+    src: 'https://media.meimei.qzz.io/Albums/others/forya.m4a',
     title: 'for ya',
     author: '蒋小呢',
     loop: true,
@@ -512,7 +512,7 @@ mePlayer30({
 mePlayer31({
   theme: 'mini',
   music: {
-    src: './Albums/others/杏花弦外雨.m4a',
+    src: 'https://media.meimei.qzz.io/Albums/others/杏花弦外雨.m4a',
     title: '杏花弦外雨',
     author: 'CRITTY,司夏',
     loop: true,
@@ -526,7 +526,7 @@ mePlayer31({
 mePlayer32({
   theme: 'mini',
   music: {
-    src: './Albums/others/KissandCry.mp3',
+    src: 'https://media.meimei.qzz.io/Albums/others/KissandCry.mp3',
     title: 'Kiss and Cry',
     author: '《失恋巧克力恋人》插曲',
     loop: true,
@@ -540,7 +540,7 @@ mePlayer32({
 mePlayer33({
   theme: 'mini',
   music: {
-    src: './Albums/others/莫文蔚-盛夏的果实.mp3',
+    src: 'https://media.meimei.qzz.io/Albums/others/莫文蔚-盛夏的果实.mp3',
     title: '盛夏的果实',
     author: '莫文蔚',
     loop: true,
@@ -554,7 +554,7 @@ mePlayer33({
 mePlayer34({
   theme: 'mini',
   music: {
-    src: './Albums/others/胡夏&郁可唯-知否知否.mp3',
+    src: 'https://media.meimei.qzz.io/Albums/others/胡夏&郁可唯-知否知否.mp3',
     title: '知否知否',
     author: '胡夏,郁可唯',
     loop: true,
@@ -568,7 +568,7 @@ mePlayer34({
 mePlayer35({
   theme: 'mini',
   music: {
-    src: './Albums/others/音阙诗听&李佳思-雨水.mp3',
+    src: 'https://media.meimei.qzz.io/Albums/others/音阙诗听&李佳思-雨水.mp3',
     title: '雨水',
     author: '音阙诗听,李佳思',
     loop: true,
@@ -582,7 +582,7 @@ mePlayer35({
 mePlayer36({
   theme: 'mini',
   music: {
-    src: './Albums/others/菲菲公主-第57次取消发送.mp3',
+    src: 'https://media.meimei.qzz.io/Albums/others/菲菲公主-第57次取消发送.mp3',
     title: '第57次取消发送',
     author: '菲菲公主',
     loop: true,
@@ -596,7 +596,7 @@ mePlayer36({
 mePlayer37({
   theme: 'mini',
   music: {
-    src: './Albums/others/TheStar.mp3',
+    src: 'https://media.meimei.qzz.io/Albums/others/TheStar.mp3',
     title: 'TheStar',
     author: '音阙诗听,李佳思',
     loop: true,
