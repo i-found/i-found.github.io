@@ -942,8 +942,10 @@ li.search { position: relative; }
   <div class="modal-content">
     <h3>添加记录</h3>
     <div class="modal-time" id="modalTime"></div>
-    <input type="text" class="modal-title-input" id="recordTitle" placeholder="输入笔记标题">
-    <textarea id="recordText" placeholder="写下你想记录的..."></textarea>
+    <input type="text" class="modal-title-input" id="recordTitle" placeholder="输入笔记标题"
+           autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    <textarea id="recordText" placeholder="写下你想记录的..."
+              autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
     <div class="image-preview-area" id="imagePreviewArea" style="display:none;">
       <div class="image-preview-grid" id="imagePreviewGrid"></div>
     </div>
@@ -966,7 +968,9 @@ li.search { position: relative; }
     <h3>云端同步设置</h3>
     <p class="sync-desc">配置密钥后，记录将自动同步至云端。</p>
     <label class="token-label" for="githubToken">密钥信息</label>
-    <input type="password" class="token-input" id="githubToken" placeholder="……">
+    <!-- 密钥框打开这个弹窗时才插进来：页面里长期挂着 type=password，浏览器会把
+         它和记录标题配成「账号 + 密码」，于是每次输标题都弹保存的密码下拉 -->
+    <div id="tokenFieldSlot"></div>
     <div class="modal-buttons">
       <button class="btn-cancel btn-outline" id="importRecordsBtn">导入</button>
       <button class="btn-cancel btn-outline" id="exportRecordsBtn">导出</button>
@@ -1268,8 +1272,9 @@ li.search { position: relative; }
           healBatchTimes(records);               // 修正被同步批量刷新的「修改时间」
           saveToStorage().catch(function() {});  // 修完存回去，下次无需再算
           render();
-          updateOcrBtn();
         }
+        /* 一条记录都没有时也要算一次，否则「文」会一直亮着 */
+        updateOcrBtn();
       }).catch(function() {
         // 失败回退 localStorage
         tryLoadFromLocalStorage();
@@ -2285,30 +2290,54 @@ li.search { position: relative; }
     fb.textContent = msg;
     fb.style.display = 'block';
   }
+  /* 密钥框按需插进页面 / 用完收走。浏览器只要在文档里看到一个 type=password，
+     就会把它和记录标题凑成一套「账号 + 密码」，输标题时弹出保存密码的下拉。 */
+  function mountTokenField() {
+    var slot = document.getElementById('tokenFieldSlot');
+    if (!slot) return null;
+    var el = document.getElementById('githubToken');
+    if (!el) {
+      slot.innerHTML = '<input type="password" class="token-input" id="githubToken"'
+        + ' name="suihe-sync-key" autocomplete="new-password" spellcheck="false" placeholder="……">';
+      el = document.getElementById('githubToken');
+    }
+    if (el) el.value = getToken();
+    return el;
+  }
+  function unmountTokenField() {
+    var slot = document.getElementById('tokenFieldSlot');
+    if (slot) slot.innerHTML = '';
+  }
+  function closeSyncModal() {
+    var modal = document.getElementById('syncModal');
+    if (modal) modal.classList.remove('show');
+    unmountTokenField();
+  }
+
   /* 只有操作成功时才自动关窗；失败留在原地让用户看清原因 */
   function closeSyncModalSoon(delay) {
     setTimeout(function() {
       var modal = document.getElementById('syncModal');
       if (modal) modal.classList.remove('show');
+      unmountTokenField();
       var fb = document.getElementById('syncFeedback');
       if (fb) { fb.style.display = 'none'; fb.textContent = ''; }
     }, delay || 900);
   }
   _el = document.getElementById('syncSettingsBtn');
   if (_el) _el.addEventListener('click', function() {
-    document.getElementById('githubToken').value = getToken();
+    mountTokenField();
     document.getElementById('syncFeedback').style.display = 'none';
     document.getElementById('syncModal').classList.add('show');
   });
   _el = document.getElementById('cancelSync');
-  if (_el) _el.addEventListener('click', function() {
-    document.getElementById('syncModal').classList.remove('show');
-  });
+  if (_el) _el.addEventListener('click', closeSyncModal);
   _el = document.getElementById('syncModal');
-  if (_el) _el.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('show'); });
+  if (_el) _el.addEventListener('click', function(e) { if (e.target === this) closeSyncModal(); });
   _el = document.getElementById('saveSync');
   if (_el) _el.addEventListener('click', function() {
-    var token = document.getElementById('githubToken').value.trim();
+    var tokenEl = document.getElementById('githubToken');
+    var token = tokenEl ? tokenEl.value.trim() : '';
     if (!token) { syncFeedbackMsg('error', '请输入同步密钥'); return; }
     setToken(token);
     updateSyncUI();
@@ -2585,6 +2614,7 @@ li.search { position: relative; }
     updateSyncUI();
     loadRecords(); // 异步加载（IndexedDB）
     render();
+    updateOcrBtn();   // 先按「暂无记录」收起来，加载完会再算一次
     /* 保存记录时就会自动识别图片文字；这里只是把历史漏掉的静默补一遍 */
     setTimeout(autoBackfillOcr, 2500);
 
@@ -2619,7 +2649,7 @@ li.search { position: relative; }
   window.readClipboard = function() {};
   window.openAddRecordModal = function() { openModal(); };
   window.openSyncModalFn = function() {
-    document.getElementById('githubToken').value = getToken();
+    mountTokenField();
     document.getElementById('syncFeedback').style.display = 'none';
     document.getElementById('syncModal').classList.add('show');
   };
