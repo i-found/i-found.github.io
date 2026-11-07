@@ -183,6 +183,7 @@
           </button>
           <div class="nav-search-popup" id="searchPopup">
             <input type="text" class="search-input" id="searchBar" placeholder="搜索记录..." autocomplete="off">
+            <section class="record-search-results" id="recordSearchResults" hidden></section>
           </div>
         </li>
       </ul>
@@ -452,6 +453,43 @@ li.search { position: relative; }
   color: #333;
 }
 .search-input::placeholder { color: #bbb; }
+
+/* 搜索结果面板：与主页/音乐页一致的下拉列表形态 */
+.record-search-results {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 380px;
+  max-width: calc(100vw - 40px);
+  max-height: 420px;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  text-align: left;
+  z-index: 60;
+  box-sizing: border-box;
+}
+.record-search-results[hidden] { display: none; }
+.sr-item {
+  display: block; width: 100%; padding: 10px 14px;
+  border: none; border-bottom: 1px solid #f0f0f0; background: #fff;
+  cursor: pointer; text-align: left; box-sizing: border-box;
+  transition: background .15s ease, box-shadow .15s ease;
+  font-family: inherit;
+}
+.sr-item:hover, .sr-item.active { background: #fff5f5; }
+.sr-item.active { box-shadow: inset 3px 0 0 #FF8B8B; }
+.sr-top { display: flex; gap: 6px; font-size: 14px; line-height: 1.5; margin: 0; }
+.sr-kind { color: #FF8B8B; flex-shrink: 0; font-weight: normal; }
+.sr-field { flex: 1; min-width: 0; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sr-context { font-size: 13px; color: #888; line-height: 1.5; margin: 2px 0 0; max-height: 42px; overflow: hidden; }
+.sr-context mark, .sr-field mark { background: #ffe082; color: #333; }
+.sr-empty { padding: 12px 14px; color: #999; font-size: 14px; margin: 0; }
+/* 跳转后给目标加光圈，600ms 后移除，靠过渡慢慢淡出 */
+.record-card, .record-title, .record-text, .record-time { transition: box-shadow .32s ease; }
+.record-card.search-hit { box-shadow: 0 0 0 3px #FF6B81, 0 4px 15px rgba(255,71,87,0.25); }
+.record-title.search-hit, .record-text.search-hit, .record-time.search-hit { box-shadow: 0 0 0 3px #FF8B8B; border-radius: 4px; }
 .record-card {
   background: #fafafa;
   border-radius: 8px;
@@ -1226,34 +1264,24 @@ li.search { position: relative; }
   // 渲染所有记录
   function render() {
     var container = document.getElementById('recordsContainer');
-    var searchBar = document.getElementById('searchBar');
-    var searchTerm = searchBar ? searchBar.value.trim().toLowerCase() : '';
-    var filtered = records;
+    /* 列表始终全量渲染；搜索走下拉结果面板，不再用关键词过滤整页 */
+    var list = records;
 
-    if (searchTerm) {
-      filtered = records.filter(function(r) {
-        var inTitle = r.title && r.title.toLowerCase().indexOf(searchTerm) !== -1;
-        var inText = r.text && r.text.toLowerCase().indexOf(searchTerm) !== -1;
-        var inOcr = r.ocrText && r.ocrText.toLowerCase().indexOf(searchTerm) !== -1;
-        return inTitle || inText || inOcr;
-      });
-    }
-
-    if (filtered.length === 0) {
-      container.innerHTML = '<div class="records-empty">' + (searchTerm ? '没有匹配的记录' : '还没有记录，点击上方按钮添加第一条吧~') + '</div>';
+    if (list.length === 0) {
+      container.innerHTML = '<div class="records-empty">还没有记录，点击上方按钮添加第一条吧~</div>';
       return;
     }
 
     var html = '';
-    for (var i = filtered.length - 1; i >= 0; i--) {
-      var r = filtered[i];
+    for (var i = list.length - 1; i >= 0; i--) {
+      var r = list[i];
       html += '<div class="record-card" data-id="' + r.id + '" id="record-' + r.id + '">';
       html += '<button class="record-edit" data-id="' + r.id + '" title="编辑">✎</button>';
       html += '<button class="record-delete" data-id="' + r.id + '" title="删除">×</button>';
       if (r.title) {
-        html += '<div class="record-title">' + highlightText(r.title, searchTerm) + '</div>';
+        html += '<div class="record-title">' + escapeHtml(r.title) + '</div>';
       }
-      html += '<div class="record-text">' + highlightText(r.text, searchTerm) + '</div>';
+      html += '<div class="record-text">' + escapeHtml(r.text) + '</div>';
       var imgs = displayImages(r);
       if (imgs.length) {
         html += '<div class="record-images">';
@@ -1697,6 +1725,7 @@ li.search { position: relative; }
       if (isOpen) {
         searchPopup.classList.remove('open');
         searchIconBtn.classList.remove('active');
+        hideSearchResults();
       } else {
         searchPopup.classList.add('open');
         searchIconBtn.classList.add('active');
@@ -1711,22 +1740,150 @@ li.search { position: relative; }
         !searchIconBtn.contains(e.target)) {
       searchPopup.classList.remove('open');
       searchIconBtn.classList.remove('active');
+      hideSearchResults();
     }
   });
-  // 输入时实时过滤
-  if (searchInput) {
-    searchInput.addEventListener('input', function() { render(); });
-    // Enter 键搜索
-    searchInput.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') { e.preventDefault(); render(); searchInput.blur(); }
+  // ===== 搜索：与主页/音乐页一致（分类结果 + 上下键 + 光圈） =====
+  var recordSearchResults = document.getElementById('recordSearchResults');
+  var currentSearchRows = [], activeSearchIndex = -1;
+
+  function addMark(el, text, q) {
+    var lo = (text || '').toLowerCase(), ql = q.toLowerCase(), ix = lo.indexOf(ql);
+    if (ix < 0) { el.textContent = text; return; }
+    el.appendChild(document.createTextNode(text.slice(0, ix)));
+    var m = document.createElement('mark');
+    m.textContent = text.slice(ix, ix + q.length);
+    el.appendChild(m);
+    el.appendChild(document.createTextNode(text.slice(ix + q.length)));
+  }
+
+  function excerpt(text, q, pad) {
+    var lo = text.toLowerCase(), ix = lo.indexOf(q.toLowerCase());
+    if (ix < 0) return text.slice(0, 60) + (text.length > 60 ? '…' : '');
+    var s = Math.max(0, ix - pad), e = Math.min(text.length, ix + q.length + pad);
+    return (s > 0 ? '…' : '') + text.slice(s, e) + (e < text.length ? '…' : '');
+  }
+
+  function setActiveSearch(i) {
+    var items = recordSearchResults.querySelectorAll('.sr-item');
+    if (!items.length) { activeSearchIndex = -1; return; }
+    var n = items.length;
+    /* 首尾相接：末条再按 ↓ 回第一条，首条再按 ↑ 到最后一条 */
+    i = ((i % n) + n) % n;
+    activeSearchIndex = i;
+    for (var k = 0; k < n; k++) { items[k].classList.toggle('active', k === i); }
+    items[i].scrollIntoView({ block: 'nearest' });
+  }
+
+  function hideSearchResults() {
+    recordSearchResults.hidden = true;
+    recordSearchResults.innerHTML = '';
+    currentSearchRows = [];
+    activeSearchIndex = -1;
+  }
+
+  function renderSearch(q) {
+    if (!q) { hideSearchResults(); return; }
+    var lower = q.toLowerCase(), rows = [];
+    records.forEach(function(r) {
+      var dateText = formatTime(r.time || r.id);
+      var body = (r.text || '') + ((r.ocrText && r.text) ? '\n' + r.ocrText : (r.ocrText || ''));
+      /* 三个分类各出一条：标题 / 正文 / 日期 */
+      if (r.title && r.title.toLowerCase().indexOf(lower) >= 0) {
+        rows.push({ id: r.id, field: '标题', label: r.title, context: dateText });
+      }
+      if (body && body.toLowerCase().indexOf(lower) >= 0) {
+        rows.push({ id: r.id, field: '正文', label: (r.text || r.ocrText || ''), context: excerpt(body, q, 20) });
+      }
+      if (dateText && dateText.toLowerCase().indexOf(lower) >= 0) {
+        rows.push({ id: r.id, field: '日期', label: dateText, context: r.title || (r.text || '').slice(0, 24) });
+      }
     });
-    // Esc 关闭
+    currentSearchRows = rows;
+    recordSearchResults.innerHTML = '';
+    if (!rows.length) {
+      var em = document.createElement('div');
+      em.className = 'sr-empty';
+      em.textContent = '没有找到和“' + q + '”相关的内容';
+      recordSearchResults.appendChild(em);
+    }
+    rows.slice(0, 30).forEach(function(r, ix) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'sr-item';
+      var top = document.createElement('div');
+      top.className = 'sr-top';
+      var f = document.createElement('span');
+      f.className = 'sr-field';
+      addMark(f, r.field + '：' + r.label, q);
+      top.appendChild(f);
+      var ctx = document.createElement('div');
+      ctx.className = 'sr-context';
+      addMark(ctx, r.context, q);
+      b.appendChild(top);
+      b.appendChild(ctx);
+      b.addEventListener('click', function() { goRecordField(r.id, r.field); });
+      b.addEventListener('mouseenter', function() { setActiveSearch(ix); });
+      recordSearchResults.appendChild(b);
+    });
+    recordSearchResults.hidden = false;
+    setActiveSearch(0);
+  }
+
+  function flashRecord(el) {
+    if (!el) return;
+    el.classList.remove('search-hit');
+    void el.offsetWidth;
+    el.classList.add('search-hit');
+    setTimeout(function() { el.classList.remove('search-hit'); }, 600);
+  }
+
+  function goRecordField(id, field) {
+    hideSearchResults();
+    searchPopup.classList.remove('open');
+    searchIconBtn.classList.remove('active');
+    searchInput.value = '';
+    render();
+    var card = document.getElementById('record-' + id);
+    if (!card) return;
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    var target = card;
+    if (field === '标题') target = card.querySelector('.record-title') || card;
+    else if (field === '正文') target = card.querySelector('.record-text') || card;
+    else if (field === '日期') target = card.querySelector('.record-time') || card;
+    flashRecord(target);
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener('input', function() { renderSearch(searchInput.value.trim()); });
+    searchInput.addEventListener('focus', function() { if (searchInput.value.trim()) renderSearch(searchInput.value.trim()); });
     searchInput.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') {
+        hideSearchResults();
         searchPopup.classList.remove('open');
         searchIconBtn.classList.remove('active');
         searchInput.value = '';
-        render();
+        return;
+      }
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        var qk = searchInput.value.trim();
+        if (!qk) return;
+        if (recordSearchResults.hidden || !recordSearchResults.querySelector('.sr-item')) renderSearch(qk);
+        var cnt = recordSearchResults.querySelectorAll('.sr-item').length;
+        if (!cnt) return;
+        if (activeSearchIndex < 0) setActiveSearch(e.key === 'ArrowDown' ? 0 : cnt - 1);
+        else setActiveSearch(activeSearchIndex + (e.key === 'ArrowDown' ? 1 : -1));
+        return;
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        var q = searchInput.value.trim();
+        if (!q) return;
+        if (!currentSearchRows.length) renderSearch(q);
+        var r = currentSearchRows[activeSearchIndex] || currentSearchRows[0];
+        if (!r) return;
+        goRecordField(r.id, r.field);
       }
     });
   }
@@ -1749,31 +1906,6 @@ li.search { position: relative; }
     if (e.target.classList.contains('record-image')) {
       openLightbox(e.target.getAttribute('data-src'));
       return;
-    }
-    // 搜索模式下点击卡片内容 → 跳转到该记录
-    var searchTerm = searchInput.value.trim();
-    if (searchTerm) {
-      var card = e.target.closest('.record-card');
-      if (card) {
-        var targetId = card.getAttribute('data-id');
-        // 清空搜索、收起搜索框、重新渲染全部
-        searchPopup.classList.remove('open');
-        searchIconBtn.classList.remove('active');
-        searchInput.value = '';
-        render();
-        // 滚动到目标记录
-        var targetEl = document.getElementById('record-' + targetId);
-        if (targetEl) {
-          targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          // 高亮闪烁
-          targetEl.style.transition = 'box-shadow 0.15s ease';
-          targetEl.style.boxShadow = '0 0 0 3px #ff6b81';
-          setTimeout(function() {
-            targetEl.style.boxShadow = '';
-            setTimeout(function() { targetEl.style.transition = ''; }, 150);
-          }, 600);
-        }
-      }
     }
   });
 
