@@ -460,18 +460,26 @@ var data=[
     function loadLyric (name) {
         lyReset ();
         lyric.lyricStr=lyrics[name];
-        lyric.lyMTime=returnTimeLyric(lyric.lyricStr)[0];
-        lyric.lyMtext=returnTimeLyric(lyric.lyricStr)[1];
-            lyricUl.innerHTML='';
-            for (var i = 0; i < lyric.lyMtext.length; i++) {
-                var li1=document.createElement('li');
-                if (lyric.lyMtext[i]=='') {
-                    li1.innerHTML='&nbsp;';
-                }else {
-                    li1.innerHTML=lyric.lyMtext[i];
-                }
-                lyricUl.appendChild(li1);
-            }
+        var parsed=returnTimeLyric(lyric.lyricStr);
+        var times=[],texts=[];
+        for (var k = 0; k < parsed[1].length; k++) {
+            /* 原 LRC 里两句之间常常夹一条只有时间标签、没有文字的行（[00:42.86] 后面直接换行）。
+               以前用 &nbsp; 占位保留，于是每两句之间多出一条 42px 的空白：
+               行距一会儿 42、一会儿 84，看着就是「有的地方间隔特别大」。
+               这里直接丢掉这条空行，时间轴同步丢掉，滚动下标才对得上。 */
+            var txt=(parsed[1][k]||'').replace(/^\s+|\s+$/g,'');
+            if (!txt) { continue; }
+            times.push(parsed[0][k]);
+            texts.push(txt);
+        }
+        lyric.lyMTime=times;
+        lyric.lyMtext=texts;
+        lyricUl.innerHTML='';
+        for (var i = 0; i < texts.length; i++) {
+            var li1=document.createElement('li');
+            li1.innerHTML=texts[i];
+            lyricUl.appendChild(li1);
+        }
     }
     //19.歌词清除样式,ul回到顶部(切换歌曲调用，歌词复位)
     function lyReset () {
