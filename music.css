@@ -583,6 +583,15 @@ span{
 .sr-context{font-size:13px; color:#888; line-height:1.5; margin:2px 0 0; max-height:42px; overflow:hidden;}
 .sr-context mark,.sr-field mark{background:#ffe082; color:#333;}
 .sr-empty{padding:12px 14px; color:#999; font-size:14px; margin:0;}
+/* 搜索历史：标题行 + 清空；每条右侧还有单独删除 */
+.sr-head{display:flex; align-items:center; justify-content:space-between; padding:9px 14px 5px; font-size:12px; color:#aaa;}
+.sr-clear{border:none; background:none; padding:2px; margin:0; color:#FF8B8B; font-size:12px; font-family:inherit; cursor:pointer;}
+.sr-clear:hover{text-decoration:underline;}
+.sr-item.sr-history{display:flex; align-items:center; padding:0;}
+.sr-hword{flex:1; min-width:0; display:flex; align-items:center; padding:10px 0 10px 14px; border:none; background:none; font:inherit; color:#333; text-align:left; cursor:pointer;}
+.sr-history .sr-field{display:block; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.sr-del{flex-shrink:0; width:30px; height:30px; margin-right:9px; border:none; background:none; border-radius:50%; color:#c9c9c9; font-size:18px; line-height:1; cursor:pointer;}
+.sr-del:hover{background:#ffecec; color:#FF8B8B;}
 .album-card{scroll-margin-top:80px; position:relative; transition:box-shadow .32s ease;}
 /* 搜索定位：命中的字段本身变粉，卡片/详情/浮层的描边交给 .locate-ring */
 .album-card h3.search-hit,.album-card .album-meta.search-hit,.album-card .album-date.search-hit{color:#FF8B8B;}

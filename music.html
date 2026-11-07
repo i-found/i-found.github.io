@@ -6,7 +6,7 @@
      右边留白、THE END 偏左、底色看着没铺满，全是这一步缺的。 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>听见 | 美好时光</title>
-<link rel="stylesheet" href="music.css?v=2e01b24b">
+<link rel="stylesheet" href="music.css?v=e419ee3c">
 <link rel="icon" href="./img/ico.png?v=c6aeb3b5" type="image/x-icon">
 </head>
 <body>
@@ -107,6 +107,8 @@
 			<!-- 拼音搜索：tianmao / tm 也能搜到「天猫」 -->
 			<script type="text/javascript" src="js/pinyin-data.js?v=ccab0a6c"></script>
 			<script type="text/javascript" src="js/pinyin.js?v=54e83b5c"></script>
+			<!-- 搜索历史：三页共用一份，面板里可单条删除、可一次清空 -->
+			<script type="text/javascript" src="js/search-history.js?v=a046cc95"></script>
 			<script type="text/javascript">
 			var $a=$(".buttons a");
 			var $s=$(".buttons span");
@@ -445,7 +447,7 @@
 			var searchInput=document.getElementById("albumSearchInput"), searchBox=document.getElementById("albumSearchResults");
 			/* 高亮：汉字直接命中，或拼音命中（tianmao / tm），都把命中的那截包进 <mark> */
 			function addMark(el,text,q){ var hit=window.PinyinMatch?PinyinMatch.find(text,q):null; if(!hit){ el.textContent=text; return; } el.appendChild(document.createTextNode(text.slice(0,hit.start))); var m=document.createElement("mark"); m.textContent=text.slice(hit.start,hit.end); el.appendChild(m); el.appendChild(document.createTextNode(text.slice(hit.end))); }
-			var currentSearchRows=[], activeSearchIndex=-1;
+			var currentSearchRows=[], activeSearchIndex=-1, searchHistoryTimer=null;
 			/* 键盘上下键在结果间移动：视觉等同鼠标悬停，Enter 打开当前高亮项 */
 			function setActiveSearch(i){
 				var items=searchBox.querySelectorAll(".sr-item");
@@ -457,8 +459,23 @@
 				for(var k=0;k<n;k++){ items[k].classList.toggle("active",k===i); }
 				items[i].scrollIntoView({block:"nearest"});
 			}
+			/* 空输入时展示最近 10 条：每条右侧可单独删除，右上角可一次清空 */
+			function renderSearchHistory(){
+				currentSearchRows=SearchHistory.render(searchBox,{
+					input:searchInput,
+					onPick:function(word){ renderSearch(word); },
+					onChange:function(rows){ currentSearchRows=rows; activeSearchIndex=-1; }
+				});
+				activeSearchIndex=-1;
+			}
+			function openRow(r){
+				if(!r) return;
+				/* 历史词回车：回填并直接搜 */
+				if(r.isHistory){ searchInput.value=r.word; SearchHistory.save(r.word); renderSearch(r.word); return; }
+				searchBox.hidden=true; goRow(r);
+			}
 			function renderSearch(q){
-				if(!q){ searchBox.hidden=true; searchBox.innerHTML=""; currentSearchRows=[]; activeSearchIndex=-1; return; }
+				if(!q){ renderSearchHistory(); return; }
 				var lower=q.toLowerCase(), rows=[];
 				/* 索引按“位置”逐条列出：同一段文字出现在卡片 / 详情 / 单曲浮层里，就各出一条，互不替代 */
 				/* 匹配统一走 PinyinMatch：汉字按原文，纯字母再试全拼和首字母 */
@@ -503,30 +520,45 @@
 					top.appendChild(k); top.appendChild(al); top.appendChild(f);
 					var ctx=document.createElement("div"); ctx.className="sr-context"; addMark(ctx,r.context,q);
 					b.appendChild(top); b.appendChild(ctx);
-					b.addEventListener("click",function(){ searchBox.hidden=true; goRow(r); });
+					b.addEventListener("click",function(){ SearchHistory.save(q); searchBox.hidden=true; goRow(r); });
 					b.addEventListener("mouseenter",function(){ setActiveSearch(ix); });
 					searchBox.appendChild(b);
 				});
 				searchBox.hidden=false;
 				setActiveSearch(0);
 			}
-			searchInput.addEventListener("input",function(){ renderSearch(searchInput.value.trim()); });
-			searchInput.addEventListener("focus",function(){ if(searchInput.value.trim()) renderSearch(searchInput.value.trim()); });
+			searchInput.addEventListener("input",function(){
+				var q=searchInput.value.trim();
+				renderSearch(q);
+				/* 停手 900ms 才记进历史，免得把打字过程中的半截词也存进去 */
+				clearTimeout(searchHistoryTimer);
+				if(q) searchHistoryTimer=setTimeout(function(){ SearchHistory.save(q); },900);
+			});
+			/* 空着聚焦也要渲染一次：这时面板显示的是历史 */
+			searchInput.addEventListener("focus",function(){ renderSearch(searchInput.value.trim()); });
 			var navSearch=document.getElementById("navSearch"), navToggle=document.getElementById("navSearchToggle");
-			navToggle.addEventListener("click",function(ev){ ev.stopPropagation(); if(navSearch.classList.contains("open")){ if(!searchInput.value.trim()){ navSearch.classList.remove("open"); searchBox.hidden=true; } else { searchInput.focus(); } } else { navSearch.classList.add("open"); searchInput.focus(); } });
+			navToggle.addEventListener("click",function(ev){ ev.stopPropagation(); if(navSearch.classList.contains("open")){ if(!searchInput.value.trim()){ navSearch.classList.remove("open"); searchBox.hidden=true; } else { searchInput.focus(); } } else { navSearch.classList.add("open"); searchInput.focus(); renderSearch(searchInput.value.trim()); } });
 			searchInput.addEventListener("keydown",function(ev){
 				if(ev.key==="Escape"){ searchBox.hidden=true; searchInput.blur(); if(!searchInput.value.trim()) navSearch.classList.remove("open"); return; }
 				if(ev.key==="ArrowDown"||ev.key==="ArrowUp"){
 					ev.preventDefault();
-					var qk=searchInput.value.trim(); if(!qk) return;
-					if(searchBox.hidden||!searchBox.querySelector(".sr-item")) renderSearch(qk);
+					/* 空输入时也允许上下键在历史里走 */
+					if(searchBox.hidden) renderSearch(searchInput.value.trim());
 					var cnt=searchBox.querySelectorAll(".sr-item").length;
 					if(!cnt) return;
 					if(activeSearchIndex<0) setActiveSearch(ev.key==="ArrowDown"?0:cnt-1);
 					else setActiveSearch(activeSearchIndex+(ev.key==="ArrowDown"?1:-1));
 					return;
 				}
-				if(ev.key==="Enter"){ ev.preventDefault(); var q=searchInput.value.trim(); if(!q) return; if(!currentSearchRows.length) renderSearch(q); var r=currentSearchRows[activeSearchIndex]||currentSearchRows[0]; if(!r) return; searchBox.hidden=true; goRow(r); }
+				if(ev.key==="Enter"){
+					ev.preventDefault();
+					var q=searchInput.value.trim();
+					/* 输入框空着时，回车等于「用历史里的第一条再搜一次」 */
+					if(!q){ var h=currentSearchRows[activeSearchIndex]||currentSearchRows[0]; if(h&&h.isHistory) openRow(h); return; }
+					SearchHistory.save(q);
+					if(!currentSearchRows.length) renderSearch(q);
+					openRow(currentSearchRows[activeSearchIndex]||currentSearchRows[0]);
+				}
 			});
 			document.addEventListener("click",function(ev){ if(!ev.target.closest(".nav-search")){ searchBox.hidden=true; if(!searchInput.value.trim()) navSearch.classList.remove("open"); } });
 			document.querySelectorAll(".album-card").forEach(function(card){

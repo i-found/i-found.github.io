@@ -137,7 +137,7 @@
     <script type="text/javascript" src="js/SmoothScroll.js?v=dc3721b7"></script>
     <link rel="stylesheet" href="./dist/meplayer.css?v=af1ac3be">
     <link rel="stylesheet" href="main.css?v=9d556d4a">
-    <link rel="stylesheet" href="index.css?v=d83eee60">
+    <link rel="stylesheet" href="index.css?v=859935a5">
     <link rel="stylesheet" type="text/css"media="screen and (max-width:1080px)"href="tinyScreen.css?v=19ca5be7" />
     <link rel="icon" href="./img/ico.png?v=c6aeb3b5" type="image/x-icon">
   </head>
@@ -189,7 +189,7 @@
       </a>
 
       <!-- 站点版本号：每次推送 +1，刷新后看这里就能确定是不是最新版本 -->
-      <span class="site-version" id="siteVersion">V1.10.48</span>
+      <span class="site-version" id="siteVersion">V1.10.49</span>
 
       <ul>
         <li><a class="buttom first" href="https://i-found.github.io/">首页</a></li>
@@ -934,6 +934,8 @@
     <!-- 拼音搜索：tianmao / tm 也能搜到「天猫」 -->
     <script src="js/pinyin-data.js?v=ccab0a6c"></script>
     <script src="js/pinyin.js?v=54e83b5c"></script>
+    <!-- 搜索历史：三页共用一份，面板里可单条删除、可一次清空 -->
+    <script src="js/search-history.js?v=a046cc95"></script>
 
 <script type="text/javascript">
 (function(){
@@ -1431,9 +1433,34 @@ function goDetail(key){ openHome(key); setTimeout(function(){ var target=documen
 var searchInput=document.getElementById("homeSearchInput"), searchBox=document.getElementById("homeSearchResults");
 /* 高亮：汉字直接命中，或拼音命中（tianmao / tm），都把命中的那截包进 <mark> */
 function addMark(el,text,q){ var hit=window.PinyinMatch?PinyinMatch.find(text,q):null; if(!hit){ el.textContent=text; return; } el.appendChild(document.createTextNode(text.slice(0,hit.start))); var m=document.createElement("mark"); m.textContent=text.slice(hit.start,hit.end); el.appendChild(m); el.appendChild(document.createTextNode(text.slice(hit.end))); }
-var currentSearchRows=[];
+var currentSearchRows=[], activeSearchIndex=-1, searchHistoryTimer=null;
+/* 空输入时展示最近 10 条：每条右侧可单独删除，右上角可一次清空 */
+function renderSearchHistory(){
+currentSearchRows=SearchHistory.render(searchBox,{
+input:searchInput,
+onPick:function(word){ renderSearch(word); },
+onChange:function(rows){ currentSearchRows=rows; activeSearchIndex=-1; }
+});
+activeSearchIndex=-1;
+}
+/* 键盘上下键在结果间移动，首尾相接；视觉等同鼠标悬停 */
+function setActiveSearch(i){
+var items=searchBox.querySelectorAll(".sr-item");
+if(!items.length){ activeSearchIndex=-1; return; }
+i=(i+items.length)%items.length;
+for(var k=0;k<items.length;k++) items[k].classList.toggle("active",k===i);
+activeSearchIndex=i;
+items[i].scrollIntoView({block:"nearest"});
+}
+function openRow(r){
+if(!r) return;
+/* 历史词回车：回填并直接搜 */
+if(r.isHistory){ searchInput.value=r.word; SearchHistory.save(r.word); renderSearch(r.word); return; }
+searchBox.hidden=true;
+if(r.kind==="card") goCard(r.key); else goDetail(r.key);
+}
 function renderSearch(q){
-if(!q){ searchBox.hidden=true; searchBox.innerHTML=""; return; }
+if(!q){ renderSearchHistory(); return; }
 /* 匹配统一走 PinyinMatch：汉字按原文，纯字母再试全拼和首字母 */
 var rows=[];
 homeCards.forEach(function(c,key){
@@ -1445,9 +1472,10 @@ var ih=PinyinMatch.find(c.intro,q);
 if(ih){ var s=Math.max(0,ih.start-20), e=Math.min(c.intro.length,ih.end+20); rows.push({key:key,kind:"detail",field:"介绍",label:"提到“"+c.intro.slice(ih.start,ih.end)+"”",context:(s>0?"…":"")+c.intro.slice(s,e)+(e<c.intro.length?"…":"")}); }
 });
 currentSearchRows=rows;
+activeSearchIndex=-1;
 searchBox.innerHTML="";
 if(!rows.length){ var em=document.createElement("div"); em.className="sr-empty"; em.textContent="没有找到和“"+q+"”相关的内容"; searchBox.appendChild(em); }
-rows.slice(0,30).forEach(function(r){
+rows.slice(0,30).forEach(function(r,ix){
 var b=document.createElement("button"); b.type="button"; b.className="sr-item";
 var top=document.createElement("div"); top.className="sr-top";
 var k=document.createElement("b"); k.className="sr-kind"; k.textContent=r.kind==="card"?"卡片":"详情";
@@ -1456,18 +1484,43 @@ var f=document.createElement("span"); f.className="sr-field"; addMark(f,r.field+
 top.appendChild(k); top.appendChild(al); top.appendChild(f);
 var ctx=document.createElement("div"); ctx.className="sr-context"; addMark(ctx,r.context,q);
 b.appendChild(top); b.appendChild(ctx);
-b.addEventListener("click",function(){ searchBox.hidden=true; if(r.kind==="card") goCard(r.key); else goDetail(r.key); });
+b.addEventListener("mouseenter",function(){ setActiveSearch(ix); });
+b.addEventListener("click",function(){ SearchHistory.save(q); searchBox.hidden=true; if(r.kind==="card") goCard(r.key); else goDetail(r.key); });
 searchBox.appendChild(b);
 });
 searchBox.hidden=false;
 }
-searchInput.addEventListener("input",function(){ renderSearch(searchInput.value.trim()); });
-searchInput.addEventListener("focus",function(){ if(searchInput.value.trim()) renderSearch(searchInput.value.trim()); });
+searchInput.addEventListener("input",function(){
+var q=searchInput.value.trim();
+renderSearch(q);
+/* 停手 900ms 才记进历史，免得把打字过程中的半截词也存进去 */
+clearTimeout(searchHistoryTimer);
+if(q) searchHistoryTimer=setTimeout(function(){ SearchHistory.save(q); },900);
+});
+/* 空着聚焦也要渲染一次：这时面板显示的是历史 */
+searchInput.addEventListener("focus",function(){ renderSearch(searchInput.value.trim()); });
 var navSearch=document.getElementById("navSearch"), navToggle=document.getElementById("navSearchToggle");
-navToggle.addEventListener("click",function(ev){ ev.stopPropagation(); if(navSearch.classList.contains("open")){ if(!searchInput.value.trim()){ navSearch.classList.remove("open"); searchBox.hidden=true; } else { searchInput.focus(); } } else { navSearch.classList.add("open"); searchInput.focus(); } });
+navToggle.addEventListener("click",function(ev){ ev.stopPropagation(); if(navSearch.classList.contains("open")){ if(!searchInput.value.trim()){ navSearch.classList.remove("open"); searchBox.hidden=true; } else { searchInput.focus(); } } else { navSearch.classList.add("open"); searchInput.focus(); renderSearch(searchInput.value.trim()); } });
 searchInput.addEventListener("keydown",function(ev){
-if(ev.key==="Escape"){ searchBox.hidden=true; searchInput.blur(); if(!searchInput.value.trim()) navSearch.classList.remove("open"); }
-if(ev.key==="Enter"){ ev.preventDefault(); var q=searchInput.value.trim(); if(!q) return; if(!currentSearchRows.length) renderSearch(q); var r=currentSearchRows[0]; if(!r) return; searchBox.hidden=true; if(r.kind==="card") goCard(r.key); else goDetail(r.key); }
+if(ev.key==="Escape"){ searchBox.hidden=true; searchInput.blur(); if(!searchInput.value.trim()) navSearch.classList.remove("open"); return; }
+if(ev.key==="ArrowDown"||ev.key==="ArrowUp"){
+ev.preventDefault();
+if(searchBox.hidden) renderSearch(searchInput.value.trim());
+var cnt=searchBox.querySelectorAll(".sr-item").length;
+if(!cnt) return;
+if(activeSearchIndex<0) setActiveSearch(ev.key==="ArrowDown"?0:cnt-1);
+else setActiveSearch(activeSearchIndex+(ev.key==="ArrowDown"?1:-1));
+return;
+}
+if(ev.key==="Enter"){
+ev.preventDefault();
+var q=searchInput.value.trim();
+/* 输入框空着时，回车等于「用历史里的第一条再搜一次」 */
+if(!q){ var h=currentSearchRows[activeSearchIndex]||currentSearchRows[0]; if(h&&h.isHistory) openRow(h); return; }
+SearchHistory.save(q);
+if(!currentSearchRows.length) renderSearch(q);
+openRow(currentSearchRows[activeSearchIndex]||currentSearchRows[0]);
+}
 });
 document.addEventListener("click",function(ev){ if(!ev.target.closest(".nav-search")){ searchBox.hidden=true; if(!searchInput.value.trim()) navSearch.classList.remove("open"); } });
 homeCards.forEach(function(c,key){

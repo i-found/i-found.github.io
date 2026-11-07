@@ -140,9 +140,11 @@
     <!-- 拼音搜索：tianmao / tm 也能搜到「天猫」 -->
     <script type="text/javascript" src="js/pinyin-data.js?v=ccab0a6c"></script>
     <script type="text/javascript" src="js/pinyin.js?v=54e83b5c"></script>
+    <!-- 搜索历史：三页共用一份，面板里可单条删除、可一次清空 -->
+    <script type="text/javascript" src="js/search-history.js?v=a046cc95"></script>
     <link rel="stylesheet" href="./dist/meplayer.css?v=af1ac3be">
     <link rel="stylesheet" href="main.css?v=9d556d4a">
-    <link rel="stylesheet" href="index.css?v=d83eee60">
+    <link rel="stylesheet" href="index.css?v=859935a5">
     <link rel="stylesheet" type="text/css"media="screen and (max-width:1080px)"href="tinyScreen.css?v=19ca5be7" />
     <link rel="icon" href="./img/ico.png?v=c6aeb3b5" type="image/x-icon">
   </head>
@@ -541,6 +543,20 @@ li.search { position: relative; }
   color: #FF8B8B; font-size: 12px; font-family: inherit; cursor: pointer;
 }
 .sr-clear:hover { text-decoration: underline; }
+/* 每条历史：左边是词（点了就搜），右边是单独的删除按钮 */
+.sr-item.sr-history { display: flex; align-items: center; padding: 0; }
+.sr-hword {
+  flex: 1; min-width: 0; display: flex; align-items: center;
+  padding: 10px 0 10px 14px; border: none; background: none;
+  font: inherit; color: #333; text-align: left; cursor: pointer;
+}
+.sr-history .sr-field { display: block; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sr-del {
+  flex-shrink: 0; width: 30px; height: 30px; margin-right: 9px;
+  border: none; background: none; border-radius: 50%;
+  color: #c9c9c9; font-size: 18px; line-height: 1; cursor: pointer;
+}
+.sr-del:hover { background: #ffecec; color: #FF8B8B; }
 .record-card {
   background: #fafafa;
   border-radius: 8px;
@@ -1845,77 +1861,20 @@ li.search { position: relative; }
 
   /* ================= 搜索历史 =================
      存在 localStorage：最多 10 条、最新在前、重复的提前。
-     只有清除浏览器数据才会消失。 */
-  var SEARCH_HISTORY_KEY = 'suihe_search_history';
+     数据与面板都交给 js/search-history.js，首页 / 音乐页 / 记录页共用同一份。 */
   var searchHistoryTimer = null;
 
-  function getSearchHistory() {
-    try {
-      var list = JSON.parse(localStorage.getItem(SEARCH_HISTORY_KEY) || '[]');
-      if (!Array.isArray(list)) return [];
-      return list.filter(function(w) { return typeof w === 'string' && w.trim(); }).slice(0, 10);
-    } catch (e) { return []; }
-  }
+  function getSearchHistory() { return SearchHistory.get(); }
+  function saveSearchHistory(word) { SearchHistory.save(word); }
 
-  function saveSearchHistory(word) {
-    word = (word || '').trim();
-    if (!word) return;
-    var list = getSearchHistory().filter(function(w) { return w !== word; });
-    list.unshift(word);
-    try { localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(list.slice(0, 10))); } catch (e) {}
-  }
-
-  /* 搜索框为空时展示：最近 10 条 + 清空按钮 */
+  /* 搜索框为空时展示：最近 10 条，每条右侧可单独删除，右上角可一次清空 */
   function renderSearchHistory() {
-    var list = getSearchHistory();
-    recordSearchResults.innerHTML = '';
-    currentSearchRows = [];
+    currentSearchRows = SearchHistory.render(recordSearchResults, {
+      input: searchInput,
+      onPick: function(word) { renderSearch(word); },
+      onChange: function(rows) { currentSearchRows = rows; activeSearchIndex = -1; }
+    });
     activeSearchIndex = -1;
-    if (!list.length) { recordSearchResults.hidden = true; return; }
-
-    var head = document.createElement('div');
-    head.className = 'sr-head';
-    var title = document.createElement('span');
-    title.textContent = '最近搜索';
-    var clear = document.createElement('button');
-    clear.type = 'button';
-    clear.className = 'sr-clear';
-    clear.textContent = '清空';
-    clear.addEventListener('click', function(e) {
-      e.stopPropagation();
-      try { localStorage.removeItem(SEARCH_HISTORY_KEY); } catch (e2) {}
-      renderSearchHistory();
-      searchInput.focus();
-    });
-    head.appendChild(title);
-    head.appendChild(clear);
-    recordSearchResults.appendChild(head);
-
-    list.forEach(function(word, ix) {
-      currentSearchRows.push({ word: word, isHistory: true });
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'sr-item';
-      var top = document.createElement('div');
-      top.className = 'sr-top';
-      var f = document.createElement('span');
-      f.className = 'sr-field';
-      f.textContent = word;
-      top.appendChild(f);
-      b.appendChild(top);
-      b.addEventListener('click', function(e) {
-        /* 这里会重建结果面板、当前按钮被移出文档，
-           冒泡到 document 时 contains(target) 已是 false，会被误判成「点了外部」而关掉面板 */
-        e.stopPropagation();
-        searchInput.value = word;
-        saveSearchHistory(word);
-        renderSearch(word);
-        searchInput.focus();
-      });
-      b.addEventListener('mouseenter', function() { setActiveSearch(ix); });
-      recordSearchResults.appendChild(b);
-    });
-    recordSearchResults.hidden = false;
   }
 
   /* ================= 图片文字识别（百度 OCR） =================
