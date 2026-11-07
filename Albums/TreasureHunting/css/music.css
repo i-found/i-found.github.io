@@ -823,8 +823,8 @@ body::after {
 		height:38px;
 		line-height:37px;
 		padding-right:58px;
-		text-indent:1.5em;
+		text-indent:2.4em;   /* 让开左侧的状态图标，不然播放中的箭头会压到歌名上 */
 	}
 	#play-list ul li span{font-size:12px;right:8px;}
-	#play-list ul li i.ic{left:calc(1em - 2px);}
+	#play-list ul li i.ic{left:6px;}   /* 图标固定贴左，右侧再给文字留 2.4em */
 }
