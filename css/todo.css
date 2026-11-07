@@ -1,0 +1,463 @@
+/* ===== 首页「日历计划」卡片 =====
+   原来那张「乌鸦」图文卡换成一块纯文字的月历：
+   卡片本身是本月迷你日历，点整块卡片进全屏月历，点某一天弹当天的计划卡。
+   数据与记录页共用同一个云端密钥（suihe_records_key），详见 js/todo-calendar.js。 */
+
+.todo-card {
+  cursor: pointer;
+  color: #0F2540;
+  background: #fff;
+  outline: none;
+}
+.todo-card:hover { box-shadow: 6px 6px 15px 2px rgba(0, 0, 0, 0.08); }
+.todo-card:focus-visible { box-shadow: 0 0 0 2px #FF8B8B inset; }
+
+.todo-card .todo-card-body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 34px 40px 30px;
+  box-sizing: border-box;
+}
+
+.todo-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.todo-eyebrow {
+  margin: 0;
+  font-family: "PingFangSC-Regular";
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: #BCBCBC;
+}
+.todo-big {
+  margin: 6px 0 0;
+  font-family: "PingFangSC-Regular";
+  font-size: 62px;
+  font-weight: 700;
+  line-height: 1;
+  color: #0F2540;
+  letter-spacing: 1px;
+}
+.todo-card-side {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+.todo-month {
+  font-family: "PingFangSC-Regular";
+  font-size: 13px;
+  color: #828282;
+}
+/* 同步状态：绿=已同步，灰=仅本机，橙=失败 */
+.todo-sync {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #D8D8D8;
+  flex: 0 0 auto;
+}
+.todo-sync.ok { background: #27AE60; }
+.todo-sync.warn { background: #F39C12; }
+
+/* 迷你月历：只放数字，今天实心粉点，有计划的日期下面一个小圆 */
+.todo-mini-head {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-top: 20px;
+  margin-bottom: 2px;
+}
+.todo-mini-head span {
+  font-family: "PingFangSC-Regular";
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: #D6D6D6;
+  text-align: center;
+}
+.todo-mini {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px 0;
+}
+.todo-mini span {
+  position: relative;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "PingFangSC-Regular";
+  font-size: 13px;
+  color: #9A9A9A;
+  border-radius: 50%;
+}
+.todo-mini span.is-out { color: #DCDCDC; }
+.todo-mini span.is-today {
+  color: #fff;
+  background: #FF8B8B;
+  font-weight: 600;
+}
+.todo-mini span.has-plan::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 3px;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: #FF8B8B;
+}
+.todo-mini span.is-today.has-plan::after { background: #fff; bottom: 4px; }
+
+.todo-card-foot {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid #F4F4F4;
+}
+.todo-count {
+  margin: 0 0 8px;
+  font-family: "PingFangSC-Regular";
+  font-size: 14px;
+  color: #0F2540;
+}
+.todo-preview {
+  margin: 0;
+  font-family: "PingFangSC-Regular";
+  font-size: 13px;
+  line-height: 1.8;
+  color: #BCBCBC;
+  max-height: 72px;
+  overflow: hidden;
+}
+.todo-preview b { color: #FF8B8B; font-weight: 400; }
+
+/* ===== 全屏月历 ===== */
+.todo-full {
+  position: fixed;
+  inset: 0;
+  z-index: 9990;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+  background: rgba(15, 37, 64, 0.42);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  animation: todo-fade .22s ease;
+}
+.todo-full[hidden] { display: none; }
+@keyframes todo-fade { from { opacity: 0; } to { opacity: 1; } }
+
+.todo-panel {
+  display: flex;
+  flex-direction: column;
+  width: min(1100px, 100%);
+  height: min(780px, 100%);
+  padding: 26px 30px 22px;
+  box-sizing: border-box;
+  background: #fff;
+  border-radius: 26px;
+  overflow: hidden;
+  box-shadow: 0 30px 70px rgba(15, 37, 64, 0.28);
+  animation: todo-rise .26s cubic-bezier(.2, .8, .2, 1);
+}
+@keyframes todo-rise {
+  from { opacity: 0; transform: translateY(14px) scale(.99); }
+  to { opacity: 1; transform: none; }
+}
+
+.todo-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #F2F2F2;
+}
+.todo-panel-title {
+  margin: 0;
+  font-family: "PingFangSC-Regular";
+  font-size: 22px;
+  font-weight: 600;
+  color: #0F2540;
+}
+.todo-panel-sub {
+  margin: 0;
+  font-family: "PingFangSC-Regular";
+  font-size: 13px;
+  color: #B4B4B4;
+}
+.todo-panel-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+.todo-btn {
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid #E6E6E6;
+  border-radius: 16px;
+  background: #fff;
+  font-family: "PingFangSC-Regular";
+  font-size: 13px;
+  color: #666;
+  cursor: pointer;
+  transition: border-color .18s ease, color .18s ease, background .18s ease;
+}
+.todo-btn:hover { border-color: #FF8B8B; color: #FF8B8B; }
+.todo-btn.icon { width: 32px; padding: 0; font-size: 15px; line-height: 1; }
+.todo-btn.primary {
+  border-color: transparent;
+  background: #FF8B8B;
+  color: #fff;
+}
+.todo-btn.primary:hover { background: #FF7A7A; color: #fff; }
+
+.todo-week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+  padding: 14px 0 8px;
+  font-family: "PingFangSC-Regular";
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: #C4C4C4;
+  text-align: center;
+}
+
+.todo-grid {
+  flex: 1 1 0;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+  min-height: 0;
+}
+.todo-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 8px 10px;
+  border: 1px solid #F1F1F1;
+  border-radius: 14px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+.todo-cell:hover {
+  border-color: #FFC9C9;
+  box-shadow: 0 8px 18px rgba(255, 139, 139, 0.16);
+  transform: translateY(-1px);
+}
+.todo-cell.is-out { opacity: .34; }
+.todo-cell.is-today { border-color: #FF8B8B; background: #FFF7F7; }
+.todo-cell .todo-cell-d {
+  font-family: "PingFangSC-Regular";
+  font-size: 14px;
+  font-weight: 600;
+  color: #0F2540;
+  line-height: 1.2;
+}
+.todo-cell.is-today .todo-cell-d { color: #FF6F6F; }
+.todo-cell .todo-cell-tag {
+  font-family: "PingFangSC-Regular";
+  font-size: 11px;
+  color: #FF8B8B;
+}
+.todo-cell .todo-cell-t {
+  font-family: "PingFangSC-Regular";
+  font-size: 11px;
+  line-height: 1.5;
+  color: #9A9A9A;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+}
+.todo-cell .todo-cell-t s { color: #CFCFCF; }
+
+/* ===== 当天计划卡（叠在月历上，模仿音乐页「专辑详情 → 单曲浮层」） ===== */
+.todo-day {
+  position: fixed;
+  inset: 0;
+  z-index: 9995;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+  background: rgba(15, 37, 64, 0.24);
+  animation: todo-fade .18s ease;
+}
+.todo-day[hidden] { display: none; }
+.todo-day-card {
+  display: flex;
+  flex-direction: column;
+  width: min(520px, 100%);
+  max-height: min(640px, 100%);
+  padding: 24px 24px 20px;
+  box-sizing: border-box;
+  background: #fff;
+  border-radius: 22px;
+  box-shadow: 0 24px 60px rgba(15, 37, 64, 0.24);
+  animation: todo-rise .2s cubic-bezier(.2, .8, .2, 1);
+}
+.todo-day-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #F4F4F4;
+}
+.todo-day-title {
+  margin: 0;
+  font-family: "PingFangSC-Regular";
+  font-size: 18px;
+  font-weight: 600;
+  color: #0F2540;
+}
+.todo-day-week {
+  font-family: "PingFangSC-Regular";
+  font-size: 13px;
+  color: #B4B4B4;
+}
+.todo-day-close {
+  margin-left: auto;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 50%;
+  background: #F7F7F7;
+  color: #FF5252;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+.todo-day-close:hover { background: #FFECEC; }
+
+.todo-list {
+  flex: 1 1 auto;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+  min-height: 60px;
+}
+.todo-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 0;
+  border-bottom: 1px solid #F7F7F7;
+}
+.todo-row:last-child { border-bottom: 0; }
+.todo-check {
+  flex: 0 0 auto;
+  width: 17px;
+  height: 17px;
+  margin: 2px 0 0;
+  accent-color: #FF8B8B;
+  cursor: pointer;
+}
+.todo-row .todo-text {
+  flex: 1 1 auto;
+  font-family: "PingFangSC-Regular";
+  font-size: 15px;
+  line-height: 1.6;
+  color: #333;
+  word-break: break-word;
+}
+.todo-row.done .todo-text {
+  color: #C4C4C4;
+  text-decoration: line-through;
+}
+.todo-row .todo-del {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #D8D8D8;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+.todo-row .todo-del:hover { color: #FF5252; background: #FFF0F0; }
+
+.todo-empty {
+  padding: 22px 0;
+  font-family: "PingFangSC-Regular";
+  font-size: 13px;
+  color: #C4C4C4;
+  text-align: center;
+}
+
+.todo-form {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #F4F4F4;
+}
+.todo-form input {
+  flex: 1 1 auto;
+  height: 40px;
+  padding: 0 14px;
+  box-sizing: border-box;
+  border: 1px solid #EDEDED;
+  border-radius: 12px;
+  background: #FAFAFA;
+  font-family: "PingFangSC-Regular";
+  font-size: 14px;
+  color: #333;
+  outline: none;
+}
+.todo-form input:focus { border-color: #FFC9C9; background: #fff; }
+.todo-form button {
+  flex: 0 0 auto;
+  height: 40px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 12px;
+  background: #FF8B8B;
+  font-family: "PingFangSC-Regular";
+  font-size: 14px;
+  color: #fff;
+  cursor: pointer;
+}
+.todo-form button:hover { background: #FF7A7A; }
+
+/* 小屏：全屏月历铺满，格子只留日期和条数 */
+@media screen and (max-width: 1080px) {
+  .todo-full { padding: 0; background: #fff; }
+  .todo-panel {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    padding: 16px 14px;
+    box-shadow: none;
+  }
+  .todo-panel-title { font-size: 18px; }
+  .todo-panel-sub { display: none; }
+  .todo-week { padding: 10px 0 6px; }
+  .todo-grid { gap: 6px; }
+  .todo-cell { padding: 6px; border-radius: 10px; }
+  .todo-cell .todo-cell-t { display: none; }
+  .todo-day-card { max-height: 84vh; }
+
+  /* 首页卡片：小屏也是同一块，字号收一点 */
+  .todo-card .todo-card-body { padding: 22px 24px; }
+  .todo-big { font-size: 46px; }
+  .todo-mini { margin-top: 14px; }
+  .todo-mini span { height: 28px; font-size: 12px; }
+}
