@@ -14,6 +14,9 @@ _workflow_state.json
 # Python 字节码缓存
 __pycache__/
 
+# R2 / Worker 上传凭据（本机文件，绝不进仓库）
+_r2_secret.py
+
 # 一次性的验证脚本与截图，验证完就删，不进仓库。
 _tmp_*
 _li_*

@@ -35,8 +35,9 @@ mp4 不进仓库（.gitignore），传到 Cloudflare R2，URL 形如
     https://media.meimei.qzz.io/vid/corgi-01.mp4?v=<本地文件 md5 前 8 位>
 这个 ?v= 以前靠手改，现在由第 3 步按本地文件哈希自动维护；本地没有对应文件时原样保留。
 
-上传走 rclone（`python _workflow.py upload`），需要先 `rclone config` 配好 R2 的 S3 remote，
-再把文件顶部的 UPLOAD_REMOTE / UPLOAD_BUCKET / UPLOAD_PREFIX 改成自己的名字。
+上传走纯 HTTP（`python _workflow.py upload`），不需要装 rclone 之类的客户端：
+凭据放环境变量或 _r2_secret.py（不进仓库），走站点 Worker 的上传路由，或直接调
+Cloudflare REST API 写桶。和记录页上传记录是同一个思路：本地只发请求。
 ?v= 取的是本地文件哈希，只有「R2 上的字节 == 本地文件」时缓存击穿才准确，
 所以顺序固定为：转码 -> 上传 -> 打号 -> 版本号 -> push。
 
@@ -45,7 +46,7 @@ mp4 不进仓库（.gitignore），传到 Cloudflare R2，URL 形如
     python _workflow.py media              # 1) 转码全部视频
     python _workflow.py media 01 07        #    只转指定的 corgi 编号
     python _workflow.py posters            # 2) 重截全部封面
-    python _workflow.py upload             # 3) 把 vid/*.mp4 传上 R2（rclone，--dry-run 可预演）
+    python _workflow.py upload             # 3) 把 vid/*.mp4 传上 R2（纯 HTTP，--dry-run 预演）
     python _workflow.py stamp              # 4) 打版本号（本地 + R2）
     python _workflow.py bump               # 5) 站点版本号 +1
     python _workflow.py release            # 1、2、4、5 按顺序跑完，不提交
@@ -59,7 +60,6 @@ import hashlib
 import json
 import os
 import re
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -123,11 +123,23 @@ ABS_REF = re.compile(r'%s/([^"\'?\s)]+?\.(?:%s))(?:\?v=[0-9a-f]+)?'
 STAMP_FILES = ('*.html', 'Albums/*/index.html', 'js/*.js')
 
 # ====================== 5. R2 上传 ======================
-# rclone 的 remote 名（`rclone config` 里自己起的）与桶名，按本机配置填。
-# 上传前会先校验 remote / 桶是否存在，名字不对会直接告诉你现有的是哪些。
-UPLOAD_REMOTE = 'r2'      # 例如 rclone config 里叫 r2 / r2media / cloudflare
-UPLOAD_BUCKET = 'media'   # R2 桶名
-UPLOAD_PREFIX = 'vid'     # 桶内前缀：本地 vid/x.mp4 -> <桶>/vid/x.mp4
+# 全部走 HTTP，不需要装任何东西（和记录页上传记录是同一个思路：只发请求，不装客户端）。
+#
+# 两种模式，按本机有哪个凭据自动选：
+#   'worker' —— 站点 Worker 已经有 R2 绑定，给它加一条上传路由即可，凭据全在服务端，
+#               本地只放一个 X-Records-Key（和记录页 localStorage 里那个一样）。
+#   'api'    —— 直接调 Cloudflare REST API 写 R2，本地放 API Token（R2 写权限）。
+#
+# 凭据不要写进仓库：放环境变量，或放 _r2_secret.py（已在 .gitignore 里）。
+UPLOAD_MODE = 'auto'          # auto | worker | api
+UPLOAD_WORKER_URL = 'https://meimei.qzz.io/api/upload'
+UPLOAD_PREFIX = 'vid'         # 桶内前缀：本地 vid/x.mp4 -> <桶>/vid/x.mp4
+R2_BUCKET = 'media'           # R2 桶名
+
+# 环境变量名（_r2_secret.py 里同名变量也认）
+ENV_WORKER_KEY = 'SUIHE_RECORDS_KEY'   # 记录页用的那个 key
+ENV_ACCOUNT_ID = 'R2_ACCOUNT_ID'
+ENV_API_TOKEN = 'R2_API_TOKEN'
 
 # ====================== 6. 素材清单 ======================
 # 壁纸视频：_corgi_map.txt 每行「编号 \t 源文件名」
@@ -588,59 +600,117 @@ def bump(show=False):
 
 
 # ======================================================================
-# 5) 上传 R2
+# 5) 上传 R2（纯 HTTP，不需要装任何客户端）
 # ======================================================================
-def _rclone():
-    exe = shutil.which('rclone')
-    if not exe:
-        print('没找到 rclone。装好后 `rclone config` 选 Amazon S3 -> Cloudflare R2，'
-              '填 Access Key / Secret / 账号 ID，再把本文件顶部的 '
-              'UPLOAD_REMOTE / UPLOAD_BUCKET 改成你配的名字。')
-    return exe
+def _secrets():
+    """凭据来源：环境变量优先，其次 _r2_secret.py（本地文件，不进仓库）。"""
+    env = dict(os.environ)
+    fp = os.path.join(ROOT, '_r2_secret.py')
+    if os.path.isfile(fp):
+        ns = {}
+        try:
+            exec(open(fp, encoding='utf-8').read(), ns)
+            for k, v in ns.items():
+                if k.isupper() and isinstance(v, str) and v.strip():
+                    env.setdefault(k, v.strip())
+        except Exception as e:
+            print('读 _r2_secret.py 出错: %s' % e)
+    return env
 
 
-def upload(force=False, dry=False):
-    """5) 把 vid/*.mp4 传到 Cloudflare R2。
+def _pick_mode(env):
+    if UPLOAD_MODE in ('worker', 'api'):
+        return UPLOAD_MODE
+    if env.get(ENV_WORKER_KEY):
+        return 'worker'
+    if env.get(ENV_API_TOKEN) and env.get(ENV_ACCOUNT_ID):
+        return 'api'
+    return ''
 
-    ?v= 用的是本地文件 md5，只有「传上去的字节 == 本地文件」时才成立，
+
+def _upload_worker(session, env, key, path, dry):
+    """POST 到站点 Worker 的上传路由：凭据全在服务端，本地只有 key（和记录页同一套）。"""
+    with open(path, 'rb') as fh:
+        body = fh.read()
+    if dry:
+        print('  [dry] POST %s  %-34s %6.2f MB' % (UPLOAD_WORKER_URL, key, len(body) / 1048576))
+        return True
+    r = session.post(UPLOAD_WORKER_URL,
+                     headers={'X-Records-Key': env[ENV_WORKER_KEY],
+                              'X-Object-Key': key,
+                              'Content-Type': 'video/mp4'},
+                     data=body, timeout=(15, 600))
+    if r.status_code not in (200, 201, 204):
+        print('  %-34s 失败 %s %s' % (key, r.status_code, (r.text or '')[:120]))
+        return False
+    print('  %-34s OK   %6.2f MB' % (key, len(body) / 1048576))
+    return True
+
+
+def _upload_api(session, env, key, path, dry):
+    """直传 Cloudflare REST API 写 R2：PUT /accounts/<id>/r2/buckets/<bucket>/objects/<key>。"""
+    url = ('https://api.cloudflare.com/client/v4/accounts/%s/r2/buckets/%s/objects/%s'
+           % (env[ENV_ACCOUNT_ID], R2_BUCKET, key))
+    with open(path, 'rb') as fh:
+        body = fh.read()
+    if dry:
+        print('  [dry] PUT  %s  %6.2f MB' % (url, len(body) / 1048576))
+        return True
+    r = session.put(url,
+                    headers={'Authorization': 'Bearer ' + env[ENV_API_TOKEN],
+                             'Content-Type': 'video/mp4'},
+                    data=body, timeout=(15, 900))
+    if r.status_code not in (200, 201):
+        print('  %-34s 失败 %s %s' % (key, r.status_code, (r.text or '')[:160]))
+        return False
+    print('  %-34s OK   %6.2f MB' % (key, len(body) / 1048576))
+    return True
+
+
+def upload(dry=False, only=None):
+    """5) 把 vid/*.mp4 传到 Cloudflare R2（纯 HTTP，不装客户端）。
+
+    ?v= 用的是本地文件 md5，只有「R2 上的字节 == 本地文件」时才成立，
     所以顺序是 转码 -> 上传 -> 打号(stamp) -> 版本号 -> push。
     """
-    exe = _rclone()
-    if not exe:
+    try:
+        import requests
+    except ImportError:
+        print('需要 requests（pip install requests）')
         return 1
 
-    remotes = [x.strip().rstrip(':') for x in
-               (run([exe, 'listremotes'], check=False).stdout or '').splitlines() if x.strip()]
-    if UPLOAD_REMOTE not in remotes:
-        print('rclone 里没有名为 %r 的 remote，现有: %s'
-              % (UPLOAD_REMOTE, ', '.join(remotes) or '（空）'))
-        return 1
-
-    buckets = [x.strip().rstrip('/') for x in
-               (run([exe, 'lsf', UPLOAD_REMOTE + ':', '--dirs-only', '--max-depth', '1'],
-                    check=False).stdout or '').splitlines() if x.strip()]
-    if UPLOAD_BUCKET not in buckets:
-        print('桶 %r 不在 %s: 下面，现有: %s'
-              % (UPLOAD_BUCKET, UPLOAD_REMOTE, ', '.join(buckets) or '（空）'))
+    env = _secrets()
+    mode = _pick_mode(env)
+    if not mode:
+        print('没有上传凭据。二选一：\n'
+              '  A. 站点 Worker 加一条上传路由（它已经绑了 R2），然后把 key 放进来：\n'
+              '       setx %s "<记录页那个 X-Records-Key>"\n'
+              '  B. 直接给 Cloudflare API 写 R2 的权限：\n'
+              '       setx %s "<账号ID>"  &  setx %s "<R2 写权限的 API Token>"\n'
+              '  也可以写进 _r2_secret.py（已在 .gitignore 里，不进仓库）。'
+              % (ENV_WORKER_KEY, ENV_ACCOUNT_ID, ENV_API_TOKEN))
         return 1
 
     files = sorted(glob.glob(os.path.join(VID, '*.mp4')))
-    dst = '%s:%s/%s' % (UPLOAD_REMOTE, UPLOAD_BUCKET, UPLOAD_PREFIX)
-    print('上传 %d 个 mp4 -> %s%s' % (len(files), dst, '（dry-run）' if dry else ''))
+    if only:
+        files = [f for f in files if os.path.splitext(os.path.basename(f))[0] in only]
+    print('上传 %d 个 mp4 -> R2 桶 %s/%s（模式 %s%s）'
+          % (len(files), R2_BUCKET, UPLOAD_PREFIX, mode, '，dry-run' if dry else ''))
 
-    cmd = [exe, 'copy', VID, dst, '--include', '*.mp4',
-           '--transfers', '4', '--checkers', '8',
-           '--stats', '5s', '--stats-one-line']
-    if force:
-        cmd += ['--ignore-times']     # 文件名/体积没变也要重传（比如重编码后体积恰好相同）
-    if dry:
-        cmd += ['--dry-run', '-v']
-    # 不捕获输出：rclone 的进度条直接打在终端上
-    rc = subprocess.run(cmd).returncode
-    if rc != 0:
-        print('rclone 返回 %d，检查网络/凭据后重试' % rc)
+    session = requests.Session()
+    fn = _upload_worker if mode == 'worker' else _upload_api
+    ok = fail = 0
+    for f in files:
+        key = '%s/%s' % (UPLOAD_PREFIX, os.path.basename(f))
+        if fn(session, env, key, f, dry):
+            ok += 1
+        else:
+            fail += 1
+
+    print('完成: 成功 %d，失败 %d' % (ok, fail))
+    if fail:
         return 1
-    print('上传完成。接着跑 python _workflow.py stamp && python _workflow.py bump && python _workflow.py push "..."')
+    print('接着跑 python _workflow.py stamp && python _workflow.py push "..."')
     return 0
 
 
@@ -724,7 +794,7 @@ def main(argv):
         bump(show='show' in opts)
         return 0
     if cmd == 'upload':
-        return upload(force='force' in opts, dry='dry-run' in opts)
+        return upload(dry='dry-run' in opts, only=set(args[1:]) or None)
     if cmd == 'release':
         return release(args[1:], name)
     if cmd == 'push':
