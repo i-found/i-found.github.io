@@ -188,6 +188,7 @@
           </button>
           <div class="nav-search-popup" id="searchPopup">
             <input type="text" class="search-input" id="searchBar" placeholder="搜索记录..." autocomplete="off">
+            <button type="button" class="search-clear" id="searchClear" title="清除" aria-label="清除搜索内容" hidden>×</button>
             <section class="record-search-results" id="recordSearchResults" hidden></section>
           </div>
         </li>
@@ -460,19 +461,35 @@ li.search { position: relative; }
   to { opacity: 1; transform: translateY(-50%) scale(1); }
 }
 .search-input {
-  width: 100%;
+  flex: 1 1 auto;
+  min-width: 0;
   height: 44px;
-  padding: 0 20px;
+  padding: 0 4px 0 20px;
   border: none;
   outline: none;
   font-size: 15px;
   border-radius: 30px;
   background: transparent;
   box-sizing: border-box;
-  background: transparent;
   color: #333;
 }
 .search-input::placeholder { color: #bbb; }
+/* 有内容才出现的清除按钮：一键清空输入并退回历史列表 */
+.search-clear {
+  flex: 0 0 auto;
+  width: 26px; height: 26px;
+  margin-right: 6px;
+  padding: 0;
+  border: none; border-radius: 50%;
+  background: #f3f3f3;
+  color: #999;
+  font-size: 15px; line-height: 1;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s ease, color .15s ease;
+}
+.search-clear:hover { background: #ffe3e7; color: #ff6b81; }
+.search-clear[hidden] { display: none; }
 
 /* 搜索结果面板：与主页/音乐页一致的下拉列表形态 */
 .record-search-results {
@@ -1809,6 +1826,7 @@ li.search { position: relative; }
     if (searchIconBtn) searchIconBtn.classList.remove('active');
     hideSearchResults();
     if (searchInput) { searchInput.value = ''; searchInput.blur(); }
+    syncSearchClear();
   }
 
   if (searchIconBtn) {
@@ -1838,6 +1856,18 @@ li.search { position: relative; }
   // ===== 搜索：与主页/音乐页一致（分类结果 + 上下键 + 光圈） =====
   var recordSearchResults = document.getElementById('recordSearchResults');
   var currentSearchRows = [], activeSearchIndex = -1;
+
+  /* 悬停改高亮走 mousemove 而不是 mouseenter：面板一铺开，浏览器会给鼠标恰好
+     压住的那一行补发 mouseenter，默认高亮就从中意的第一行跳走了。mousemove 只在
+     人真的挪动鼠标时才有，静止时一直停在第 0 行。 */
+  if (recordSearchResults) {
+    recordSearchResults.addEventListener('mousemove', function(e) {
+      var row = e.target && e.target.closest ? e.target.closest('[data-sr-index]') : null;
+      if (!row) return;
+      var ix = parseInt(row.getAttribute('data-sr-index'), 10);
+      if (ix >= 0 && ix !== activeSearchIndex) setActiveSearch(ix);
+    }, { passive: true });
+  }
 
   /* 高亮：汉字直接命中，或拼音命中（tianmao / tm），都把命中的那截包进 <mark> */
   function addMark(el, text, q) {
@@ -2084,6 +2114,7 @@ li.search { position: relative; }
   }
 
   function renderSearch(q) {
+    syncSearchClear();
     if (!q) { renderSearchHistory(); return; }
     /* 匹配统一走 PinyinMatch：汉字按原文，纯字母再试全拼和首字母 */
     var rows = [];
@@ -2126,6 +2157,7 @@ li.search { position: relative; }
       var b = document.createElement('button');
       b.type = 'button';
       b.className = 'sr-item';
+      b.dataset.srIndex = ix;
       var top = document.createElement('div');
       top.className = 'sr-top';
       var f = document.createElement('span');
@@ -2138,7 +2170,7 @@ li.search { position: relative; }
       b.appendChild(top);
       b.appendChild(ctx);
       b.addEventListener('click', function() { saveSearchHistory(q); goRecordField(r.id, r.field, r.isImage); });
-      b.addEventListener('mouseenter', function() { setActiveSearch(ix); });
+      /* 悬停高亮统一由面板上的 mousemove 处理，见上方注释 */
       recordSearchResults.appendChild(b);
     });
     recordSearchResults.hidden = false;
@@ -2196,9 +2228,25 @@ li.search { position: relative; }
     flashRecord(target, anchor);
   }
 
+  /* 输入框里有内容才露出「×」：一键清空并退回历史列表 */
+  var searchClearBtn = document.getElementById('searchClear');
+  function syncSearchClear() {
+    if (searchClearBtn) searchClearBtn.hidden = !(searchInput && searchInput.value);
+  }
+  if (searchClearBtn) {
+    searchClearBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      searchInput.value = '';
+      clearTimeout(searchHistoryTimer);   // 别把没打完的半截词记进历史
+      renderSearch('');   // 清空后回到「最近搜索」
+      searchInput.focus();
+    });
+  }
+
   if (searchInput) {
     searchInput.addEventListener('input', function() {
       var q = searchInput.value.trim();
+      syncSearchClear();
       renderSearch(q);
       /* 停手 900ms 才记进历史，免得把打字过程中的半截词也存进去 */
       clearTimeout(searchHistoryTimer);
