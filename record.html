@@ -230,9 +230,9 @@ html{scrollbar-gutter:stable;}
   <div class="add-record-fixed" id="addRecordWrap">
     <button class="add-record-btn" id="addRecordBtn" onclick="openAddRecordModal()" title="添加记录">＋</button>
   </div>
-  <!-- 识别图片文字 - 左下角 -->
+  <!-- 补识别图片文字 - 左下角（只在还有没识别过的图时才出现） -->
   <div class="ocr-btn-fixed">
-    <button class="sync-settings-btn" id="ocrAllBtn" title="识别图片里的文字" onclick="ocrAllRecords()">文</button>
+    <button class="sync-settings-btn" id="ocrAllBtn" title="补识别历史图片里的文字（新加的图保存时会自动识别）" onclick="ocrAllRecords()">文</button>
   </div>
   <!-- 同步设置 - 左下角 -->
   <div class="sync-settings-fixed">
@@ -356,6 +356,8 @@ html{scrollbar-gutter:stable;}
   z-index: 5;
 }
 .ocr-btn-fixed .sync-settings-btn { font-size: 17px; }
+/* 全部识别过就整个收起来，平时不该有「要先点我」的暗示 */
+.ocr-btn-fixed.is-hidden { display: none; }
 
 .sync-status {
   display: block;
@@ -1266,6 +1268,7 @@ li.search { position: relative; }
           healBatchTimes(records);               // 修正被同步批量刷新的「修改时间」
           saveToStorage().catch(function() {});  // 修完存回去，下次无需再算
           render();
+          updateOcrBtn();
         }
       }).catch(function() {
         // 失败回退 localStorage
@@ -1287,6 +1290,7 @@ li.search { position: relative; }
           records = parsed.map(normalizeRecord);
           healBatchTimes(records);
           render();
+          updateOcrBtn();
           // 迁移到 IndexedDB
           saveToStorage().catch(function() {});
         }
@@ -1729,7 +1733,7 @@ li.search { position: relative; }
         saveRecords([savedRecord]);
         /* 有图就顺手识别文字；后台跑，失败不影响保存 */
         var ocrTarget = savedRecord;
-        setTimeout(function() { ensureOcr(ocrTarget); }, 300);
+        setTimeout(function() { ensureOcr(ocrTarget).then(updateOcrBtn); }, 300);
       }
     } catch(e) {
       showSyncStatus('保存出错: ' + e.message, 'error');
@@ -1754,6 +1758,7 @@ li.search { position: relative; }
       showSyncStatus('删除未同步：' + (err.message || '网络错误') + '，联网后刷新会自动重试', 'error');
     });
     render();
+    updateOcrBtn();
   }
 
   // 图片灯箱
@@ -1989,6 +1994,38 @@ li.search { position: relative; }
     }).catch(function() { return ''; });
   }
 
+  /* 有图但还没识别过的记录（一般只有历史数据或上次失败的，新记录保存时已自动识别） */
+  function pendingOcrRecords(limit) {
+    var list = records.filter(function(r) { return !r.ocrText && displayImages(r).length; });
+    return limit ? list.slice(0, limit) : list;
+  }
+
+  /* 左下角那个「文」只在确实还有漏网的图片时才出现，平时不占位也不碍眼 */
+  function updateOcrBtn() {
+    var btn = document.getElementById('ocrAllBtn');
+    if (!btn || !btn.parentNode) return;
+    btn.parentNode.classList.toggle('is-hidden', !pendingOcrRecords().length);
+  }
+
+  /* 打开页面后把漏识别的静默补一次（一次会话只跑一趟，最多 5 条，不打扰） */
+  function autoBackfillOcr() {
+    if (ocrRunning) return;
+    try { if (sessionStorage.getItem('suihe_ocr_backfill')) return; } catch (e) {}
+    var todo = pendingOcrRecords(5);
+    if (!todo.length) { updateOcrBtn(); return; }
+    try { sessionStorage.setItem('suihe_ocr_backfill', '1'); } catch (e) {}
+    ocrRunning = true;
+    var chain = Promise.resolve();
+    todo.forEach(function(r) {
+      chain = chain.then(function() { return ensureOcr(r); });
+    });
+    chain.then(function() {
+      ocrRunning = false;
+      updateOcrBtn();
+      render();
+    }).catch(function() { ocrRunning = false; });
+  }
+
   /* 批量识别：只跑「有图片但还没识别过」的记录 */
   function ocrAllRecords() {
     if (ocrRunning) return;
@@ -2018,10 +2055,12 @@ li.search { position: relative; }
       return saveToStorage();
     }).then(function() {
       render();
+      updateOcrBtn();
       showSyncStatus('识别完成：成功 ' + ok + '、失败 ' + fail, fail ? 'error' : 'success');
       setTimeout(function() { showSyncStatus('', ''); }, 4000);
     }).catch(function(e) {
       ocrRunning = false;
+      updateOcrBtn();
       showSyncStatus('识别中断：' + e.message, 'error');
     });
   }
@@ -2533,6 +2572,8 @@ li.search { position: relative; }
     updateSyncUI();
     loadRecords(); // 异步加载（IndexedDB）
     render();
+    /* 保存记录时就会自动识别图片文字；这里只是把历史漏掉的静默补一遍 */
+    setTimeout(autoBackfillOcr, 2500);
 
     if (hasToken()) {
       loadFromD1().then(function(d1Records) {
