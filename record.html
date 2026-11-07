@@ -141,7 +141,7 @@
     <script type="text/javascript" src="js/pinyin-data.js?v=ccab0a6c"></script>
     <script type="text/javascript" src="js/pinyin.js?v=54e83b5c"></script>
     <!-- 搜索历史：三页共用一份，面板里可单条删除、可一次清空 -->
-    <script type="text/javascript" src="js/search-history.js?v=a046cc95"></script>
+    <script type="text/javascript" src="js/search-history.js?v=5bd042fb"></script>
     <link rel="stylesheet" href="./dist/meplayer.css?v=af1ac3be">
     <link rel="stylesheet" href="main.css?v=9d556d4a">
     <link rel="stylesheet" href="index.css?v=859935a5">
@@ -1854,6 +1854,7 @@ li.search { position: relative; }
 
   function hideSearchResults() {
     recordSearchResults.hidden = true;
+    SearchHistory.detach(recordSearchResults);
     recordSearchResults.innerHTML = '';
     currentSearchRows = [];
     activeSearchIndex = -1;
@@ -2051,6 +2052,8 @@ li.search { position: relative; }
       }
     });
     currentSearchRows = rows;
+    /* 面板改显示搜索结果了，别再被历史更新覆盖 */
+    SearchHistory.detach(recordSearchResults);
     recordSearchResults.innerHTML = '';
     if (!rows.length) {
       var em = document.createElement('div');

@@ -108,7 +108,7 @@
 			<script type="text/javascript" src="js/pinyin-data.js?v=ccab0a6c"></script>
 			<script type="text/javascript" src="js/pinyin.js?v=54e83b5c"></script>
 			<!-- 搜索历史：三页共用一份，面板里可单条删除、可一次清空 -->
-			<script type="text/javascript" src="js/search-history.js?v=a046cc95"></script>
+			<script type="text/javascript" src="js/search-history.js?v=5bd042fb"></script>
 			<script type="text/javascript">
 			var $a=$(".buttons a");
 			var $s=$(".buttons span");
@@ -509,6 +509,8 @@
 					});
 				});
 				currentSearchRows=rows;
+				/* 面板改显示搜索结果了，别再被历史更新覆盖 */
+				SearchHistory.detach(searchBox);
 				searchBox.innerHTML="";
 				if(!rows.length){ var em=document.createElement("div"); em.className="sr-empty"; em.textContent="没有找到和“"+q+"”相关的内容"; searchBox.appendChild(em); }
 				rows.slice(0,30).forEach(function(r,ix){

@@ -40,8 +40,21 @@
      opts.input    输入框（回填 / 聚焦）
      opts.onPick   点了某条词
      opts.onChange 面板内容变了（删除 / 清空），参数是新的 rows */
+  /* 记住谁在展示历史：别的标签页写入了新词，就地把这几块面板重画一遍 */
+  var panels = [];
+  function remember(box, opts) {
+    for (var i = 0; i < panels.length; i++) {
+      if (panels[i].box === box) { panels[i].opts = opts; return; }
+    }
+    panels.push({ box: box, opts: opts });
+  }
+
   function render(box, opts) {
     opts = opts || {};
+    /* 打标记：只有「正在显示历史」的面板才跟着别的标签页刷新，
+       正在显示搜索结果的面板不要被历史覆盖掉 */
+    box.dataset.srMode = 'history';
+    remember(box, opts);
     box.innerHTML = '';
     var list = get();
     var rows = [];
@@ -110,12 +123,31 @@
     return rows;
   }
 
+  /* 面板改成显示搜索结果前调一下，免得被别的标签页的历史更新覆盖 */
+  function detach(box) {
+    if (box) box.dataset.srMode = '';
+  }
+
+  /* storage 事件只在「别的标签页」改动时触发：那边刚搜的词、刚删的词，
+     这边开着的历史面板立刻跟上，不用手动刷新 */
+  window.addEventListener('storage', function(e) {
+    if (e.key !== KEY) return;
+    for (var i = panels.length - 1; i >= 0; i--) {
+      var w = panels[i];
+      if (!w.box.isConnected) { panels.splice(i, 1); continue; }
+      if (w.box.dataset.srMode !== 'history') continue;
+      var rows = render(w.box, w.opts);
+      if (w.opts.onChange) w.opts.onChange(rows);
+    }
+  });
+
   window.SearchHistory = {
     key: KEY,
     get: get,
     save: save,
     remove: remove,
     clear: clear,
-    render: render
+    render: render,
+    detach: detach
   };
 })();
