@@ -353,38 +353,40 @@
   overflow-x: hidden;
   min-height: 60px;
 }
-/* 一条计划：正文占满，右边一组小圆钮（同记录页的编辑 / 删除） */
+/* 一条计划：正文层压在「删除」上面，往左滑才露出底下的删除 */
 .todo-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  padding: 9px 0;
+  position: relative;
+  overflow: hidden;
   border-bottom: 1px solid #F7F7F7;
+  touch-action: pan-y;
 }
 .todo-row:last-child { border-bottom: 0; }
 .todo-row-main {
-  flex: 1 1 auto;
-  min-width: 0;
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  padding: 2px 0;
+  padding: 11px 0;
+  background: #fff;
+  transition: transform .24s cubic-bezier(.2, .8, .2, 1);
+  will-change: transform;
+  touch-action: pan-y;
 }
-.todo-act {
+.todo-row-main.dragging {
+  transition: none;
+  cursor: grabbing;
+  user-select: none;
+  -webkit-user-select: none;
+}
+/* 正文层右边的编辑钮：平时淡一点，指上去才亮 */
+.todo-row .todo-edit,
+.todo-row .todo-done {
   flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding-top: 1px;
-  opacity: .62;
-  transition: opacity .18s ease;
-}
-.todo-row:hover .todo-act,
-.todo-row.is-editing .todo-act { opacity: 1; }
-.todo-act button {
   width: 24px;
   height: 24px;
   padding: 0;
+  margin-top: 1px;
   border: 0;
   border-radius: 50%;
   background: #F2F2F2;
@@ -394,15 +396,42 @@
   text-align: center;
   color: #A8A8A8;
   cursor: pointer;
-  transition: background .16s ease, color .16s ease;
+  opacity: .62;
+  transition: background .16s ease, color .16s ease, opacity .18s ease;
 }
-.todo-act .todo-edit { transform: scaleX(-1); }
-.todo-act .todo-edit:hover { background: #ff6b81; color: #fff; }
-.todo-act .todo-del:hover { background: #ff4757; color: #fff; }
-.todo-act .todo-done { display: none; background: #ff6b81; color: #fff; font-size: 14px; }
-.todo-row.is-editing .todo-edit,
-.todo-row.is-editing .todo-del { display: none; }
+.todo-row .todo-edit { transform: scaleX(-1); }
+.todo-row:hover .todo-edit { opacity: 1; }
+.todo-row .todo-edit:hover { background: #ff6b81; color: #fff; opacity: 1; }
+.todo-row .todo-done {
+  display: none;
+  background: #ff6b81;
+  color: #fff;
+  font-size: 14px;
+  opacity: 1;
+}
+.todo-row.is-editing .todo-edit { display: none; }
 .todo-row.is-editing .todo-done { display: block; }
+/* 底层的删除：滑开才看得见 */
+.todo-row .todo-del {
+  position: absolute;
+  z-index: 0;
+  top: 50%;
+  right: 0;
+  width: 72px;
+  height: 38px;
+  margin-top: -19px;
+  border: 0;
+  border-radius: 10px;
+  background: #FF5252;
+  font-family: "PingFangSC-Regular";
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: #fff;
+  cursor: pointer;
+  transition: background .16s ease;
+}
+.todo-row .todo-del:hover { background: #F04545; }
+.todo-row .todo-del:active { background: #E03A3A; }
 .todo-check {
   flex: 0 0 auto;
   width: 17px;
