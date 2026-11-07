@@ -611,3 +611,92 @@ span{
 }
 @keyframes ringSpin{from{--ringAng:0deg;}to{--ringAng:360deg;}}
 @keyframes ringFade{to{opacity:0;}}
+
+/* ================= 移动端（≤768px） =================
+   桌面整套是 1200px 定宽：导航、轮播、卡片网格、专辑详情都写死 1200/265px。
+   手机只有 390 左右宽，不重排就会横向溢出——内容被顶到屏幕外、右边空一条、
+   THE END 不在正中，看着像「底层块居左对齐了」。
+   下面每一条都只在窄屏生效，桌面规则一个字没动。 */
+@media (max-width:768px){
+  html,body{overflow-x:hidden;}
+
+  /* ---- 导航：企鹅 + 欢迎语 + 搜索，i-found 二级图标让位 ---- */
+  .Navi-Bar{height:56px;}
+  .Navi-Bar-content{width:auto;padding:0 12px;}
+  .Navi-Bar .img2{display:none;}
+  .img1{height:30px;top:13px;}
+  .img1:hover{height:30px;top:13px;left:0;}
+  .Navi-Bar .nav-welcome{
+    height:56px;line-height:56px;font-size:19px;letter-spacing:0;
+    max-width:66vw;overflow:hidden;text-overflow:ellipsis;
+  }
+  .Navi-Bar .nav-search{top:8px;}
+  .Navi-Bar .nav-search.open{width:calc(100vw - 24px);}
+  .Navi-Bar .nav-search.open input{width:calc(100vw - 76px);}
+  .nav-search-results{width:calc(100vw - 24px);max-height:56vh;}
+
+  /* ---- 轮播：751px 的图按 86vw 等比重排，p1~p7 的像素位移全部换成 vw ----
+     原来 1200 宽容器里 751 宽的图居中偏移 224px，相邻间隔也是 224~225px；
+     换成 86vw 的图之后，居中偏移 = (100-86)/2 = 7vw，间隔 = 224/751*86 ≈ 25.65vw。 */
+  .changebox{margin-top:66px;height:auto;padding-bottom:6px;}
+  .list{
+    position:relative;left:auto;margin-left:0;
+    width:100%;height:calc(86vw*300/751);overflow:hidden;
+  }
+  .list li img{width:86vw;height:auto;aspect-ratio:751/300;}
+  .p1{transform:translate3d(-44.3vw,0,0) scale(0.81);}
+  .p2{transform:translate3d(-18.65vw,0,0) scale(0.81);}
+  .p3{transform:translate3d(7vw,0,0) scale(1);}
+  .p4{transform:translate3d(32.65vw,0,0) scale(0.81);}
+  .p5{transform:translate3d(58.3vw,0,0) scale(0.81);}
+  .p6{transform:translate3d(83.95vw,0,0) scale(0.81);}
+  .p7{transform:translate3d(109.6vw,0,0) scale(0.81);}
+  /* 左右箭头：innerHTML 里图标是内联 64px，得用 !important 才压得住 */
+  .btn{width:34px;height:34px;line-height:34px;margin-top:-17px;opacity:.75;}
+  .btn img{width:34px !important;height:34px !important;}
+  .buttons{position:relative;left:auto;bottom:auto;margin:12px 0 0;width:100%;padding-top:0;}
+  .buttons a{width:26px;padding-top:3px;}
+
+  /* ---- 专辑卡片：四列改两列 ---- */
+  .album-cards{
+    width:auto;margin:22px 12px 0;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+  }
+  .album-card{width:auto;padding:8px;border-radius:16px;scroll-margin-top:70px;}
+  .album-card img{height:auto;aspect-ratio:4/3;border-radius:11px;}
+  .album-card h3{font-size:15px;margin:8px 2px 2px;}
+  .album-card .album-meta{font-size:12px;margin:0 2px;}
+  .album-card .album-date{font-size:11px;margin:5px 2px 0;}
+  .album-card .album-hint{height:6px;margin:4px 2px;}
+  .album-card .album-play{font-size:12px;margin:2px;}
+
+  /* ---- 展开的专辑介绍：左右两栏改上下 ---- */
+  .album-detail{
+    width:auto;margin:18px 12px 0;padding:16px;
+    flex-direction:column;min-height:0;border-radius:18px;
+  }
+  .album-detail-cover{
+    flex:0 0 auto;width:100%;height:auto;aspect-ratio:16/9;
+    margin:0 0 14px;border-radius:12px;
+  }
+  .album-detail-text h3{font-size:20px;}
+  .album-detail-text .album-meta{font-size:13px;margin-bottom:10px;}
+  .album-detail-intro{font-size:14px;line-height:1.75;margin-bottom:14px;}
+  .album-tracklist{columns:1;font-size:14px;line-height:1.95;padding-left:18px;margin-bottom:14px;}
+  .album-close{top:10px;right:10px;width:32px;height:32px;font-size:16px;}
+
+  /* ---- 单曲介绍浮层：桌面是左侧 388px 竖条，手机改成底部抽屉 ---- */
+  .track-pop{
+    position:fixed;left:10px;right:10px;bottom:10px;top:auto;
+    width:auto;max-height:74vh;
+    padding:16px 16px 54px;border-radius:18px;
+  }
+  .track-pop-cover{aspect-ratio:16/9;margin-bottom:12px;}
+  .track-pop-title{font-size:17px;}
+  .track-pop-intro{font-size:13px;line-height:1.8;}
+  .track-pop-play{left:16px;bottom:20px;font-size:14px;}
+
+  /* ---- 页脚：内容块已经是 100vw，text-align:center 自然就在正中 ---- */
+  .page-end{padding-top:34px;padding-bottom:26px;font-size:12px;letter-spacing:2px;}
+}

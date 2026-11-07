@@ -763,3 +763,45 @@ body::after {
 	background-repeat: no-repeat;
 	background-size: 8px 8px;
 }
+
+/* ================= 移动端（≤768px）：曲目面板 =================
+   桌面上面板是屏幕宽的 25%，手机上只剩 90 多像素：标题被裁、关闭按钮挤没了、
+   歌名只剩半个字。这里按视口重新给宽度，行高和字号一起收一档。
+   面板的进出手感仍然是 JS 按 offsetHeight 算 bottom，不用改脚本。 */
+@media (max-width:768px){
+	#play-list{
+		width:min(84vw,340px);
+		background-color:rgba(252,252,253,.97);   /* 面板下面就是控件，太透会互相干扰 */
+		backdrop-filter:blur(10px);
+		-webkit-backdrop-filter:blur(10px);
+		max-height:76vh;
+		overflow-y:auto;
+		-webkit-overflow-scrolling:touch;
+		border-radius:14px 0 0 0;
+	}
+	.list-title{
+		font-size:16px;
+		height:52px;
+		line-height:52px;
+		padding-left:14px;
+		padding-right:48px;   /* 给右上角的 ✕ 让位，标题不再被它压住 */
+		box-sizing:border-box;   /* 标题栏跟着面板宽度走，不然 100% + padding 会撑出面板 */
+	}
+	#playListCount{
+		width:17px;height:17px;line-height:17px;font-size:11px;
+		left:4px;top:-2px;
+	}
+	.list-title-close{
+		right:10px;top:11px;
+		width:30px;height:30px;line-height:28px;font-size:24px;
+	}
+	#play-list ul li{
+		font-size:14px;
+		height:38px;
+		line-height:37px;
+		padding-right:58px;
+		text-indent:1.5em;
+	}
+	#play-list ul li span{font-size:12px;right:8px;}
+	#play-list ul li i.ic{left:calc(1em - 2px);}
+}
