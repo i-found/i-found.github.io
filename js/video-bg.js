@@ -36,7 +36,12 @@
         {src:"../../vid/moon-touch.mp4?v=1a33bf38", poster:"../../vid/moon-touch.jpg?v=db57b960", cover:"../../vid/moon-touch-disc.jpg?v=bf9a2b85"},
         {src:"../../vid/endless-pain.mp4?v=d8b0de07", poster:"../../vid/endless-pain.jpg?v=d114e862", cover:"../../vid/endless-pain-disc.jpg?v=763d294a"},
         {src:"../../vid/beyoud.mp4?v=5a5bd938", poster:"../../vid/beyoud.jpg?v=27ac263e", cover:"../../vid/beyoud-disc.jpg?v=17cec89d"},
-        {src:"../../vid/a-curse-paper-lily.mp4?v=bad01e69", poster:"../../vid/a-curse-paper-lily.jpg?v=d76519ce", cover:"../../vid/a-curse-paper-lily-disc.jpg?v=03f02208"}
+        {src:"../../vid/a-curse-paper-lily.mp4?v=bad01e69", poster:"../../vid/a-curse-paper-lily.jpg?v=d76519ce", cover:"../../vid/a-curse-paper-lily-disc.jpg?v=03f02208"},
+        {src:"../../vid/such-beautiful-eyes.mp4?v=d04fc05b", poster:"../../vid/such-beautiful-eyes.jpg?v=d547c456", cover:"../../vid/such-beautiful-eyes-disc.jpg?v=f7936c99"},
+        {src:"../../vid/jianghu-years.mp4?v=e03b2df0", poster:"../../vid/jianghu-years.jpg?v=fc484fdd", cover:"../../vid/jianghu-years-disc.jpg?v=dfc8ea69"},
+        {src:"../../vid/eye-strike.mp4?v=bc76b087", poster:"../../vid/eye-strike.jpg?v=c693e358", cover:"../../vid/eye-strike-disc.jpg?v=d1600c75"},
+        {src:"../../vid/fairy-beauty.mp4?v=e2212bae", poster:"../../vid/fairy-beauty.jpg?v=1bdfd69d", cover:"../../vid/fairy-beauty-disc.jpg?v=690f5a82"},
+        {src:"../../vid/sword-beauties.mp4?v=ea399469", poster:"../../vid/sword-beauties.jpg?v=f0ebef9d", cover:"../../vid/sword-beauties-disc.jpg?v=cdfa4920"}
     ];
 
     /* ---- 专属背景：按歌名锁定视频，进到这首歌必出，不参与上面的随机池 ----
@@ -55,7 +60,7 @@
 
     /* ---- 全站歌曲总数：自定义9 + 寻雾启示9 + 苏格拉没有底10 + 梦游计10
             + 不如吃茶去9 + 青年晚报9 + 寻宝游戏9 = 65
-            随机池 14 条 → 14/65 ≈ 22%，一轮 10 次换歌里约出现 2 次 ---- */
+            随机池 19 条 → 19/65 ≈ 29%，一轮 10 次换歌里约出现 3 次 ---- */
     var videoBgTotalSongs=65;
 
     var ROUND_SIZE=10;   // 一轮换歌次数

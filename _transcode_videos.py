@@ -49,6 +49,11 @@ MUSIC_MAP = {
     'beyoud': '14、Beyoud·作者Vitti.mp4',
     'a-curse-paper-lily': '15、A Curse - Paper Lily·作者Starcasm.mp4',
     'feihua-rumeng': '无缝-星瞳藏刃 飞花入梦(2).mp4',
+    'such-beautiful-eyes': '怎么会有这么美的眼睛！？_视频.mp4',
+    'jianghu-years': '我行走江湖那些年_视频.mp4',
+    'eye-strike': '绝美眼眸暴击，你有见过吗？_视频.mp4',
+    'fairy-beauty': '这是什么神仙颜值，太美了！_视频.mp4',
+    'sword-beauties': '一组刀剑美人图_视频.mp4',
 }
 
 
