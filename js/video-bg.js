@@ -37,11 +37,11 @@
         {src:"../../vid/endless-pain.mp4?v=d8b0de07", poster:"../../vid/endless-pain.jpg?v=d114e862", cover:"../../vid/endless-pain-disc.jpg?v=763d294a"},
         {src:"../../vid/beyoud.mp4?v=5a5bd938", poster:"../../vid/beyoud.jpg?v=27ac263e", cover:"../../vid/beyoud-disc.jpg?v=17cec89d"},
         {src:"../../vid/a-curse-paper-lily.mp4?v=bad01e69", poster:"../../vid/a-curse-paper-lily.jpg?v=d76519ce", cover:"../../vid/a-curse-paper-lily-disc.jpg?v=03f02208"},
-        {src:"../../vid/such-beautiful-eyes.mp4?v=d04fc05b", poster:"../../vid/such-beautiful-eyes.jpg?v=d547c456", cover:"../../vid/such-beautiful-eyes-disc.jpg?v=f7936c99"},
-        {src:"../../vid/jianghu-years.mp4?v=e03b2df0", poster:"../../vid/jianghu-years.jpg?v=fc484fdd", cover:"../../vid/jianghu-years-disc.jpg?v=dfc8ea69"},
-        {src:"../../vid/eye-strike.mp4?v=bc76b087", poster:"../../vid/eye-strike.jpg?v=c693e358", cover:"../../vid/eye-strike-disc.jpg?v=d1600c75"},
-        {src:"../../vid/fairy-beauty.mp4?v=e2212bae", poster:"../../vid/fairy-beauty.jpg?v=1bdfd69d", cover:"../../vid/fairy-beauty-disc.jpg?v=690f5a82"},
-        {src:"../../vid/sword-beauties.mp4?v=ea399469", poster:"../../vid/sword-beauties.jpg?v=f0ebef9d", cover:"../../vid/sword-beauties-disc.jpg?v=cdfa4920"}
+        {src:"../../vid/such-beautiful-eyes.mp4?v=0439952d", poster:"../../vid/such-beautiful-eyes.jpg?v=5a237cd2", cover:"../../vid/such-beautiful-eyes-disc.jpg?v=31e60f8e"},
+        {src:"../../vid/jianghu-years.mp4?v=5f2e535b", poster:"../../vid/jianghu-years.jpg?v=1adf77a8", cover:"../../vid/jianghu-years-disc.jpg?v=702d7e41"},
+        {src:"../../vid/eye-strike.mp4?v=0e244274", poster:"../../vid/eye-strike.jpg?v=fd9dab38", cover:"../../vid/eye-strike-disc.jpg?v=52b6f2b4"},
+        {src:"../../vid/fairy-beauty.mp4?v=8280aa74", poster:"../../vid/fairy-beauty.jpg?v=49f7169f", cover:"../../vid/fairy-beauty-disc.jpg?v=51464d02"},
+        {src:"../../vid/sword-beauties.mp4?v=3bc9171a", poster:"../../vid/sword-beauties.jpg?v=678c35eb", cover:"../../vid/sword-beauties-disc.jpg?v=6a377b77"}
     ];
 
     /* ---- 专属背景：按歌名锁定视频，进到这首歌必出，不参与上面的随机池 ----

@@ -11,6 +11,10 @@
 5. 统一 H.264 High / yuv420p / faststart，保证浏览器边下边播。
 6. 封面（vid/*.jpg）一律截视频第一帧，严格 -ss 0，不允许带任何偏移。
    全屏落下来先显示这张图、视频再从 0 秒开播，差一帧就会看到跳变。
+7. 例外：源本身已经是 H.264 / yuv420p / ≤1080p 时不做二次编码，
+   只去音轨 + faststart，画质等于原片、体积≈原片。
+   （这类片源码率常只有 2~3 Mbps，压到 1/3 就是肉眼可见的糊，二次编码只会更差。）
+   只有 4K / 非 H.264 的源才走上面第 2 条的 1/3 两遍 ABR。
 ====================================================================
 
 用法：
@@ -74,19 +78,68 @@ if ffmpeg_has_force_divisible_by():
     SCALE += ':force_divisible_by=2'
 
 
+def probe_video(path):
+    """取视频流的编码信息，用来判断能不能直接流复制。
+    注意用 default=nw=1 拿「键=值」，别用 csv —— csv 的字段顺序由 ffprobe 决定，不是请求顺序。"""
+    r = subprocess.run(['ffprobe', '-v', 'error', '-select_streams', 'v:0',
+                        '-show_entries', 'stream=codec_name,pix_fmt,width,height',
+                        '-of', 'default=nw=1', path], capture_output=True, text=True,
+                       encoding='utf-8', errors='ignore')
+    d = {}
+    for line in r.stdout.strip().splitlines():
+        if '=' in line:
+            k, v = line.split('=', 1)
+            d[k.strip()] = v.strip()
+    if 'codec_name' not in d or 'width' not in d:
+        return None
+    try:
+        return {'codec': d['codec_name'], 'pix': d.get('pix_fmt', ''),
+                'w': int(d['width']), 'h': int(d['height'])}
+    except (ValueError, KeyError):
+        return None
+
+
 def transcode(src, out, label):
     if not os.path.exists(src):
         print('  源文件不存在: %s' % src)
         return False
     dur = probe(src)
     src_size = os.path.getsize(src)
-    # 已经转过的（体积明显小于原片）直接跳过，支持断点续跑
-    if os.path.exists(out) and os.path.getsize(out) < src_size * 0.55:
-        return False
+    info = probe_video(src)
+    # 源本身已经是网页能直接播的规格（H.264 / yuv420p / ≤1080p）→ 不重编码，只去音轨 + faststart。
+    # 这类片子源码率通常只有 2~3 Mbps，再按 1/3 压到 1 Mbps 就是肉眼可见的糊；
+    # 二次编码只会更差（SSIM 掉到 0.93），直接流复制才是画质零损失的做法，成片体积≈原片。
+    copy_ok = bool(info and info['codec'] == 'h264' and info['pix'] == 'yuv420p'
+                   and info['w'] <= MAX_W and info['h'] <= MAX_H)
+
+    # 已经处理过的直接跳过，支持断点续跑（两种模式的「完成」含义不同）
+    if os.path.exists(out):
+        done = os.path.getsize(out)
+        if copy_ok and done <= src_size:
+            return False
+        if (not copy_ok) and done < src_size * 0.55:
+            return False
+
+    tmp = out + '.part.mp4'
+
+    if copy_ok:
+        cmd = ['ffmpeg', '-y', '-v', 'error', '-i', src, '-c:v', 'copy', '-movflags', '+faststart']
+        if DROP_AUDIO:
+            cmd += ['-an']
+        cmd += [tmp]
+        r = subprocess.run(cmd, capture_output=True)
+        if r.returncode != 0:
+            print('  流复制失败: %s' % r.stderr.decode('utf-8', 'ignore')[-200:])
+            return False
+        os.replace(tmp, out)
+        new_size = os.path.getsize(out)
+        print('  %-22s %6.1fs  %7.2f MB -> %6.2f MB  直接流复制，零重编码，画质等于源'
+              % (label, dur, src_size / 1048576, new_size / 1048576))
+        return True
+
     target_bytes = src_size * TARGET_SIZE_RATIO
     vkbps = max(MIN_BITRATE_KBPS, int(target_bytes * 8 / dur / 1000 * 0.985))
 
-    tmp = out + '.part.mp4'
     logdir = tempfile.mkdtemp(prefix='x264pass_')
     log = os.path.join(logdir, 'pass')
     base = ['ffmpeg', '-y', '-v', 'error', '-i', src, '-vf', SCALE,
