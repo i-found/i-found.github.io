@@ -86,9 +86,11 @@ def upload_one(path, key):
 
 
 def main():
+    argv = [a for a in sys.argv[1:] if not a.startswith('--')]
+    force = '--force' in sys.argv[1:]
     targets = []
-    if len(sys.argv) > 1:
-        for a in sys.argv[1:]:
+    if argv:
+        for a in argv:
             p = a.replace('\\', '/')
             if not os.path.isabs(p):
                 p = os.path.join(os.getcwd(), p)
@@ -101,12 +103,12 @@ def main():
             p = os.path.join('vid', fn)
             targets.append((p, 'vid/' + fn))
 
-    print('检查 %d 个文件...' % len(targets), flush=True)
+    print('检查 %d 个文件...%s' % (len(targets), '（--force：忽略大小比对）' if force else ''), flush=True)
     todo = []
     for p, k in targets:
         rs = remote_size(k)
         ls = os.path.getsize(p)
-        if rs != ls:
+        if force or rs != ls:
             todo.append((p, k, ls, rs))
 
     if not todo:
