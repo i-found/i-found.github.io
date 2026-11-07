@@ -1,7 +1,7 @@
 {
- "token": "24.f12b8252294d83708606755997d2ff42.2592000.1796663331.282335-123996927",
- "issued_at": 1794071330,
- "expires_at": 1794331423,
- "expires_readable": "临期演练（3 天后到期）",
+ "token": "24.92523d68b76dec2d3da348af8a5f3a86.2592000.1796664265.282335-123996927",
+ "issued_at": 1794072265,
+ "expires_at": 1796664265,
+ "expires_readable": "2026-12-07 17:24",
  "note": "百度 OCR access_token，只用于识别记录图片里的文字；过期后重跑 _refresh_ocr_token.py"
 }
