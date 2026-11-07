@@ -3,70 +3,70 @@ var data=[
             {
                 song:"幻听",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 幻听.m4a",
+                src:"https://media.meimei.qzz.io/Albums/梦游计/mp3/许嵩 - 幻听.m4a",
                 img:'css/img/幻听cover.png',
                 lyric:'幻听'
             },
             {
                 song:"全球变冷",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 全球变冷.m4a",
+                src:"https://media.meimei.qzz.io/Albums/梦游计/mp3/许嵩 - 全球变冷.m4a",
                 img:'css/img/全球变冷cover.png',
                 lyric:'全球变冷'
             },
             {
                 song:"对话老师",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 对话老师.m4a",
+                src:"https://media.meimei.qzz.io/Albums/梦游计/mp3/许嵩 - 对话老师.m4a",
                 img:'css/img/对话老师cover.png',
                 lyric:'对话老师'
             },
             {
                 song:"闺蜜",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 闺蜜.m4a",
+                src:"https://media.meimei.qzz.io/Albums/梦游计/mp3/许嵩 - 闺蜜.m4a",
                 img:'css/img/闺蜜cover.png',
                 lyric:'闺蜜'
             },
             {
                 song:"装糊涂",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 装糊涂.m4a",
+                src:"https://media.meimei.qzz.io/Albums/梦游计/mp3/许嵩 - 装糊涂.m4a",
                 img:'css/img/装糊涂cover.png',
                 lyric:'装糊涂'
             },
             {
                 song:"胡萝卜须",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 胡萝卜须.m4a",
+                src:"https://media.meimei.qzz.io/Albums/梦游计/mp3/许嵩 - 胡萝卜须.m4a",
                 img:'css/img/胡萝卜须cover.png',
                 lyric:'胡萝卜须'
             },
             {
                 song:"亲情式的爱情",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 亲情式的爱情.m4a",
+                src:"https://media.meimei.qzz.io/Albums/梦游计/mp3/许嵩 - 亲情式的爱情.m4a",
                 img:'css/img/亲情式的爱情cover.png',
                 lyric:'亲情式的爱情'
             },
             {
                 song:"伴虎",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 伴虎.m4a",
+                src:"https://media.meimei.qzz.io/Albums/梦游计/mp3/许嵩 - 伴虎.m4a",
                 img:'css/img/伴虎cover.png',
                 lyric:'伴虎'
             },
             {
                 song:"Play With Style",
                 singer:"许嵩",
-                src:"mp3/许嵩 - Play With Style.m4a",
+                src:"https://media.meimei.qzz.io/Albums/梦游计/mp3/许嵩 - Play With Style.m4a",
                 img:'css/img/PlayWithStylecover.png',
                 lyric:'PlayWithStyle'
             },
             {
                 song:"心疼你的过去",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 心疼你的过去.m4a",
+                src:"https://media.meimei.qzz.io/Albums/梦游计/mp3/许嵩 - 心疼你的过去.m4a",
                 img:'css/img/心疼你的过去cover.png',
                 lyric:'心疼你的过去'
             }

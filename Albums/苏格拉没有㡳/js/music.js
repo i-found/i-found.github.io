@@ -3,70 +3,70 @@ var data=[
             {
                 song:"想象之中",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 想象之中.m4a",
+                src:"https://media.meimei.qzz.io/Albums/苏格拉没有㡳/mp3/许嵩 - 想象之中.m4a",
                 img:'css/img/想象之中cover.png',
                 lyric:'想象之中'
             },
             {
                 song:"微博控",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 微博控.m4a",
+                src:"https://media.meimei.qzz.io/Albums/苏格拉没有㡳/mp3/许嵩 - 微博控.m4a",
                 img:'css/img/微博控cover.png',
                 lyric:'微博控'
             },
             {
                 song:"千百度",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 千百度.m4a",
+                src:"https://media.meimei.qzz.io/Albums/苏格拉没有㡳/mp3/许嵩 - 千百度.m4a",
                 img:'css/img/千百度cover.png',
                 lyric:'千百度'
             },
             {
                 song:"河山大好",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 河山大好.m4a",
+                src:"https://media.meimei.qzz.io/Albums/苏格拉没有㡳/mp3/许嵩 - 河山大好.m4a",
                 img:'css/img/河山大好cover.png',
                 lyric:'河山大好'
             },
             {
                 song:"降温",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 降温.m4a",
+                src:"https://media.meimei.qzz.io/Albums/苏格拉没有㡳/mp3/许嵩 - 降温.m4a",
                 img:'css/img/降温cover.png',
                 lyric:'降温'
             },
             {
                 song:"拆东墙",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 拆东墙.m4a",
+                src:"https://media.meimei.qzz.io/Albums/苏格拉没有㡳/mp3/许嵩 - 拆东墙.m4a",
                 img:'css/img/拆东墙cover.png',
                 lyric:'拆东墙'
             },
             {
                 song:"医生",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 医生.m4a",
+                src:"https://media.meimei.qzz.io/Albums/苏格拉没有㡳/mp3/许嵩 - 医生.m4a",
                 img:'css/img/医生cover.jpg',
                 lyric:'医生'
             },
             {
                 song:"双人旁",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 双人旁.m4a",
+                src:"https://media.meimei.qzz.io/Albums/苏格拉没有㡳/mp3/许嵩 - 双人旁.m4a",
                 img:'css/img/双人旁cover.jpg',
                 lyric:'双人旁'
             },
             {
                 song:"毁人不倦",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 毁人不倦.m4a",
+                src:"https://media.meimei.qzz.io/Albums/苏格拉没有㡳/mp3/许嵩 - 毁人不倦.m4a",
                 img:'css/img/毁人不倦cover.jpg',
                 lyric:'毁人不倦'
             },
             {
                 song:"敬酒不吃",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 敬酒不吃.m4a",
+                src:"https://media.meimei.qzz.io/Albums/苏格拉没有㡳/mp3/许嵩 - 敬酒不吃.m4a",
                 img:'css/img/敬酒不吃cover.jpg',
                 lyric:'敬酒不吃'
             }

@@ -3,63 +3,63 @@ var data=[
             {
                 song:"明智之举",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 明智之举.m4a",
+                src:"https://media.meimei.qzz.io/Albums/TreasureHunting/mp3/许嵩 - 明智之举.m4a",
                 img:'css/img/明智之举cover.webp',
                 lyric:'明智之举'
             },
             {
                 song:"如约而至",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 如约而至.m4a",
+                src:"https://media.meimei.qzz.io/Albums/TreasureHunting/mp3/许嵩 - 如约而至.m4a",
                 img:'css/img/如约而至cover.jpg',
                 lyric:'如约而至'
             },
             {
                 song:"大千世界",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 大千世界.m4a",
+                src:"https://media.meimei.qzz.io/Albums/TreasureHunting/mp3/许嵩 - 大千世界.m4a",
                 img:'css/img/大千世界cover.webp',
                 lyric:'大千世界'
             },
             {
                 song:"老古董",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 老古董.m4a",
+                src:"https://media.meimei.qzz.io/Albums/TreasureHunting/mp3/许嵩 - 老古董.m4a",
                 img:'css/img/老古董cover.webp',
                 lyric:'老古董'
             },
             {
                 song:"艺术家们",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 艺术家们.m4a",
+                src:"https://media.meimei.qzz.io/Albums/TreasureHunting/mp3/许嵩 - 艺术家们.m4a",
                 img:'css/img/艺术家们cover.jpg',
                 lyric:'艺术家们'
             },
             {
                 song:"柳成荫",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 柳成荫.m4a",
+                src:"https://media.meimei.qzz.io/Albums/TreasureHunting/mp3/许嵩 - 柳成荫.m4a",
                 img:'css/img/柳成荫cover.jpg',
                 lyric:'柳成荫'
             },
             {
                 song:"重复重复",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 重复重复.m4a",
+                src:"https://media.meimei.qzz.io/Albums/TreasureHunting/mp3/许嵩 - 重复重复.m4a",
                 img:'css/img/重复重复cover.jpg',
                 lyric:'重复重复'
             },
             {
                 song:"九月清晨",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 九月清晨.m4a",
+                src:"https://media.meimei.qzz.io/Albums/TreasureHunting/mp3/许嵩 - 九月清晨.m4a",
                 img:'css/img/九月清晨cover.jpg',
                 lyric:'九月清晨'
             },
             {
                 song:"浪",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 浪.m4a",
+                src:"https://media.meimei.qzz.io/Albums/TreasureHunting/mp3/许嵩 - 浪.m4a",
                 img:'css/img/浪cover.jpg',
                 lyric:'浪'
             }

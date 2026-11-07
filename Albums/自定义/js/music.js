@@ -3,63 +3,63 @@ var data=[
             {
                 song:"有何不可",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 有何不可.m4a",
+                src:"https://media.meimei.qzz.io/Albums/自定义/mp3/许嵩 - 有何不可.m4a",
                 img:'css/img/有何不可cover.png',
                 lyric:'有何不可'
             },
             {
                 song:"多余的解释",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 多余的解释.m4a",
+                src:"https://media.meimei.qzz.io/Albums/自定义/mp3/许嵩 - 多余的解释.m4a",
                 img:'css/img/多余的解释cover.png',
                 lyric:'多余的解释'
             },
             {
                 song:"清明雨上",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 清明雨上.m4a",
+                src:"https://media.meimei.qzz.io/Albums/自定义/mp3/许嵩 - 清明雨上.m4a",
                 img:'css/img/清明雨上cover.png',
                 lyric:'清明雨上'
             },
             {
                 song:"认错",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 认错.m4a",
+                src:"https://media.meimei.qzz.io/Albums/自定义/mp3/许嵩 - 认错.m4a",
                 img:'css/img/认错cover.png',
                 lyric:'认错'
             },
             {
                 song:"城府",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 城府.m4a",
+                src:"https://media.meimei.qzz.io/Albums/自定义/mp3/许嵩 - 城府.m4a",
                 img:'css/img/城府cover.png',
                 lyric:'城府'
             },
             {
                 song:"内线",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 内线.m4a",
+                src:"https://media.meimei.qzz.io/Albums/自定义/mp3/许嵩 - 内线.m4a",
                 img:'css/img/内线cover.png',
                 lyric:'内线'
             },
             {
                 song:"坏孩子",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 坏孩子.m4a",
+                src:"https://media.meimei.qzz.io/Albums/自定义/mp3/许嵩 - 坏孩子.m4a",
                 img:'css/img/坏孩子cover.png',
                 lyric:'坏孩子'
             },
             {
                 song:"如果当时",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 如果当时.m4a",
+                src:"https://media.meimei.qzz.io/Albums/自定义/mp3/许嵩 - 如果当时.m4a",
                 img:'css/img/如果当时cover.png',
                 lyric:'如果当时'
             },
             {
                 song:"星座书上",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 星座书上.m4a",
+                src:"https://media.meimei.qzz.io/Albums/自定义/mp3/许嵩 - 星座书上.m4a",
                 img:'css/img/星座书上cover.gif',
                 lyric:'星座书上'
             }

@@ -10,3 +10,10 @@ _transcode_*.log
 # 一次性的验证脚本与截图，验证完就删，不进仓库。
 _tmp_*
 _li_*
+
+# 音频与视频已迁移到 Cloudflare R2（https://media.meimei.qzz.io）。
+# 这些大文件不再进仓库，URL 见各专辑 js/music.js 与 js/*-wallpapers.js。
+Albums/**/*.m4a
+Albums/**/*.mp3
+Albums/**/*.ogg
+vid/*.mp4

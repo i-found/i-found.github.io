@@ -3,63 +3,63 @@ var data=[
             {
                 song:"庐州月",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 庐州月.m4a",
+                src:"https://media.meimei.qzz.io/Albums/寻雾启示/mp3/许嵩 - 庐州月.m4a",
                 img:'css/img/庐州月cover.png',
                 lyric:'庐州月'
             },
             {
                 song:"叹服",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 叹服.m4a",
+                src:"https://media.meimei.qzz.io/Albums/寻雾启示/mp3/许嵩 - 叹服.m4a",
                 img:'css/img/叹服cover.png',
                 lyric:'叹服'
             },
             {
                 song:"单人旅途",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 单人旅途.m4a",
+                src:"https://media.meimei.qzz.io/Albums/寻雾启示/mp3/许嵩 - 单人旅途.m4a",
                 img:'css/img/单人旅途cover.png',
                 lyric:'单人旅途'
             },
             {
                 song:"在那不遥远的地方",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 在那不遥远的地方.m4a",
+                src:"https://media.meimei.qzz.io/Albums/寻雾启示/mp3/许嵩 - 在那不遥远的地方.m4a",
                 img:'css/img/在那不遥远的地方cover.png',
                 lyric:'在那不遥远的地方'
             },
             {
                 song:"不煽情",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 不煽情.m4a",
+                src:"https://media.meimei.qzz.io/Albums/寻雾启示/mp3/许嵩 - 不煽情.m4a",
                 img:'css/img/不煽情cover.png',
                 lyric:'不煽情'
             },
             {
                 song:"灰色头像",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 灰色头像.m4a",
+                src:"https://media.meimei.qzz.io/Albums/寻雾启示/mp3/许嵩 - 灰色头像.m4a",
                 img:'css/img/灰色头像cover.png',
                 lyric:'灰色头像'
             },
             {
                 song:"白马非马",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 白马非马.m4a",
+                src:"https://media.meimei.qzz.io/Albums/寻雾启示/mp3/许嵩 - 白马非马.m4a",
                 img:'css/img/白马非马cover.png',
                 lyric:'白马非马'
             },
             {
                 song:"我们的恋爱是对生命的严重浪费",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 我们的恋爱是对生命的严重浪费.m4a",
+                src:"https://media.meimei.qzz.io/Albums/寻雾启示/mp3/许嵩 - 我们的恋爱是对生命的严重浪费.m4a",
                 img:'css/img/我们的恋爱是对生命的严重浪费cover.png',
                 lyric:'我们的恋爱是对生命的严重浪费'
             },
             {
                 song:"我无所谓",
                 singer:"许嵩",
-                src:"mp3/许嵩 - 我无所谓.m4a",
+                src:"https://media.meimei.qzz.io/Albums/寻雾启示/mp3/许嵩 - 我无所谓.m4a",
                 img:'css/img/我无所谓cover.png',
                 lyric:'我无所谓'
             }
