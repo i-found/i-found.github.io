@@ -353,32 +353,56 @@
   overflow-x: hidden;
   min-height: 60px;
 }
-/* 一条计划：正文在下层之上，往左滑才露出底下的「删除」 */
+/* 一条计划：正文占满，右边一组小圆钮（同记录页的编辑 / 删除） */
 .todo-row {
-  position: relative;
-  overflow: hidden;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 9px 0;
   border-bottom: 1px solid #F7F7F7;
-  touch-action: pan-y;
 }
 .todo-row:last-child { border-bottom: 0; }
 .todo-row-main {
-  position: relative;
-  z-index: 1;
+  flex: 1 1 auto;
+  min-width: 0;
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  padding: 11px 0;
-  background: #fff;
-  transition: transform .24s cubic-bezier(.2, .8, .2, 1);
-  will-change: transform;
-  touch-action: pan-y;
+  padding: 2px 0;
 }
-.todo-row-main.dragging {
-  transition: none;
-  cursor: grabbing;
-  user-select: none;
-  -webkit-user-select: none;
+.todo-act {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding-top: 1px;
+  opacity: .62;
+  transition: opacity .18s ease;
 }
+.todo-row:hover .todo-act,
+.todo-row.is-editing .todo-act { opacity: 1; }
+.todo-act button {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #F2F2F2;
+  font-family: "PingFangSC-Regular";
+  font-size: 13px;
+  line-height: 24px;
+  text-align: center;
+  color: #A8A8A8;
+  cursor: pointer;
+  transition: background .16s ease, color .16s ease;
+}
+.todo-act .todo-edit { transform: scaleX(-1); }
+.todo-act .todo-edit:hover { background: #ff6b81; color: #fff; }
+.todo-act .todo-del:hover { background: #ff4757; color: #fff; }
+.todo-act .todo-done { display: none; background: #ff6b81; color: #fff; font-size: 14px; }
+.todo-row.is-editing .todo-edit,
+.todo-row.is-editing .todo-del { display: none; }
+.todo-row.is-editing .todo-done { display: block; }
 .todo-check {
   flex: 0 0 auto;
   width: 17px;
@@ -399,26 +423,24 @@
   color: #C4C4C4;
   text-decoration: line-through;
 }
-.todo-row .todo-del {
-  position: absolute;
-  z-index: 0;
-  top: 50%;
-  right: 0;
-  width: 72px;
-  height: 38px;
-  margin-top: -19px;
+/* 编辑态：正文换成输入框，复选框先藏起来，避免误勾 */
+.todo-edit-input {
+  display: none;
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0 0 3px;
   border: 0;
-  border-radius: 10px;
-  background: #FF5252;
+  border-bottom: 1px solid #FFC9C9;
+  background: transparent;
   font-family: "PingFangSC-Regular";
-  font-size: 13px;
-  letter-spacing: 1px;
-  color: #fff;
-  cursor: pointer;
-  transition: background .16s ease;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #333;
+  outline: none;
 }
-.todo-row .todo-del:hover { background: #F04545; }
-.todo-row .todo-del:active { background: #E03A3A; }
+.todo-row.is-editing .todo-text,
+.todo-row.is-editing .todo-check { display: none; }
+.todo-row.is-editing .todo-edit-input { display: block; }
 
 .todo-empty {
   padding: 22px 0;
