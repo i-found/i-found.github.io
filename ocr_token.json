@@ -1,0 +1,7 @@
+{
+ "token": "24.f12b8252294d83708606755997d2ff42.2592000.1796663331.282335-123996927",
+ "issued_at": 1794071330,
+ "expires_at": 1796663330,
+ "expires_readable": "2026-12-08 01:08",
+ "note": "百度 OCR access_token，只用于识别记录图片里的文字；过期后重跑 _refresh_ocr_token.py"
+}
