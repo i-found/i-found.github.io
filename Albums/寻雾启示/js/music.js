@@ -67,6 +67,21 @@ var data=[
 ///////////////////<-------变量区-------->//////////////////////////////////////
 
     var Audio1=document.getElementsByTagName('audio')[0];
+
+    // ---- 预取下一首：只取元数据，切歌几乎瞬发 ----
+    var preAudio=document.createElement('audio');
+    preAudio.preload='metadata';
+    preAudio.muted=true;
+    function prefetchNext(idx){
+        try{
+            if(!data||data.length<2){ return; }
+            var nx=(idx+1)%data.length;
+            if(nx===idx||!data[nx]||!data[nx].src){ return; }
+            if(preAudio.getAttribute('data-key')===data[nx].src){ return; }
+            preAudio.setAttribute('data-key',data[nx].src);
+            preAudio.src=data[nx].src;
+        }catch(e){}
+    }
     var processBar=document.getElementById("process-bar");//进度条
     var curBtn=document.getElementById("cur-btn");//进度条拖拽按钮
     var processCur=document.getElementById("process-cur");//进度条播放线
@@ -1099,7 +1114,7 @@ var data=[
 
     // ---- 兜底：新标签页没有用户手势，浏览器可能直接拒绝带声播放 ----
     var hasPlayed=false;
-    Audio1.addEventListener('playing',function(){ hasPlayed=true; });
+    Audio1.addEventListener('playing',function(){ hasPlayed=true; prefetchNext(n); });
     function revertToPause(){
         playBtn.onOff=false;
         playBtn.style.display='inline-block';
@@ -1127,11 +1142,11 @@ var data=[
         animateRun();
         lyricTimer();
     }
-    function armResume(){
+    function armResume(msg){
         var hint=document.createElement('div');
         hint.id='autoPlayHint';
         if(window.console&&console.warn){ console.warn('[autoplay] 自动播放被拦截：'+(playErr||'unknown')); }
-        hint.textContent='浏览器未允许自动播放 · 点击任意处开始播放';
+        hint.textContent=msg||'浏览器未允许自动播放 · 点击任意处开始播放';
         hint.style.cssText='position:fixed;left:50%;bottom:112px;transform:translateX(-50%);z-index:10000;padding:9px 20px;border-radius:22px;background:rgba(0,0,0,.6);color:#fff;font-size:14px;letter-spacing:1px;pointer-events:none;white-space:nowrap;';
         document.body.appendChild(hint);
         document.addEventListener('pointerdown',resume,true);
@@ -1143,4 +1158,19 @@ var data=[
         revertToPause();
         armResume();
     },1200);
+    // ---- 兜底二：界面显示在播却没有进度（远端首字节慢/连接卡住）----
+    var stallTimer=null;
+    function watchdogStall(){
+        clearTimeout(stallTimer);
+        stallTimer=setTimeout(function(){
+            if(Audio1.paused||Audio1.ended){ return; }
+            if(Audio1.currentTime>0.3||Audio1.readyState>=3){ return; }
+            if(window.console&&console.warn){ console.warn('[stall] 播放无进度 readyState='+Audio1.readyState); }
+            revertToPause();
+            armResume('加载较慢 · 点击任意处重试');
+        },8000);
+    }
+    Audio1.addEventListener('loadstart',watchdogStall);
+    Audio1.addEventListener('waiting',watchdogStall);
+    Audio1.addEventListener('playing',function(){ clearTimeout(stallTimer); });
 })();
