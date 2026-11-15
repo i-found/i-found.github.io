@@ -879,7 +879,7 @@
     return rows;
   }
 
-  /* 从搜索结果跳过来：翻到那一天、打开当天计划卡，把那个格子交回去做描边 */
+  /* 从搜索结果跳过来：翻到那一天、打开当天计划卡，把这张卡交回去做描边 */
   function jumpTo(key) {
     var p = String(key || '').split('-');
     if (p.length !== 3) return null;
@@ -890,7 +890,8 @@
     viewYear = y; viewMonth = m;
     renderGrid();
     openDay(key, true);
-    return gridEl ? gridEl.querySelector('.todo-cell[data-key="' + key + '"]') : null;
+    /* 描边落在打开的计划卡上，不是后面那格日历 */
+    return dayEl ? dayEl.querySelector('.todo-day-card') : null;
   }
 
   window.TodoCalendar = {

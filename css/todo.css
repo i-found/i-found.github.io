@@ -442,6 +442,8 @@
 }
 .todo-day[hidden] { display: none; }
 .todo-day-card {
+  /* 搜索跳转的描边动效挂在这张卡上，需要它自己当定位参照 */
+  position: relative;
   display: flex;
   flex-direction: column;
   width: min(520px, 100%);
