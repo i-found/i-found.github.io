@@ -395,7 +395,7 @@
     document.body.appendChild(dayEl);
 
     /* ---- 左滑露出「删除」：按住这一行往左拖，过一半松手就吸附打开 ---- */
-    var SW = 72;   /* 与 css 里 .todo-del 的宽度一致 */
+    var SW = 46;   /* 滑开露出的宽度：删除圆 30px + 右边留白 */
     var sw = { row: null, main: null, x0: 0, y0: 0, base: 0, dragging: false, suppressClick: false };
 
     function setSwipe(row, open) {
@@ -572,7 +572,11 @@
     /* 底层是「删除」，往左滑才露出来；正文层右边常驻 ✎ 编辑（编辑时换成 ✓ 保存） */
     ul.innerHTML = list.map(function(x) {
       return '<li class="todo-row' + (x.done ? ' done' : '') + '" data-id="' + x.id + '">'
-        + '<button type="button" class="todo-del">删除</button>'
+        + '<button type="button" class="todo-del" title="删除" aria-label="删除">'
+        + '<svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true" focusable="false">'
+        + '<path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor"'
+        + ' stroke-width="2" stroke-linecap="round"/>'
+        + '</svg></button>'
         + '<div class="todo-row-main">'
         + '<input type="checkbox" class="todo-check"' + (x.done ? ' checked' : '') + '>'
         + '<span class="todo-text">' + esc(x.text) + '</span>'

@@ -541,28 +541,31 @@
 }
 .todo-row .todo-done:hover { background: #FF7B7B; }
 .todo-row.is-editing .todo-edit { display: none; }
-.todo-row.is-editing .todo-done { display: block; }
-/* 底层的删除：滑开才看得见 */
+.todo-row.is-editing .todo-done { display: inline-flex; }
+/* 底层的删除：滑开才看得见。圆形，和卡片右上角的关闭钮同形状，
+   只是粉红底 + 白色 ✕ */
 .todo-row .todo-del {
   position: absolute;
   z-index: 0;
   top: 50%;
   right: 0;
-  width: 72px;
-  height: 38px;
-  margin-top: -19px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  margin-top: -15px;
+  padding: 0;
   border: 0;
-  border-radius: 10px;
-  background: #FF5252;
-  font-family: "PingFangSC-Regular";
-  font-size: 13px;
-  letter-spacing: 1px;
+  border-radius: 50%;
+  background: #FF8B8B;
   color: #fff;
   cursor: pointer;
   transition: background .16s ease;
 }
-.todo-row .todo-del:hover { background: #F04545; }
-.todo-row .todo-del:active { background: #E03A3A; }
+.todo-row .todo-del svg { display: block; }
+.todo-row .todo-del:hover { background: #FF7B7B; }
+.todo-row .todo-del:active { background: #FF6B6B; }
 .todo-check {
   flex: 0 0 auto;
   width: 17px;
