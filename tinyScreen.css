@@ -219,6 +219,11 @@
 
   }
 
+  /* 左上角年月日去掉后，正文起点保持原来的位置 */
+  .bookmark1 .hero-content{
+    margin-top:150px;
+  }
+
   .author{
     text-indent:2em;
     text-align:right;
