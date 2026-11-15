@@ -302,13 +302,22 @@
     for (var i = 0; i < cells.length; i++) {
       var c = cells[i];
       var list = listOf(c.key);
+      var doneCount = 0;
+      for (var d = 0; d < list.length; d++) if (list[d].done) doneCount++;
+      var allDone = list.length > 0 && doneCount === list.length;
       var cls = 'todo-cell';
       if (!c.inMonth) cls += ' is-out';
       if (c.key === todayKey) cls += ' is-today';
-      /* 左边一列只放日期 + 项数，右边一列逐条列内容（未完成红点、已完成绿点） */
+      if (allDone) cls += ' is-done-all';
+      /* 左边一列只放日期 + 进度，右边一列逐条列内容（未完成红点、已完成绿点） */
+      var tag = '';
+      if (list.length) {
+        tag = allDone
+          ? '<span class="todo-cell-tag">' + list.length + ' 项<br>全部完成</span>'
+          : '<span class="todo-cell-tag">' + (list.length - doneCount) + ' 项<br>待完成</span>';
+      }
       var head = '<span class="todo-cell-head">'
-        + '<span class="todo-cell-d">' + c.d + '</span>'
-        + (list.length ? '<span class="todo-cell-tag">' + list.length + ' 项</span>' : '')
+        + '<span class="todo-cell-d">' + c.d + '</span>' + tag
         + '</span>';
       var body = list.length
         ? '<span class="todo-cell-list">' + list.map(function(x) {

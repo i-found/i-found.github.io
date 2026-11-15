@@ -284,7 +284,7 @@
 .todo-cell .todo-cell-tag {
   font-family: "PingFangSC-Regular";
   font-size: 10px;
-  line-height: 1.4;
+  line-height: 1.35;
   color: #FF8B8B;
   white-space: nowrap;
 }
@@ -328,6 +328,21 @@
   text-decoration: line-through;
 }
 .todo-cell-i.is-done::before { background: #2ECC71; }
+
+/* 当天计划全部完成：整格换成绿色主调（日期、进度、内容一起变，底色淡） */
+.todo-cell.is-done-all {
+  border-color: rgba(46, 204, 113, 0.5);
+  background: rgba(46, 204, 113, 0.07);
+}
+.todo-cell.is-done-all:hover {
+  border-color: #2ECC71;
+  box-shadow: 0 8px 18px rgba(46, 204, 113, 0.16);
+}
+.todo-cell.is-done-all .todo-cell-d { color: #2ECC71; }
+.todo-cell.is-done-all .todo-cell-tag { color: #2ECC71; }
+.todo-cell.is-done-all .todo-cell-i,
+.todo-cell.is-done-all .todo-cell-i.is-done { color: rgba(46, 204, 113, 0.62); }
+
 .todo-cell-more {
   flex: 0 0 auto;
   display: block;
