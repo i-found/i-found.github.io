@@ -1035,7 +1035,7 @@ li.search { position: relative; }
     </div>
     <div class="modal-buttons">
       <button class="btn-cancel" id="cancelRecord">取消</button>
-      <button class="btn-save" id="saveRecordBtn" type="button">保存</button>
+      <button class="btn-save" id="saveRecordBtn" type="button" title="保存并关闭（Ctrl+S）">保存</button>
     </div>
   </div>
 </div>
@@ -1996,6 +1996,17 @@ li.search { position: relative; }
       setTimeout(function() { btn._saving = false; }, 800);
     });
   }
+
+  /* 弹窗开着时 Ctrl+S 就等于点保存：存盘并关窗，顺手挡掉浏览器自带的"保存网页" */
+  document.addEventListener('keydown', function(e) {
+    if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey) return;
+    if (String(e.key).toLowerCase() !== 's') return;
+    var modal = document.getElementById('recordModal');
+    if (!modal || !modal.classList.contains('show')) return;
+    e.preventDefault();
+    var btn = document.getElementById('saveRecordBtn');
+    if (btn && !btn._saving) btn.click();
+  }, true);
 
   // 搜索图标点击展开/关闭
   var searchPopup = document.getElementById('searchPopup');
