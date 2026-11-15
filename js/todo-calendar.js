@@ -19,6 +19,7 @@
   var data = load();
   var cardEl = null, fullEl = null, gridEl = null, titleEl = null, dayEl = null;
   var viewYear = 0, viewMonth = 0;   /* 全屏月历当前显示的月份 */
+  var weekEl = null;                 /* 全屏月历那排「日 一 二 …」 */
   var dayKey = '';                   /* 计划卡正在编辑的日期 */
   var pushTimer = null;
   var lastPull = 0;                  /* 上次拉取时间，回到前台时按需再拉 */
@@ -158,6 +159,35 @@
       });
   }
 
+  /* ---------- 星期表头：今天那一列点个色 ---------- */
+  /* 赤橙黄绿青蓝紫，都挑的浅色、低饱和，落在白底上不刺眼，
+     但又比旁边那几格灰字亮一点，一眼能看出今天在哪一列 */
+  var WEEK_TINTS = ['#DB9090', '#DDA56F', '#C6B65C', '#86BD93', '#78BCBC', '#86A3CE', '#A894C2'];
+  var weekTint = { key: '', color: WEEK_TINTS[0] };
+
+  /* 同一天内不换色：不然每次重画卡片（改计划、切回前台）字色都跳一下。
+     过了零点换天，key 变了才重新掷一次。 */
+  function todayTint() {
+    var t = nowToday();
+    var k = keyOf(t.y, t.m, t.d);
+    if (weekTint.key !== k) {
+      weekTint.key = k;
+      weekTint.color = WEEK_TINTS[Math.floor(Math.random() * WEEK_TINTS.length)];
+    }
+    return weekTint.color;
+  }
+
+  /* 日 一 二 三 四 五 六，今天对应的那个字上色 */
+  function weekHeadHtml() {
+    var t = nowToday();
+    var color = todayTint();
+    return WEEK.map(function(w, i) {
+      return i === t.w
+        ? '<span class="todo-week-today" style="color:' + color + '">' + w + '</span>'
+        : '<span>' + w + '</span>';
+    }).join('');
+  }
+
   /* ---------- 卡片（首页那一块） ---------- */
   function renderCard() {
     if (!cardEl) return;
@@ -177,7 +207,7 @@
       + '<span class="todo-sync" title="仅保存在本机浏览器"></span>'
       + '</div>'
       + '</div>'
-      + '<div class="todo-mini-head">' + WEEK.map(function(w) { return '<span>' + w + '</span>'; }).join('') + '</div>'
+      + '<div class="todo-mini-head">' + weekHeadHtml() + '</div>'
       + '<div class="todo-mini">' + miniCells(t) + '</div>'
       + '<div class="todo-card-foot">'
       + '<p class="todo-count">' + (todayList.length
@@ -253,13 +283,15 @@
       + '<button type="button" class="todo-btn" data-act="close">关闭</button>'
       + '</div>'
       + '</div>'
-      + '<div class="todo-week">' + WEEK.map(function(w) { return '<span>' + w + '</span>'; }).join('') + '</div>'
+      + '<div class="todo-week" id="todoWeek"></div>'
       + '<div class="todo-grid"></div>'
       + '<input type="file" class="todo-import-input" accept=".md,.markdown,text/markdown,text/plain" hidden>'
       + '</div>';
     document.body.appendChild(fullEl);
     gridEl = fullEl.querySelector('.todo-grid');
     titleEl = fullEl.querySelector('#todoTitle');
+    weekEl = fullEl.querySelector('#todoWeek');
+    if (weekEl) weekEl.innerHTML = weekHeadHtml();
 
     var fileInput = fullEl.querySelector('.todo-import-input');
     if (fileInput) fileInput.addEventListener('change', onFilePicked);
@@ -312,6 +344,8 @@
     var t = nowToday();
     var todayKey = keyOf(t.y, t.m, t.d);
     titleEl.textContent = viewYear + ' 年 ' + (viewMonth + 1) + ' 月';
+    /* 表头也重画一次：翻月不用变，但跨过零点后「今天」换了一列，色得跟着挪 */
+    if (weekEl) weekEl.innerHTML = weekHeadHtml();
     var cells = monthCells(viewYear, viewMonth);
     var html = '';
     for (var i = 0; i < cells.length; i++) {
