@@ -309,12 +309,12 @@
       if (!c.inMonth) cls += ' is-out';
       if (c.key === todayKey) cls += ' is-today';
       if (allDone) cls += ' is-done-all';
-      /* 左边一列只放日期 + 进度，右边一列逐条列内容（未完成红点、已完成绿点） */
+      /* 左边一列只放日期 + 项数（未做完=还剩几项，全做完=共几项并转绿），
+         右边一列逐条列内容（未完成红点、已完成绿点） */
       var tag = '';
       if (list.length) {
-        tag = allDone
-          ? '<span class="todo-cell-tag">' + list.length + ' 项<br>全部完成</span>'
-          : '<span class="todo-cell-tag">' + (list.length - doneCount) + ' 项<br>待完成</span>';
+        tag = '<span class="todo-cell-tag">'
+          + (allDone ? list.length : list.length - doneCount) + ' 项</span>';
       }
       var head = '<span class="todo-cell-head">'
         + '<span class="todo-cell-d">' + c.d + '</span>' + tag
