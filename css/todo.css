@@ -52,16 +52,22 @@
   font-size: 13px;
   color: #828282;
 }
-/* 同步状态：绿=已同步，灰=仅本机，橙=失败 */
+/* 同步状态：绿=已备份，灰=仅本机，橙=失败，粉=正在同步 */
 .todo-sync {
   width: 7px;
   height: 7px;
   border-radius: 50%;
   background: #D8D8D8;
   flex: 0 0 auto;
+  transition: background .2s ease;
 }
 .todo-sync.ok { background: #27AE60; }
 .todo-sync.warn { background: #F39C12; }
+.todo-sync.busy { background: #FF6B81; animation: todo-sync-pulse 1s ease-in-out infinite; }
+@keyframes todo-sync-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .35; }
+}
 
 /* 迷你月历：只放数字，今天实心粉点，有计划的日期下面一个小圆 */
 .todo-mini-head {

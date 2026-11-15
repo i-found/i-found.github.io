@@ -1,16 +1,19 @@
 /* 首页「日历计划」：卡片里是本月迷你月历 → 点整块卡片进全屏月历 → 点某一天弹当天的计划卡。
    两层嵌套沿用音乐页「专辑卡片 → 专辑详情 → 单曲浮层」的那套手感。
 
-   数据存 localStorage 的 suihe_todos，形如
-     { "2026-11-08": [ { id, text, done } ] }
+   本地存 localStorage 的 suihe_todos，每天一份：
+     { "2026-11-08": { items: [ { id, text, done } ], at: 1762…, del: false } }
+   at 是这一天最后一次改动的时间，本机和云端靠它比新旧；del 是「整天被清空」的墓碑，
+   有了它，删掉的计划才不会被另一台设备的旧副本重新推回来。
+   老版本把当天直接存成数组，load 时会自动升级，已经写过的计划不丢。
+
    云端与记录页共用同一套密钥（localStorage 的 suihe_records_key）和同一台 API 主机，
-   demo 阶段的端点约定为 /api/todos，收发 { todos: {...} }；
-   后端还没这个接口时静默退回「仅本机」，不影响使用。 */
+   端点 /api/todos 收发 { todos: {...} }，整份 JSON 放进 R2 的 todo-list 桶。 */
 (function() {
   var STORE_KEY = 'suihe_todos';
   var TOKEN_KEY = 'suihe_records_key';           /* 与 record.html 共用 */
   var API_BASE = 'https://meimei.qzz.io';        /* 与 record.html 共用 */
-  var API_PATH = '/api/todos';                   /* demo 约定，后端就绪后即可打通 */
+  var API_PATH = '/api/todos';                   /* Worker 路由，数据落 R2 桶 todo-list */
 
   var WEEK = ['日', '一', '二', '三', '四', '五', '六'];
   var data = load();
@@ -18,20 +21,44 @@
   var viewYear = 0, viewMonth = 0;   /* 全屏月历当前显示的月份 */
   var dayKey = '';                   /* 计划卡正在编辑的日期 */
   var pushTimer = null;
+  var lastPull = 0;                  /* 上次拉取时间，回到前台时按需再拉 */
 
   /* ---------- 数据 ---------- */
+  /* 一天的数据统一成 { items, at, del }：老版本存的是裸数组，at 记 0，
+     第一次改动时才会写上时间戳。 */
+  function normalizeDay(v) {
+    if (Array.isArray(v)) return { items: v, at: 0, del: false };
+    if (v && typeof v === 'object') {
+      return {
+        items: Array.isArray(v.items) ? v.items : [],
+        at: Number(v.at) || 0,
+        del: !!v.del
+      };
+    }
+    return null;
+  }
   function load() {
-    try {
-      var d = JSON.parse(localStorage.getItem(STORE_KEY) || '{}');
-      return d && typeof d === 'object' ? d : {};
-    } catch (e) { return {}; }
+    var raw;
+    try { raw = JSON.parse(localStorage.getItem(STORE_KEY) || '{}'); } catch (e) { raw = {}; }
+    var out = {};
+    if (!raw || typeof raw !== 'object') return out;
+    Object.keys(raw).forEach(function(k) {
+      var d = normalizeDay(raw[k]);
+      if (d) out[k] = d;
+    });
+    return out;
   }
   function persist() {
     try { localStorage.setItem(STORE_KEY, JSON.stringify(data)); } catch (e) {}
   }
   function listOf(key) {
-    var l = data[key];
-    return Array.isArray(l) ? l : [];
+    var d = data[key];
+    return d && Array.isArray(d.items) ? d.items : [];
+  }
+  /* 写一天：list 为空等于把这一天删干净，留个墓碑挡住云端旧副本 */
+  function setList(key, list) {
+    list = list || [];
+    data[key] = { items: list, at: Date.now(), del: !list.length };
   }
 
   function pad(n) { return n < 10 ? '0' + n : '' + n; }
@@ -70,44 +97,64 @@
     }
   }
   function pushSoon() {
-    if (!getToken()) return;
+    if (!getToken()) { setSync('', '仅保存在本机浏览器'); return; }
     clearTimeout(pushTimer);
     pushTimer = setTimeout(push, 900);
   }
   function push() {
     var token = getToken();
-    if (!token) return;
-    fetch(API_BASE + API_PATH, {
+    if (!token) { setSync('', '仅保存在本机浏览器'); return Promise.resolve(false); }
+    clearTimeout(pushTimer);
+    setSync('busy', '正在备份…');
+    return fetch(API_BASE + API_PATH, {
       method: 'POST',
       headers: { 'X-Records-Key': token, 'Content-Type': 'application/json' },
       body: JSON.stringify({ todos: data })
     }).then(function(r) {
+      if (r.status === 401) throw { unauthorized: true };
       if (!r.ok) throw new Error('HTTP ' + r.status);
-      setSync('ok', '已同步到云端');
-    }).catch(function() {
-      setSync('warn', '云端暂不可用，已保存在本机');
+      setSync('ok', '已备份到云端');
+      return true;
+    }).catch(function(err) {
+      if (err && err.unauthorized) setSync('warn', '密钥不正确，只保存在本机');
+      else setSync('warn', '云端暂不可用，已保存在本机');
+      return false;
     });
   }
   function pull() {
     var token = getToken();
     if (!token) { setSync('', '仅保存在本机浏览器'); return; }
-    setSync('', '正在同步…');
-    fetch(API_BASE + API_PATH, { headers: { 'X-Records-Key': token } })
-      .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    lastPull = Date.now();
+    setSync('busy', '正在同步…');
+    fetch(API_BASE + API_PATH, { headers: { 'X-Records-Key': token }, cache: 'no-store' })
+      .then(function(r) {
+        if (r.status === 401) throw { unauthorized: true };
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
       .then(function(d) {
-        var cloud = d && d.todos;
-        if (!cloud || typeof cloud !== 'object') { setSync('ok', '已同步到云端'); return; }
-        /* demo 的合并规则：本机没有的日期才从云端补，避免覆盖刚编辑的内容 */
+        var cloud = (d && d.todos) || {};
+        /* 同一天谁的时间戳更新就用谁的：另一台设备刚改过的计划能拉下来，
+           本机刚写的也不会被云端旧副本盖掉 */
         var changed = false;
         Object.keys(cloud).forEach(function(k) {
-          if (!data[k] && Array.isArray(cloud[k]) && cloud[k].length) { data[k] = cloud[k]; changed = true; }
+          var c = normalizeDay(cloud[k]);
+          if (!c) return;
+          var mine = data[k];
+          if (!mine || c.at > mine.at) { data[k] = c; changed = true; }
         });
         if (changed) { persist(); renderAll(); }
-        setSync('ok', '已同步到云端');
-        if (changed) push();   /* 把补下来的并集再推回去，两边一致 */
+        setSync('ok', '已备份到云端');
+        /* 本机有比云端新的日子（比如离线写的），补推一次把两边对齐 */
+        var needPush = Object.keys(data).some(function(k) {
+          var c = normalizeDay(cloud[k]);
+          return !c || data[k].at > c.at;
+        });
+        if (needPush) push();
       })
-      .catch(function() {
-        setSync('warn', '云端暂不可用，已保存在本机');
+      .catch(function(err) {
+        if (err && err.unauthorized) setSync('warn', '密钥不正确，只保存在本机');
+        else setSync('warn', '云端暂不可用，已保存在本机');
       });
   }
 
@@ -480,20 +527,20 @@
     if (!dayKey) return;
     var list = listOf(dayKey).slice();
     list.push({ id: 't' + Date.now() + Math.floor(Math.random() * 1000), text: text, done: false });
-    data[dayKey] = list;
+    setList(dayKey, list);
     persist(); pushSoon(); renderAll();
   }
   function toggleItem(id, done) {
-    var list = listOf(dayKey);
+    var list = listOf(dayKey).slice();
     for (var i = 0; i < list.length; i++) {
       if (list[i].id === id) { list[i].done = !!done; break; }
     }
-    data[dayKey] = list;
+    setList(dayKey, list);
     persist(); pushSoon(); renderAll();
   }
   function removeItem(id) {
-    data[dayKey] = listOf(dayKey).filter(function(x) { return x.id !== id; });
-    if (!data[dayKey].length) delete data[dayKey];
+    /* 删空了也留一条空记录（del 墓碑），否则联网后会被云端旧副本补回来 */
+    setList(dayKey, listOf(dayKey).filter(function(x) { return x.id !== id; }));
     persist(); pushSoon(); renderAll();
   }
   /* 改一条的文字；改成空的就等于删掉这条 */
@@ -507,7 +554,7 @@
     if (!text) { removeItem(id); return; }
     if (list[i].text === text) return;
     list[i].text = text;
-    data[dayKey] = list;
+    setList(dayKey, list);
     persist(); pushSoon(); renderAll();
   }
 
@@ -530,11 +577,20 @@
     });
     buildFull();
     renderCard();
-    setSync('', '仅保存在本机浏览器');
+    setSync('', getToken() ? '正在同步…' : '仅保存在本机浏览器');
     pull();
-    /* 日期跨零点：回来切到前台时重画一次，别让「今天」停在昨天 */
+    /* 日期跨零点：回来切到前台时重画一次，别让「今天」停在昨天；
+       顺带拉一次云端，手机上刚改的计划切到电脑就能看到 */
     document.addEventListener('visibilitychange', function() {
-      if (!document.hidden) renderCard();
+      if (document.hidden) return;
+      renderCard();
+      if (Date.now() - lastPull > 15000) pull();
+    });
+    /* 断网时改动只落本地，网络回来立刻补推 */
+    window.addEventListener('online', function() { pull(); });
+    /* 关页前把还没推上去的改动赶一赶（fire-and-forget，浏览器允许） */
+    window.addEventListener('pagehide', function() {
+      if (getToken() && pushTimer) { clearTimeout(pushTimer); push(); }
     });
   }
 

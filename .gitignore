@@ -21,6 +21,10 @@ _r2_secret.py
 _tmp_*
 _li_*
 
+# 线上 Worker（records-api）的源码备份与部署记录，本机运维文件，不进仓库。
+_worker_*.js
+_worker_settings_before.json
+
 # 音频与视频已迁移到 Cloudflare R2（https://media.meimei.qzz.io）。
 # 这些大文件不再进仓库，URL 见各专辑 js/music.js 与 js/*-wallpapers.js。
 Albums/**/*.m4a
