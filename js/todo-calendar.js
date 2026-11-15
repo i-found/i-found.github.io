@@ -585,11 +585,13 @@
     });
   }
 
-  function openDay(key) {
+  /* noFocus: 从搜索结果跳过来时不抢焦点，手机上不会自己弹出键盘 */
+  function openDay(key, noFocus) {
     dayKey = key;
     if (!dayEl) buildDay();
     dayEl.hidden = false;
     renderDay();
+    if (noFocus) return;
     var input = dayEl.querySelector('.todo-form input');
     if (input) setTimeout(function() { input.focus(); }, 60);
   }
@@ -852,5 +854,47 @@
     if (fullEl && !fullEl.hidden) closeFull();
   });
 
-  window.TodoCalendar = { mount: mount, open: openFull, close: closeFull };
+  /* ---------- 给首页搜索用 ---------- */
+  /* 命中判断跟首页搜索同一套：汉字原样比，纯字母再试拼音和首字母 */
+  function hitPlan(text, q) {
+    if (window.PinyinMatch && PinyinMatch.hit) return PinyinMatch.hit(text, q);
+    return text.toLowerCase().indexOf(String(q).toLowerCase()) >= 0;
+  }
+
+  /* 把所有日子的条目翻一遍，命中就交出一条：哪一天、哪条、做没做 */
+  function searchPlans(q) {
+    q = String(q || '').trim();
+    if (!q) return [];
+    var rows = [];
+    Object.keys(data).forEach(function(k) {
+      var list = listOf(k);
+      for (var i = 0; i < list.length; i++) {
+        var it = list[i], text = String(it.text || '');
+        if (!text || !hitPlan(text, q)) continue;
+        rows.push({ key: k, id: it.id, text: text, done: !!it.done });
+      }
+    });
+    /* 近的日子排前面；同一天按原来的先后 */
+    rows.sort(function(a, b) { return a.key === b.key ? 0 : (a.key < b.key ? 1 : -1); });
+    return rows;
+  }
+
+  /* 从搜索结果跳过来：翻到那一天、打开当天计划卡，把那个格子交回去做描边 */
+  function jumpTo(key) {
+    var p = String(key || '').split('-');
+    if (p.length !== 3) return null;
+    var y = parseInt(p[0], 10), m = parseInt(p[1], 10) - 1, d = parseInt(p[2], 10);
+    if (isNaN(y) || isNaN(m) || isNaN(d)) return null;
+    if (!fullEl) buildFull();
+    openFull();
+    viewYear = y; viewMonth = m;
+    renderGrid();
+    openDay(key, true);
+    return gridEl ? gridEl.querySelector('.todo-cell[data-key="' + key + '"]') : null;
+  }
+
+  window.TodoCalendar = {
+    mount: mount, open: openFull, close: closeFull,
+    searchPlans: searchPlans, jumpTo: jumpTo
+  };
 })();

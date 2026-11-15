@@ -190,7 +190,7 @@
       </a>
 
       <!-- 站点版本号：每次推送 +1，刷新后看这里就能确定是不是最新版本 -->
-      <span class="site-version" id="siteVersion">V1.10.98</span>
+      <span class="site-version" id="siteVersion">V1.10.99</span>
 
       <ul>
         <li><a class="buttom first" href="https://i-found.github.io/">首页</a></li>
@@ -882,7 +882,7 @@
     <script src="js/pinyin.js?v=54e83b5c"></script>
     <!-- 搜索历史：每页各存一份，面板里可单条删除、可一次清空 -->
     <script src="js/search-history.js?v=b0b61fd9"></script>
-    <script src="js/todo-calendar.js?v=6b38460c"></script>
+    <script src="js/todo-calendar.js?v=103b339e"></script>
 
 <script type="text/javascript">
 (function(){
@@ -1415,8 +1415,23 @@ if(!r) return;
 /* 历史词回车：回填并直接搜 */
 if(r.isHistory){ searchInput.value=r.word; SearchHistory.save(r.word); renderSearch(r.word); return; }
 closeSearch();
-if(r.kind==="card") goCard(r.key); else goDetail(r.key);
+openSearchRow(r);
 }
+/* 三种结果各走各的路：卡片滚回原位、详情滚到介绍、计划翻开那天的月历 */
+function openSearchRow(r){
+if(!r) return;
+if(r.kind==="card"){ goCard(r.key); return; }
+if(r.kind==="plan"){
+  if(window.TodoCalendar&&TodoCalendar.jumpTo){
+    var cell=TodoCalendar.jumpTo(r.key);
+    if(cell) flash(cell);       /* 同一套描边消散：转一圈后淡出 */
+  }
+  return;
+}
+goDetail(r.key);
+}
+/* 2026-11-16 → 11/16，计划类结果拿它当副标题 */
+function r2d(key){ var p=String(key).split("-"); return p.length===3?(parseInt(p[1],10)+"/"+parseInt(p[2],10)):key; }
 function renderSearch(q){
 if(!q){ renderSearchHistory(); return; }
 /* 匹配统一走 PinyinMatch：汉字按原文，纯字母再试全拼和首字母 */
@@ -1429,6 +1444,13 @@ if(c.date.indexOf(q)>=0) rows.push({key:key,kind:"card",field:"发行日期",lab
 var ih=PinyinMatch.find(c.intro,q);
 if(ih){ var s=Math.max(0,ih.start-20), e=Math.min(c.intro.length,ih.end+20); rows.push({key:key,kind:"detail",field:"介绍",label:"提到“"+c.intro.slice(ih.start,ih.end)+"”",context:(s>0?"…":"")+c.intro.slice(s,e)+(e<c.intro.length?"…":"")}); }
 });
+/* 日历计划里的每一条也进搜索结果，分类叫「计划」，点了翻开那一天 */
+if(window.TodoCalendar&&TodoCalendar.searchPlans){
+TodoCalendar.searchPlans(q).forEach(function(p){
+  rows.push({kind:"plan",key:p.key,field:"计划",label:p.text,
+    context:r2d(p.key)+" · "+(p.done?"已完成":"未完成")});
+});
+}
 currentSearchRows=rows;
 activeSearchIndex=-1;
 /* 面板改显示搜索结果了，别再被历史更新覆盖 */
@@ -1438,14 +1460,16 @@ if(!rows.length){ var em=document.createElement("div"); em.className="sr-empty";
 rows.slice(0,30).forEach(function(r,ix){
 var b=document.createElement("button"); b.type="button"; b.className="sr-item";
 var top=document.createElement("div"); top.className="sr-top";
-var k=document.createElement("b"); k.className="sr-kind"; k.textContent=r.kind==="card"?"卡片":"详情";
-var al=document.createElement("b"); al.className="sr-album"; al.textContent="《"+homeCards[r.key].title+"》";
+var k=document.createElement("b"); k.className="sr-kind"; k.textContent=r.kind==="card"?"卡片":(r.kind==="plan"?"计划":"详情");
+var al=document.createElement("b"); al.className="sr-album";
+/* 计划没有所属专辑，标题位置改放日期 */
+al.textContent=r.kind==="plan"?"《"+r2d(r.key)+"》":"《"+homeCards[r.key].title+"》";
 var f=document.createElement("span"); f.className="sr-field"; addMark(f,r.field+"："+r.label,q);
 top.appendChild(k); top.appendChild(al); top.appendChild(f);
 var ctx=document.createElement("div"); ctx.className="sr-context"; addMark(ctx,r.context,q);
 b.appendChild(top); b.appendChild(ctx);
 b.addEventListener("mouseenter",function(){ setActiveSearch(ix); });
-b.addEventListener("click",function(){ SearchHistory.save(q); searchBox.hidden=true; if(r.kind==="card") goCard(r.key); else goDetail(r.key); });
+b.addEventListener("click",function(){ SearchHistory.save(q); searchBox.hidden=true; openSearchRow(r); });
 searchBox.appendChild(b);
 });
 searchBox.hidden=false;
