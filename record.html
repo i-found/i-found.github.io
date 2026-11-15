@@ -694,24 +694,30 @@ li.search { position: relative; }
   padding: 1px 2px;
   border-radius: 2px;
 }
-/* 卡片右上只剩删除钮：到上边、右边的距离相等 */
+/* 卡片上的两个圆钮：右上编辑、左下删除，样式跟 todolist 那对保持一致 */
+.record-edit,
 .record-delete {
   position: absolute;
-  top: 12px;
-  right: 12px;
   z-index: 3;            /* 标题/正文是 relative，会盖住它，得抬上来才点得到 */
-  width: 26px; height: 26px;
-  line-height: 26px;
-  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px; height: 24px;
+  padding: 0;
+  border: 0;
   border-radius: 50%;
-  background: #eee;
+  background: #EFEFEF;
   color: #999;
-  font-size: 14px;
   cursor: pointer;
-  border: none;
-  transition: all 0.2s;
+  transition: background .18s ease, color .18s ease;
 }
-.record-delete:hover { background: #ff4757; color: #fff; }
+.record-edit { top: 10px; right: 10px; }
+/* 删除钮压在卡片左下角的空白里：正文离底边有 12+20 的空档，正好放得下 */
+.record-delete { left: 10px; bottom: 8px; }
+.record-edit svg,
+.record-delete svg { display: block; }
+.record-edit:hover { background: #FFECEC; color: #FF8B8B; }
+.record-delete:hover { background: #FF8B8B; color: #fff; }
 
 .records-empty {
   text-align: center;
@@ -863,33 +869,37 @@ li.search { position: relative; }
   cursor: pointer;
 }
 .image-lightbox.show { display: flex; }
-/* 舞台：两张图摞在同一处，切换时一张滑出去、另一张滑进来 */
+/* 舞台：一排图并排放着，切换就是把整排横向推一格，不做淡入淡出 */
 .lb-stage {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
   overflow: hidden;
   pointer-events: none;   /* 舞台只负责摆图，别把左右箭头挡住 */
 }
-.lb-stage img {
-  position: absolute;
-  top: 50%; left: 50%;
-  max-width: 90%;
-  max-height: 90%;
-  border-radius: 4px;
-  /* --lb-x 就是这一轮横向挪了多远，最后一段缓出用贝塞尔收住，像推了一格又轻轻停住 */
-  transform: translate(-50%, -50%) translate3d(var(--lb-x, 0px), 0, 0);
-  transition: transform .42s cubic-bezier(.22,.61,.36,1),
-              opacity .42s cubic-bezier(.22,.61,.36,1);
-  will-change: transform, opacity;
+.lb-track {
+  display: flex;
+  height: 100%;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
 }
-/* 等候进场的第二张：平时不显形也不挡鼠标 */
-.lb-stage img.lb-ghost { opacity: 0; pointer-events: none; }
-/* 收尾时先把位置挪回正中，这一下不能带动画，否则会倒着滑一段 */
-.lb-stage img.lb-jump { transition: none; }
+/* 只有真的在翻页时才挂过渡，定位和大跳转都走瞬时 */
+.lb-track.lb-run { transition: transform .28s linear; }
+.lb-slide {
+  flex: 0 0 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lb-slide img {
+  max-width: 90%;
+  max-height: 90%;
+  border-radius: 4px;
+  -webkit-user-drag: none;
+}
 /* 多图时给两侧按钮让出位置，免得箭头压住画面 */
-.image-lightbox.multi .lb-stage img { max-width: calc(100% - 150px); }
+.image-lightbox.multi .lb-slide img { max-width: calc(100% - 150px); }
 /* 左右切换：只有一条记录里有多张图时才出现 */
 .lb-nav {
   position: absolute;
@@ -933,7 +943,7 @@ li.search { position: relative; }
   .lb-nav { width: 38px; height: 38px; }
   .lb-prev { left: 10px; }
   .lb-next { right: 10px; }
-  .image-lightbox.multi .lb-stage img { max-width: calc(100% - 100px); }
+  .image-lightbox.multi .lb-slide img { max-width: calc(100% - 100px); }
 }
 </style>
 
@@ -1055,9 +1065,8 @@ li.search { position: relative; }
   <button type="button" class="lb-nav lb-prev" id="lightboxPrev" title="上一张" aria-label="上一张">
     <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
   </button>
-  <div class="lb-stage">
-    <img id="lightboxImg" src="" alt="查看大图">
-    <img class="lb-ghost" id="lightboxGhost" src="" alt="" aria-hidden="true">
+  <div class="lb-stage" id="lightboxStage">
+    <div class="lb-track" id="lightboxTrack"></div>
   </div>
   <button type="button" class="lb-nav lb-next" id="lightboxNext" title="下一张" aria-label="下一张">
     <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -1430,7 +1439,16 @@ li.search { position: relative; }
     for (var i = list.length - 1; i >= 0; i--) {
       var r = list[i];
       html += '<div class="record-card" data-id="' + r.id + '" id="record-' + r.id + '">';
-      html += '<button class="record-delete" data-id="' + r.id + '" title="删除">×</button>';
+      html += '<button class="record-edit" data-id="' + r.id + '" title="编辑" aria-label="编辑">'
+        + '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false">'
+        + '<path d="M4 20l1-5 10-10 4 4-10 10-5 1z" fill="none" stroke="currentColor"'
+        + ' stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>'
+        + '</svg></button>';
+      html += '<button class="record-delete" data-id="' + r.id + '" title="删除" aria-label="删除">'
+        + '<svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true" focusable="false">'
+        + '<path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor"'
+        + ' stroke-width="2" stroke-linecap="round"/>'
+        + '</svg></button>';
       if (r.title) {
         html += '<div class="record-title">' + escapeHtml(r.title) + '</div>';
       }
@@ -1846,15 +1864,47 @@ li.search { position: relative; }
     updateOcrBtn();
   }
 
-  // 图片灯箱：一条记录可能有多张图，左右切换时一进一出地滑
-  var lightbox = { list: [], idx: 0, busy: false };
-  var LB_SLIDE_MS = 420;   /* 和 CSS 里那条 .42s 曲线对齐，收尾靠它兜底 */
+  // 图片灯箱：一条记录可能有多张图，切换时整排一起横向推一格
+  var lightbox = { list: [], idx: 0, pos: 0, w: 0, busy: false };
+  var LB_SLIDE_MS = 280;   /* 和 CSS 里那条 .28s 对上，收尾靠它兜底 */
 
-  function lbImg() { return document.getElementById('lightboxImg'); }
-  function lbGhost() { return document.getElementById('lightboxGhost'); }
+  function lbStage() { return document.getElementById('lightboxStage'); }
+  function lbTrack() { return document.getElementById('lightboxTrack'); }
   function lbCount() {
     var cnt = document.getElementById('lightboxCount');
     if (cnt) cnt.textContent = (lightbox.idx + 1) + ' / ' + lightbox.list.length;
+  }
+
+  /* 把整排图挪到第 pos 格：animate=false 是瞬间归位，不带动画 */
+  function lbPlace(animate) {
+    var track = lbTrack(), stage = lbStage();
+    if (!track || !stage) return;
+    /* 宽度缓存着用，翻页时就不必每下都逼浏览器重算布局 */
+    if (!lightbox.w) lightbox.w = stage.clientWidth || window.innerWidth || 1;
+    track.classList.toggle('lb-run', !!animate);
+    track.style.transform = 'translate3d(' + (-lightbox.pos * lightbox.w) + 'px, 0, 0)';
+  }
+
+  /* 一条记录的所有图一次性排进轨道，首尾各克隆一张，翻到头能无缝接上 */
+  function lbBuild(list, idx) {
+    var track = lbTrack();
+    if (!track) return;
+    var multi = list.length > 1;
+    var srcs = multi ? [list[list.length - 1]].concat(list, [list[0]]) : [list[0] || ''];
+    track.innerHTML = '';
+    for (var i = 0; i < srcs.length; i++) {
+      var slide = document.createElement('div');
+      slide.className = 'lb-slide';
+      var im = document.createElement('img');
+      im.src = srcs[i];
+      im.alt = '查看大图';
+      im.draggable = false;
+      slide.appendChild(im);
+      track.appendChild(slide);
+    }
+    lightbox.pos = multi ? idx + 1 : 0;
+    lightbox.w = 0;            /* 每次开灯重新量一次，窗口改过大小也不会错位 */
+    lbPlace(false);
   }
 
   function openLightbox(srcOrList, idx) {
@@ -1863,82 +1913,53 @@ li.search { position: relative; }
     if (!list.length) list = [srcOrList || ''];
     lightbox.list = list;
     lightbox.idx = Math.max(0, Math.min(idx || 0, list.length - 1));
-    paintLightbox();
+    lightbox.busy = false;
     var box = document.getElementById('imageLightbox');
     if (!box) return;
     box.classList.toggle('multi', list.length > 1);
     box.classList.add('show');
-  }
-
-  /* 无动画地把灯箱摆成当前这张：开灯箱时用，切换收尾时也用 */
-  function paintLightbox() {
-    var img = lbImg(), ghost = lbGhost();
-    if (img) {
-      img.classList.add('lb-jump');      /* 先关过渡，位置才不会滑一段 */
-      img.style.setProperty('--lb-x', '0px');
-      img.style.opacity = '1';
-      img.src = lightbox.list[lightbox.idx] || '';
-      requestAnimationFrame(function() { img.classList.remove('lb-jump'); });
-    }
-    if (ghost) {
-      ghost.classList.add('lb-jump');
-      ghost.style.setProperty('--lb-x', '0px');
-      ghost.style.opacity = '0';
-      ghost.removeAttribute('src');
-      requestAnimationFrame(function() { ghost.classList.remove('lb-jump'); });
-    }
-    lightbox.busy = false;
+    lbBuild(list, lightbox.idx);
     lbCount();
+    /* 窗口尺寸一变，格子宽度就变了，得重新摆一次 */
+    if (!window._lbResizeBound) {
+      window._lbResizeBound = true;
+      window.addEventListener('resize', function() {
+        if (!lightbox.list.length) return;
+        lightbox.w = 0;
+        lbPlace(false);
+      });
+    }
   }
 
   function stepLightbox(d) {
     var n = lightbox.list.length;
-    if (n < 2 || lightbox.busy) return;    /* 滑到一半再点就等这一趟走完 */
-    var img = lbImg(), ghost = lbGhost();
-    var next = (lightbox.idx + d + n) % n;
-    if (!img || !ghost) { lightbox.idx = next; lbCount(); return; }
-
-    /* 挪多远跟着图宽走：大图挪得多、小图挪得少，看着才像同一只手在推 */
-    var w = img.getBoundingClientRect().width || 320;
-    var dist = Math.max(56, Math.min(w * 0.3, 460));
-    var inX = d > 0 ? dist : -dist;   /* 下一张：新图从右边推进来 */
-    var outX = -inX;
+    if (n < 2 || lightbox.busy) return;   /* 滑到一半再点就等这一趟走完 */
+    var track = lbTrack();
+    if (!track) { lightbox.idx = (lightbox.idx + d + n) % n; lbCount(); return; }
 
     lightbox.busy = true;
-    ghost.src = lightbox.list[next];
-    ghost.classList.add('lb-jump');
-    ghost.style.opacity = '0';
-    ghost.style.setProperty('--lb-x', inX + 'px');
-    img.classList.add('lb-jump');
-    img.style.opacity = '1';
-    img.style.setProperty('--lb-x', '0px');
-    void ghost.offsetWidth;               /* 读一次布局，把起点先落地，后面才有得动 */
-
-    requestAnimationFrame(function() {
-      ghost.classList.remove('lb-jump');
-      img.classList.remove('lb-jump');
-      ghost.style.opacity = '1';
-      ghost.style.setProperty('--lb-x', '0px');
-      img.style.opacity = '0.4';          /* 旧图顺手淡下去，交接处不留双层重影 */
-      img.style.setProperty('--lb-x', outX + 'px');
-    });
+    lightbox.pos += d;
+    lbPlace(true);
 
     var settle = function() {
       if (!lightbox.busy) return;
       lightbox.busy = false;
-      lightbox.idx = next;
-      paintLightbox();                    /* 新图转正，旧图收走 */
+      lightbox.idx = (lightbox.idx + d + n) % n;
+      /* 走到了首尾那张克隆格：动画结束的瞬间悄悄挪回真身，看不出接缝 */
+      if (lightbox.idx === 0 && d > 0) { lightbox.pos = 1; lbPlace(false); }
+      else if (lightbox.idx === n - 1 && d < 0) { lightbox.pos = n; lbPlace(false); }
+      lbCount();
     };
-    /* 过渡结束就收尾；浏览器关掉动画（比如减少动效）时靠定时器兜底 */
-    ghost._lbEnd && ghost.removeEventListener('transitionend', ghost._lbEnd);
-    ghost._lbEnd = function(e) {
-      if (e.target !== ghost || e.propertyName !== 'transform') return;
-      ghost.removeEventListener('transitionend', ghost._lbEnd);
-      ghost._lbEnd = null;
+    /* 过渡结束就收尾；关掉动效的浏览器不触发 transitionend，用定时器兜底 */
+    track._lbEnd && track.removeEventListener('transitionend', track._lbEnd);
+    track._lbEnd = function(e) {
+      if (e.target !== track || e.propertyName !== 'transform') return;
+      track.removeEventListener('transitionend', track._lbEnd);
+      track._lbEnd = null;
       settle();
     };
-    ghost.addEventListener('transitionend', ghost._lbEnd);
-    setTimeout(settle, LB_SLIDE_MS + 80);
+    track.addEventListener('transitionend', track._lbEnd);
+    setTimeout(settle, LB_SLIDE_MS + 90);
   }
 
   function closeLightbox() {
@@ -1946,10 +1967,14 @@ li.search { position: relative; }
     if (box) box.classList.remove('show');
     lightbox.list = [];
     lightbox.idx = 0;
+    lightbox.pos = 0;
     lightbox.busy = false;
-    var img = lbImg(), ghost = lbGhost();
-    if (img) { img.classList.add('lb-jump'); img.style.setProperty('--lb-x', '0px'); img.style.opacity = '1'; }
-    if (ghost) { ghost.classList.add('lb-jump'); ghost.style.setProperty('--lb-x', '0px'); ghost.style.opacity = '0'; ghost.removeAttribute('src'); }
+    var track = lbTrack();
+    if (track) {
+      track.classList.remove('lb-run');
+      track.style.transform = 'translate3d(0, 0, 0)';
+      track.innerHTML = '';     /* 关灯就把图撤掉，不留一堆大图占内存 */
+    }
   }
 
   // ========== 事件绑定（附带空值保护）==========
@@ -2454,14 +2479,15 @@ li.search { position: relative; }
   _el = document.getElementById('recordText');
   if (_el) _el.addEventListener('keydown', function(e) { if (e.ctrlKey && e.key === 'Enter') saveRecord(); });
 
-  // 删除/看图 事件委托（编辑改成双击卡片）
+  // 编辑/删除/看图 事件委托（双击卡片也能进编辑，算备用入口）
   var lbClickTimer = null;   /* 图片单击稍等一下，好跟双击卡片区分开 */
   _el = document.getElementById('recordsContainer');
   if (_el) _el.addEventListener('click', function(e) {
-    if (e.target.classList.contains('record-delete')) {
-      deleteRecord(parseInt(e.target.getAttribute('data-id')));
-      return;
-    }
+    /* 按钮里套了 svg，点到的是 path，得往上找按钮 */
+    var editBtn = e.target.closest ? e.target.closest('.record-edit') : null;
+    if (editBtn) { openModal(parseInt(editBtn.getAttribute('data-id'))); return; }
+    var delBtn = e.target.closest ? e.target.closest('.record-delete') : null;
+    if (delBtn) { deleteRecord(parseInt(delBtn.getAttribute('data-id'))); return; }
     if (e.target.classList.contains('record-image')) {
       if (e.detail > 1) return;      /* 连着点第二下是要双击进编辑，别再开灯箱 */
       /* 同一条记录里的图片排成一组，点哪张就从哪张开始翻 */
@@ -2479,9 +2505,9 @@ li.search { position: relative; }
     }
   });
 
-  // 双击卡片任意处进编辑
+  // 双击卡片任意处进编辑（备用入口，主用右上角那支铅笔）
   if (_el) _el.addEventListener('dblclick', function(e) {
-    if (e.target.closest('.record-delete')) return;
+    if (e.target.closest('.record-delete') || e.target.closest('.record-edit')) return;
     var card = e.target.closest('.record-card');
     if (!card) return;
     if (lbClickTimer) { clearTimeout(lbClickTimer); lbClickTimer = null; }
