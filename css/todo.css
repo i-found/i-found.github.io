@@ -350,13 +350,17 @@
   box-shadow: 0 8px 18px rgba(46, 204, 113, 0.16);
 }
 
-/* 还有条目没显示：省略号挂内容列最左边（正对红点那一列）的底部，不占内容行 */
-.todo-cell-list.has-more { position: relative; }
+/* 还有条目没显示：省略号左边缘对齐内容文字起点，
+   落在最后一条和格子底边之间的中线附近，不占内容行 */
+.todo-cell-list.has-more {
+  position: relative;
+  overflow: visible;
+}
 .todo-cell-list.has-more::after {
   content: "…";
   position: absolute;
-  left: 0;
-  bottom: 0;
+  left: 11px;
+  bottom: -5px;
   font-family: "PingFangSC-Regular";
   font-size: 10.5px;
   line-height: 11px;
