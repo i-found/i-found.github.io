@@ -275,12 +275,11 @@
       + '<p class="todo-panel-sub">点某一天，写当天的计划</p>'
       + '</div>'
       + '<div class="todo-panel-tools">'
-      + '<button type="button" class="todo-btn icon" data-act="prev" aria-label="上个月">‹</button>'
+      + '<button type="button" class="todo-btn icon" data-act="prev" aria-label="上个月">&lt;</button>'
       + '<button type="button" class="todo-btn" data-act="today">今天</button>'
-      + '<button type="button" class="todo-btn icon" data-act="next" aria-label="下个月">›</button>'
+      + '<button type="button" class="todo-btn icon" data-act="next" aria-label="下个月">&gt;</button>'
       + '<button type="button" class="todo-btn" data-act="import">导入</button>'
       + '<button type="button" class="todo-btn" data-act="export">导出</button>'
-      + '<button type="button" class="todo-btn" data-act="close">关闭</button>'
       + '</div>'
       + '</div>'
       + '<div class="todo-week" id="todoWeek"></div>'
@@ -300,8 +299,7 @@
       var btn = ev.target.closest('[data-act]');
       if (btn) {
         var act = btn.getAttribute('data-act');
-        if (act === 'close') closeFull();
-        else if (act === 'prev') shiftMonth(-1);
+        if (act === 'prev') shiftMonth(-1);
         else if (act === 'next') shiftMonth(1);
         else if (act === 'export') exportMarkdown();
         else if (act === 'import') pickMarkdown();
