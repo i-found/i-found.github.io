@@ -305,11 +305,13 @@
       var doneCount = 0;
       for (var d = 0; d < list.length; d++) if (list[d].done) doneCount++;
       var allDone = list.length > 0 && doneCount === list.length;
+      var isToday = c.key === todayKey;
       var cls = 'todo-cell';
       if (!c.inMonth) cls += ' is-out';
-      if (c.key === todayKey) cls += ' is-today';
-      if (allDone) cls += ' is-done-all';
-      /* 左边一列只放日期 + 项数（未做完=还剩几项，全做完=共几项并转绿），
+      if (isToday) cls += ' is-today';
+      /* 绿色主调只给「今天」，过去的日期全做完也保持普通样式，不要一片绿 */
+      if (allDone && isToday) cls += ' is-done-all';
+      /* 左边一列只放日期 + 项数（未做完=还剩几项，全做完=共几项），
          右边一列逐条列内容（未完成红点、已完成绿点） */
       var tag = '';
       if (list.length) {
