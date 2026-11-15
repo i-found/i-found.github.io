@@ -309,8 +309,8 @@
       var cls = 'todo-cell';
       if (!c.inMonth) cls += ' is-out';
       if (isToday) cls += ' is-today';
-      /* 当天计划全部做完（不论哪一天）都转绿色主调 */
-      if (allDone) cls += ' is-done-all';
+      /* 整格绿色主调只给今天；别的日期全做完只把项数变绿，其余照常 */
+      if (allDone) cls += isToday ? ' is-done-all' : ' is-all-done';
       /* 左边一列只放日期 + 项数（未做完=还剩几项，全做完=共几项），
          右边一列逐条列内容（未完成红点、已完成绿点） */
       var tag = '';

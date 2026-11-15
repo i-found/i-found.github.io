@@ -342,6 +342,14 @@
 .todo-cell.is-done-all .todo-cell-d { color: #2ECC71; }
 .todo-cell.is-done-all .todo-cell-tag { color: #2ECC71; }
 
+/* 非今天的日期全部完成：整格保持平常样子（和没完成的日子一致），
+   只有「多少项」这个数字变绿，鼠标移上去也是绿色反馈 */
+.todo-cell.is-all-done .todo-cell-tag { color: #2ECC71; }
+.todo-cell.is-all-done:hover {
+  border-color: #2ECC71;
+  box-shadow: 0 8px 18px rgba(46, 204, 113, 0.16);
+}
+
 /* 还有条目没显示：省略号挂内容列最左边（正对红点那一列）的底部，不占内容行 */
 .todo-cell-list.has-more { position: relative; }
 .todo-cell-list.has-more::after {
