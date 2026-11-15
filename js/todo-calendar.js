@@ -583,7 +583,7 @@
     var keys = Object.keys(data).filter(function(k) {
       return data[k] && data[k].items && data[k].items.length;
     }).sort();
-    var out = ['# 日历计划', '', '> 导出时间：' + stampNow(), ''];
+    var out = ['# Todo List', '', '> 导出时间：' + stampNow(), ''];
     keys.forEach(function(k) {
       out.push('## ' + k + ' 星期' + WEEK[weekdayOf(k)], '');
       data[k].items.forEach(function(it) {
@@ -597,7 +597,7 @@
     var md = buildMarkdown();
     if (!md.days) { toast('还没有计划可以导出'); return; }
     var t = new Date();
-    var name = '日历计划-' + t.getFullYear() + two(t.getMonth() + 1) + two(t.getDate()) + '.md';
+    var name = 'todo-list-' + t.getFullYear() + two(t.getMonth() + 1) + two(t.getDate()) + '.md';
     var blob = new Blob([md.text], { type: 'text/markdown;charset=utf-8' });
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
