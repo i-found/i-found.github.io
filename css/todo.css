@@ -329,7 +329,8 @@
 }
 .todo-cell-i.is-done::before { background: #2ECC71; }
 
-/* 当天计划全部完成：整格换成绿色主调（日期、进度、内容一起变，底色淡） */
+/* 当天计划全部完成：整格换成绿色主调（边框、日期、项数、底色变绿；
+   内容文字保持平时的灰色和字体，只有已完成的条目带删除线） */
 .todo-cell.is-done-all {
   border-color: rgba(46, 204, 113, 0.5);
   background: rgba(46, 204, 113, 0.07);
@@ -340,8 +341,6 @@
 }
 .todo-cell.is-done-all .todo-cell-d { color: #2ECC71; }
 .todo-cell.is-done-all .todo-cell-tag { color: #2ECC71; }
-.todo-cell.is-done-all .todo-cell-i,
-.todo-cell.is-done-all .todo-cell-i.is-done { color: rgba(46, 204, 113, 0.62); }
 
 /* 还有条目没显示：省略号挂内容列最左边（正对红点那一列）的底部，不占内容行 */
 .todo-cell-list.has-more { position: relative; }
@@ -356,7 +355,6 @@
   color: #C0C0C0;
   pointer-events: none;
 }
-.todo-cell.is-done-all .todo-cell-list.has-more::after { color: rgba(46, 204, 113, 0.62); }
 
 /* ===== 当天计划卡（叠在月历上，模仿音乐页「专辑详情 → 单曲浮层」） ===== */
 .todo-day {
