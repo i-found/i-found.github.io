@@ -582,7 +582,11 @@
         + '<path d="M4 20l1-5 10-10 4 4-10 10-5 1z" fill="none" stroke="currentColor"'
         + ' stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>'
         + '</svg></button>'
-        + '<button type="button" class="todo-done" title="保存">✓</button>'
+        + '<button type="button" class="todo-done" title="保存" aria-label="保存">'
+        + '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">'
+        + '<path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor"'
+        + ' stroke-width="2.2" stroke-linecap="round" stroke-linejoin="miter"/>'
+        + '</svg></button>'
         + '</div>'
         + '</li>';
     }).join('');

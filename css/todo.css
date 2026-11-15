@@ -528,16 +528,18 @@
   opacity: 1;
   transition: background .16s ease, color .16s ease, opacity .18s ease;
 }
-.todo-row .todo-edit svg { display: block; }
+.todo-row .todo-edit svg,
+.todo-row .todo-done svg { display: block; }
 .todo-row:hover .todo-edit { opacity: 1; }
 .todo-row .todo-edit:hover { background: #FFECEC; color: #FF8B8B; opacity: 1; }
+/* 保存（打勾）钮：粉红圆底 + 白色标准勾 */
 .todo-row .todo-done {
   display: none;
-  background: #ff6b81;
+  background: #FF8B8B;
   color: #fff;
-  font-size: 14px;
   opacity: 1;
 }
+.todo-row .todo-done:hover { background: #FF7B7B; }
 .todo-row.is-editing .todo-edit { display: none; }
 .todo-row.is-editing .todo-done { display: block; }
 /* 底层的删除：滑开才看得见 */
