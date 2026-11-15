@@ -181,7 +181,7 @@
       + '<div class="todo-mini">' + miniCells(t) + '</div>'
       + '<div class="todo-card-foot">'
       + '<p class="todo-count">' + (todayList.length
-        ? '今天 ' + todayList.length + ' 项计划' + (undone ? '，还有 ' + undone + ' 项没做' : '，全部完成')
+        ? '今天 ' + todayList.length + ' 项计划' + (undone ? '，' + undone + ' 项待完成……' : '，全部完成！')
         : '今天还没有计划') + '</p>'
       + '<p class="todo-preview">' + previewHtml(todayList) + '</p>'
       + '</div>'
