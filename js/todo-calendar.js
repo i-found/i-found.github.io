@@ -389,7 +389,11 @@
       + '<ul class="todo-list"></ul>'
       + '<form class="todo-form">'
       + '<input type="text" placeholder="添加一条计划，回车保存" autocomplete="off">'
-      + '<button type="submit">添加</button>'
+      + '<button type="submit" class="todo-add" title="添加" aria-label="添加">'
+      + '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">'
+      + '<path d="M12 5v14M5 12h14" fill="none" stroke="currentColor"'
+      + ' stroke-width="2.2" stroke-linecap="round"/>'
+      + '</svg></button>'
       + '</form>'
       + '</div>';
     document.body.appendChild(dayEl);

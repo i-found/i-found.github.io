@@ -647,8 +647,12 @@
 .todo-form input:focus { border-color: #FFC9C9; background: #fff; }
 .todo-form button {
   flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
   height: 40px;
-  padding: 0 18px;
+  padding: 0;
   border: 0;
   border-radius: 12px;
   background: #FF8B8B;
@@ -657,6 +661,7 @@
   color: #fff;
   cursor: pointer;
 }
+.todo-form button svg { display: block; }
 .todo-form button:hover { background: #FF7A7A; }
 
 /* 小屏：全屏月历铺满，格子只留日期和条数 */
