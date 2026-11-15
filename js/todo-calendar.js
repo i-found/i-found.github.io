@@ -183,7 +183,7 @@
       + '<p class="todo-count">' + (todayList.length
         ? '今天 ' + todayList.length + ' 项计划' + (undone ? '，还有 ' + undone + ' 项没做' : '，全部完成')
         : '今天还没有计划') + '</p>'
-      + '<p class="todo-preview">' + previewText(todayList) + '</p>'
+      + '<p class="todo-preview">' + previewHtml(todayList) + '</p>'
       + '</div>'
       + '</div>';
     cardEl.innerHTML = html;
@@ -199,17 +199,32 @@
       var cls = 'todo-mini-cell';
       if (!c.inMonth) cls += ' is-out';
       if (c.key === keyOf(t.y, t.m, t.d)) cls += ' is-today';
-      if (listOf(c.key).length) cls += ' has-plan';
+      var list = listOf(c.key);
+      if (list.length) {
+        cls += ' has-plan';
+        /* 那天全部做完：日期下面的小圆点转绿；今天则是日期圆底转绿 */
+        var done = 0;
+        for (var j = 0; j < list.length; j++) if (list[j].done) done++;
+        if (done === list.length) cls += ' is-all-done';
+      }
       html += '<span class="' + cls + '">' + c.d + '</span>';
     }
     return html;
   }
 
-  function previewText(list) {
-    if (!list.length) return '点一下这块，打开日历写今天要做的事';
-    return list.slice(0, 3).map(function(x) {
-      return '<b>·</b> ' + (x.done ? '<s>' + esc(x.text) + '</s>' : esc(x.text));
-    }).join('<br>');
+  /* 预览：一行三条，最多九条；超过九条第 9 格放省略号，
+     每条前面一个小圆点——没做完粉红，做完绿色 */
+  function previewHtml(list) {
+    if (!list.length) return '<span class="todo-preview-empty">点一下这块，打开日历写今天要做的事</span>';
+    var max = 9;
+    var show = list.length > max ? max - 1 : list.length;
+    var html = '';
+    for (var i = 0; i < show; i++) {
+      html += '<span class="todo-preview-i' + (list[i].done ? ' is-done' : '') + '">'
+        + esc(list[i].text) + '</span>';
+    }
+    if (list.length > max) html += '<span class="todo-preview-i is-more">…</span>';
+    return html;
   }
 
   function esc(s) {

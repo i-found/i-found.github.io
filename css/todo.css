@@ -118,6 +118,10 @@
   border-radius: 50%;
   background: #FF8B8B;
 }
+/* 那天计划全做完：下面的点转绿 */
+.todo-mini span.has-plan.is-all-done::after { background: #2ECC71; }
+/* 今天全做完：日期的圆底也转绿（今天圆底里的点仍是白的） */
+.todo-mini span.is-today.is-all-done { background: #2ECC71; }
 .todo-mini span.is-today.has-plan::after { background: #fff; bottom: 4px; }
 
 .todo-card-foot {
@@ -131,16 +135,42 @@
   font-size: 14px;
   color: #0F2540;
 }
+/* 今天的内容预览：一行三条，最多三行（九条），放不下的用省略号 */
 .todo-preview {
   margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0 12px;
   font-family: "PingFangSC-Regular";
   font-size: 13px;
   line-height: 1.8;
   color: #BCBCBC;
-  max-height: 72px;
-  overflow: hidden;
 }
-.todo-preview b { color: #FF8B8B; font-weight: 400; }
+.todo-preview-i {
+  position: relative;
+  padding-left: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.todo-preview-i::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 9px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #FF8B8B;
+}
+.todo-preview-i.is-done {
+  color: #C6C6C6;
+  text-decoration: line-through;
+}
+.todo-preview-i.is-done::before { background: #2ECC71; }
+.todo-preview-i.is-more { padding-left: 0; color: #C0C0C0; }
+.todo-preview-i.is-more::before { display: none; }
+.todo-preview-empty { grid-column: 1 / -1; color: #BCBCBC; }
 
 /* ===== 全屏月历 ===== */
 .todo-full {
@@ -281,11 +311,16 @@
   line-height: 1.2;
 }
 .todo-cell.is-today .todo-cell-d { color: #FF6F6F; }
+/* 项数做成小圆底徽章：没做完粉红底白字，全做完绿底白字 */
 .todo-cell .todo-cell-tag {
+  margin-top: 3px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #FF8B8B;
+  color: #fff;
   font-family: "PingFangSC-Regular";
-  font-size: 10px;
-  line-height: 1.35;
-  color: #FF8B8B;
+  font-size: 9.5px;
+  line-height: 13px;
   white-space: nowrap;
 }
 /* 右侧内容：每条一行，放不下时由脚本把最后一行换成省略号 */
@@ -340,11 +375,11 @@
   box-shadow: 0 8px 18px rgba(46, 204, 113, 0.16);
 }
 .todo-cell.is-done-all .todo-cell-d { color: #2ECC71; }
-.todo-cell.is-done-all .todo-cell-tag { color: #2ECC71; }
+.todo-cell.is-done-all .todo-cell-tag { background: #2ECC71; color: #fff; }
 
 /* 非今天的日期全部完成：整格保持平常样子（和没完成的日子一致），
-   只有「多少项」这个数字变绿，鼠标移上去也是绿色反馈 */
-.todo-cell.is-all-done .todo-cell-tag { color: #2ECC71; }
+   只有「多少项」这个圆底变绿，鼠标移上去也是绿色反馈 */
+.todo-cell.is-all-done .todo-cell-tag { background: #2ECC71; color: #fff; }
 .todo-cell.is-all-done:hover {
   border-color: #2ECC71;
   box-shadow: 0 8px 18px rgba(46, 204, 113, 0.16);
