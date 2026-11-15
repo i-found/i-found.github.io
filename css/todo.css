@@ -591,11 +591,11 @@
   cursor: pointer;
   transition: background .16s ease, border-color .16s ease;
 }
-/* 已勾选：底还是粉的，勾改成灰的，整块不再抢视线 */
+/* 已勾选：粉底 + 白勾 */
 .todo-check:checked {
   border-color: #FF8B8B;
   background-color: #FF8B8B;
-  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5' fill='none' stroke='%239E9E9E' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5' fill='none' stroke='%23FFFFFF' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: center;
   background-size: 12px 12px;
