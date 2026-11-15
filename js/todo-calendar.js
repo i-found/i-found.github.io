@@ -331,7 +331,7 @@
       var tag = '';
       if (list.length) {
         tag = '<span class="todo-cell-tag">'
-          + (allDone ? list.length : list.length - doneCount) + ' 项</span>';
+          + (allDone ? list.length : list.length - doneCount) + '</span>';
       }
       var head = '<span class="todo-cell-head">'
         + '<span class="todo-cell-d">' + c.d + '</span>' + tag

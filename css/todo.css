@@ -311,16 +311,21 @@
   line-height: 1.2;
 }
 .todo-cell.is-today .todo-cell-d { color: #FF6F6F; }
-/* 项数做成小圆底徽章：没做完粉红底白字，全做完绿底白字 */
+/* 项数做成纯数字小圆底（不写「项」字）：没做完粉红底白字，全做完绿底白字 */
 .todo-cell .todo-cell-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
   margin-top: 3px;
-  padding: 0 5px;
-  border-radius: 999px;
+  padding: 0;
+  border-radius: 50%;
   background: #FF8B8B;
   color: #fff;
   font-family: "PingFangSC-Regular";
   font-size: 9.5px;
-  line-height: 13px;
+  line-height: 1;
   white-space: nowrap;
 }
 /* 右侧内容：每条一行，放不下时由脚本把最后一行换成省略号 */
