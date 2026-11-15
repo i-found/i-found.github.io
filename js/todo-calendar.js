@@ -342,7 +342,6 @@
     var lists = gridEl.querySelectorAll('.todo-cell-list');
     for (var i = 0; i < lists.length; i++) {
       var list = lists[i];
-      var cell = list.parentNode;
       var rows = list.querySelectorAll('.todo-cell-i');
       if (!rows.length) continue;
       for (var j = 0; j < rows.length; j++) rows[j].style.display = '';
@@ -354,8 +353,8 @@
         shown--;
         rows[shown].style.display = 'none';
       }
-      if (shown === rows.length) cell.classList.remove('has-more');
-      else cell.classList.add('has-more');
+      if (shown === rows.length) list.classList.remove('has-more');
+      else list.classList.add('has-more');
     }
   }
 
