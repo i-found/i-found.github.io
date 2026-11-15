@@ -335,19 +335,17 @@
 
   /* 格子高度有限，条目放不下时按真实像素位置逐条收起（不用行高做除法，
      浏览器缩放、字体回退都不会算偏），只隐藏不删除，尺寸变了能原样回来。
-     收起来的条目用最后一行右侧的小省略号提示，不再单独占一行，
+     收起来的条目在格子左下角挂一个小省略号提示（不占内容行），
      这样能显示几条就显示几条，不会为了省略号白扔一条内容。 */
   function clampCellLists() {
     if (!gridEl) return;
     var lists = gridEl.querySelectorAll('.todo-cell-list');
     for (var i = 0; i < lists.length; i++) {
       var list = lists[i];
+      var cell = list.parentNode;
       var rows = list.querySelectorAll('.todo-cell-i');
       if (!rows.length) continue;
-      for (var j = 0; j < rows.length; j++) {
-        rows[j].style.display = '';
-        rows[j].classList.remove('has-tail');
-      }
+      for (var j = 0; j < rows.length; j++) rows[j].style.display = '';
       var box = list.getBoundingClientRect();
       if (!box.height) continue;          /* 还没排版出高度就别动 */
       var limit = box.bottom + 1;
@@ -356,19 +354,8 @@
         shown--;
         rows[shown].style.display = 'none';
       }
-      if (shown === rows.length) {
-        list.classList.remove('has-more');
-        list.style.removeProperty('--more-bottom');
-        continue;
-      }
-      list.classList.add('has-more');
-      if (shown > 0) {
-        rows[shown - 1].classList.add('has-tail');
-        /* 省略号贴住最后一条的下沿，而不是贴格子底部 */
-        var rowH = rows[0].getBoundingClientRect().height || 15;
-        var gap = box.height - shown * rowH;
-        list.style.setProperty('--more-bottom', Math.max(0, Math.round(gap)) + 'px');
-      }
+      if (shown === rows.length) cell.classList.remove('has-more');
+      else cell.classList.add('has-more');
     }
   }
 
