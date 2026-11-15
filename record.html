@@ -863,13 +863,33 @@ li.search { position: relative; }
   cursor: pointer;
 }
 .image-lightbox.show { display: flex; }
-.image-lightbox img {
+/* 舞台：两张图摞在同一处，切换时一张滑出去、另一张滑进来 */
+.lb-stage {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  overflow: hidden;
+  pointer-events: none;   /* 舞台只负责摆图，别把左右箭头挡住 */
+}
+.lb-stage img {
+  position: absolute;
+  top: 50%; left: 50%;
   max-width: 90%;
   max-height: 90%;
   border-radius: 4px;
+  /* --lb-x 就是这一轮横向挪了多远，最后一段缓出用贝塞尔收住，像推了一格又轻轻停住 */
+  transform: translate(-50%, -50%) translate3d(var(--lb-x, 0px), 0, 0);
+  transition: transform .42s cubic-bezier(.22,.61,.36,1),
+              opacity .42s cubic-bezier(.22,.61,.36,1);
+  will-change: transform, opacity;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
+/* 等候进场的第二张：平时不显形也不挡鼠标 */
+.lb-stage img.lb-ghost { opacity: 0; pointer-events: none; }
+/* 收尾时先把位置挪回正中，这一下不能带动画，否则会倒着滑一段 */
+.lb-stage img.lb-jump { transition: none; }
 /* 多图时给两侧按钮让出位置，免得箭头压住画面 */
-.image-lightbox.multi img { max-width: calc(100% - 150px); }
+.image-lightbox.multi .lb-stage img { max-width: calc(100% - 150px); }
 /* 左右切换：只有一条记录里有多张图时才出现 */
 .lb-nav {
   position: absolute;
@@ -913,7 +933,7 @@ li.search { position: relative; }
   .lb-nav { width: 38px; height: 38px; }
   .lb-prev { left: 10px; }
   .lb-next { right: 10px; }
-  .image-lightbox.multi img { max-width: calc(100% - 100px); }
+  .image-lightbox.multi .lb-stage img { max-width: calc(100% - 100px); }
 }
 </style>
 
@@ -1035,7 +1055,10 @@ li.search { position: relative; }
   <button type="button" class="lb-nav lb-prev" id="lightboxPrev" title="上一张" aria-label="上一张">
     <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
   </button>
-  <img id="lightboxImg" src="" alt="查看大图">
+  <div class="lb-stage">
+    <img id="lightboxImg" src="" alt="查看大图">
+    <img class="lb-ghost" id="lightboxGhost" src="" alt="" aria-hidden="true">
+  </div>
   <button type="button" class="lb-nav lb-next" id="lightboxNext" title="下一张" aria-label="下一张">
     <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
   </button>
@@ -1823,8 +1846,16 @@ li.search { position: relative; }
     updateOcrBtn();
   }
 
-  // 图片灯箱：一条记录可能有多张图，左右切换
-  var lightbox = { list: [], idx: 0 };
+  // 图片灯箱：一条记录可能有多张图，左右切换时一进一出地滑
+  var lightbox = { list: [], idx: 0, busy: false };
+  var LB_SLIDE_MS = 420;   /* 和 CSS 里那条 .42s 曲线对齐，收尾靠它兜底 */
+
+  function lbImg() { return document.getElementById('lightboxImg'); }
+  function lbGhost() { return document.getElementById('lightboxGhost'); }
+  function lbCount() {
+    var cnt = document.getElementById('lightboxCount');
+    if (cnt) cnt.textContent = (lightbox.idx + 1) + ' / ' + lightbox.list.length;
+  }
 
   function openLightbox(srcOrList, idx) {
     var list = Array.isArray(srcOrList) ? srcOrList : [srcOrList];
@@ -1838,23 +1869,87 @@ li.search { position: relative; }
     box.classList.toggle('multi', list.length > 1);
     box.classList.add('show');
   }
+
+  /* 无动画地把灯箱摆成当前这张：开灯箱时用，切换收尾时也用 */
   function paintLightbox() {
-    var img = document.getElementById('lightboxImg');
-    if (img) img.src = lightbox.list[lightbox.idx] || '';
-    var cnt = document.getElementById('lightboxCount');
-    if (cnt) cnt.textContent = (lightbox.idx + 1) + ' / ' + lightbox.list.length;
+    var img = lbImg(), ghost = lbGhost();
+    if (img) {
+      img.classList.add('lb-jump');      /* 先关过渡，位置才不会滑一段 */
+      img.style.setProperty('--lb-x', '0px');
+      img.style.opacity = '1';
+      img.src = lightbox.list[lightbox.idx] || '';
+      requestAnimationFrame(function() { img.classList.remove('lb-jump'); });
+    }
+    if (ghost) {
+      ghost.classList.add('lb-jump');
+      ghost.style.setProperty('--lb-x', '0px');
+      ghost.style.opacity = '0';
+      ghost.removeAttribute('src');
+      requestAnimationFrame(function() { ghost.classList.remove('lb-jump'); });
+    }
+    lightbox.busy = false;
+    lbCount();
   }
+
   function stepLightbox(d) {
-    if (lightbox.list.length < 2) return;
     var n = lightbox.list.length;
-    lightbox.idx = (lightbox.idx + d + n) % n;
-    paintLightbox();
+    if (n < 2 || lightbox.busy) return;    /* 滑到一半再点就等这一趟走完 */
+    var img = lbImg(), ghost = lbGhost();
+    var next = (lightbox.idx + d + n) % n;
+    if (!img || !ghost) { lightbox.idx = next; lbCount(); return; }
+
+    /* 挪多远跟着图宽走：大图挪得多、小图挪得少，看着才像同一只手在推 */
+    var w = img.getBoundingClientRect().width || 320;
+    var dist = Math.max(56, Math.min(w * 0.3, 460));
+    var inX = d > 0 ? dist : -dist;   /* 下一张：新图从右边推进来 */
+    var outX = -inX;
+
+    lightbox.busy = true;
+    ghost.src = lightbox.list[next];
+    ghost.classList.add('lb-jump');
+    ghost.style.opacity = '0';
+    ghost.style.setProperty('--lb-x', inX + 'px');
+    img.classList.add('lb-jump');
+    img.style.opacity = '1';
+    img.style.setProperty('--lb-x', '0px');
+    void ghost.offsetWidth;               /* 读一次布局，把起点先落地，后面才有得动 */
+
+    requestAnimationFrame(function() {
+      ghost.classList.remove('lb-jump');
+      img.classList.remove('lb-jump');
+      ghost.style.opacity = '1';
+      ghost.style.setProperty('--lb-x', '0px');
+      img.style.opacity = '0.4';          /* 旧图顺手淡下去，交接处不留双层重影 */
+      img.style.setProperty('--lb-x', outX + 'px');
+    });
+
+    var settle = function() {
+      if (!lightbox.busy) return;
+      lightbox.busy = false;
+      lightbox.idx = next;
+      paintLightbox();                    /* 新图转正，旧图收走 */
+    };
+    /* 过渡结束就收尾；浏览器关掉动画（比如减少动效）时靠定时器兜底 */
+    ghost._lbEnd && ghost.removeEventListener('transitionend', ghost._lbEnd);
+    ghost._lbEnd = function(e) {
+      if (e.target !== ghost || e.propertyName !== 'transform') return;
+      ghost.removeEventListener('transitionend', ghost._lbEnd);
+      ghost._lbEnd = null;
+      settle();
+    };
+    ghost.addEventListener('transitionend', ghost._lbEnd);
+    setTimeout(settle, LB_SLIDE_MS + 80);
   }
+
   function closeLightbox() {
     var box = document.getElementById('imageLightbox');
     if (box) box.classList.remove('show');
     lightbox.list = [];
     lightbox.idx = 0;
+    lightbox.busy = false;
+    var img = lbImg(), ghost = lbGhost();
+    if (img) { img.classList.add('lb-jump'); img.style.setProperty('--lb-x', '0px'); img.style.opacity = '1'; }
+    if (ghost) { ghost.classList.add('lb-jump'); ghost.style.setProperty('--lb-x', '0px'); ghost.style.opacity = '0'; ghost.removeAttribute('src'); }
   }
 
   // ========== 事件绑定（附带空值保护）==========
