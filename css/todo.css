@@ -3,6 +3,14 @@
    卡片本身是本月迷你日历，点整块卡片进全屏月历，点某一天弹当天的计划卡。
    数据与记录页共用同一个云端密钥（suihe_records_key），详见 js/todo-calendar.js。 */
 
+/* 卡片高度：桌面固定 590×590 正方形；窄屏（tinyScreen）宽度变成 442，
+   内容比正方形高时让卡片自然撑高，避免底部计划预览被裁掉。 */
+@media (max-width: 1080px) {
+  .todo-card.bookmark5 {
+    height: auto;
+    min-height: 442px;
+  }
+}
 .todo-card {
   cursor: pointer;
   color: #0F2540;
