@@ -230,7 +230,6 @@
       + '<p class="todo-panel-sub">点某一天，写当天的计划</p>'
       + '</div>'
       + '<div class="todo-panel-tools">'
-      + '<span class="todo-sync" title="仅保存在本机浏览器"></span>'
       + '<button type="button" class="todo-btn icon" data-act="prev" aria-label="上个月">‹</button>'
       + '<button type="button" class="todo-btn" data-act="today">今天</button>'
       + '<button type="button" class="todo-btn icon" data-act="next" aria-label="下个月">›</button>'
@@ -276,8 +275,8 @@
   function openFull() {
     var t = nowToday();
     viewYear = t.y; viewMonth = t.m;
+    fullEl.hidden = false;      /* 先显示再画，否则格子量不到高度，省略号算不出来 */
     renderGrid();
-    fullEl.hidden = false;
     document.body.classList.add('todo-open');
   }
   function closeFull() {
@@ -303,22 +302,49 @@
     for (var i = 0; i < cells.length; i++) {
       var c = cells[i];
       var list = listOf(c.key);
-      var doneCount = list.filter(function(x) { return x.done; }).length;
       var cls = 'todo-cell';
       if (!c.inMonth) cls += ' is-out';
       if (c.key === todayKey) cls += ' is-today';
-      var tag = list.length
-        ? '<span class="todo-cell-tag">' + list.length + ' 项' + (doneCount === list.length ? ' · 已完成' : '') + '</span>'
-        : '';
-      var preview = list.length
-        ? '<span class="todo-cell-t">' + list.slice(0, 2).map(function(x) {
-            return x.done ? '<s>' + esc(x.text) + '</s>' : esc(x.text);
-          }).join('<br>') + '</span>'
+      /* 左边一列只放日期 + 项数，右边一列逐条列内容（未完成红点、已完成绿点） */
+      var head = '<span class="todo-cell-head">'
+        + '<span class="todo-cell-d">' + c.d + '</span>'
+        + (list.length ? '<span class="todo-cell-tag">' + list.length + ' 项</span>' : '')
+        + '</span>';
+      var body = list.length
+        ? '<span class="todo-cell-list">' + list.map(function(x) {
+            return '<span class="todo-cell-i' + (x.done ? ' is-done' : '') + '">' + esc(x.text) + '</span>';
+          }).join('') + '</span>'
         : '';
       html += '<button type="button" class="' + cls + '" data-key="' + c.key + '">'
-        + '<span class="todo-cell-d">' + c.d + '</span>' + tag + preview + '</button>';
+        + head + body + '</button>';
     }
     gridEl.innerHTML = html;
+    /* 等这一帧排版稳定再量高度，否则算不准能放几行 */
+    if (window.requestAnimationFrame) window.requestAnimationFrame(clampCellLists);
+    else clampCellLists();
+  }
+
+  /* 格子高度固定，条目放不下时把最后一行换成省略号，别让字被切一半。
+     多出来的条目只隐藏不删除，尺寸变了能原样回来。 */
+  function clampCellLists() {
+    if (!gridEl) return;
+    var lists = gridEl.querySelectorAll('.todo-cell-list');
+    for (var i = 0; i < lists.length; i++) {
+      var list = lists[i];
+      var more = list.querySelector('.todo-cell-more');
+      if (more) list.removeChild(more);
+      var rows = list.querySelectorAll('.todo-cell-i');
+      if (!rows.length) continue;
+      for (var j = 0; j < rows.length; j++) rows[j].style.display = '';
+      var rowH = rows[0].offsetHeight || 15;
+      var fit = Math.floor((list.clientHeight + 1) / rowH);
+      if (!fit || rows.length <= fit) continue;
+      for (var k = fit - 1; k < rows.length; k++) rows[k].style.display = 'none';
+      var m = document.createElement('span');
+      m.className = 'todo-cell-more';
+      m.textContent = '…';
+      list.appendChild(m);
+    }
   }
 
   /* ---------- 当天计划卡 ---------- */
@@ -597,7 +623,7 @@
     var md = buildMarkdown();
     if (!md.days) { toast('还没有计划可以导出'); return; }
     var t = new Date();
-    var name = 'todo-list-' + t.getFullYear() + two(t.getMonth() + 1) + two(t.getDate()) + '.md';
+    var name = 'todo-list-' + t.getFullYear() + '-' + two(t.getMonth() + 1) + '-' + two(t.getDate()) + '.md';
     var blob = new Blob([md.text], { type: 'text/markdown;charset=utf-8' });
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
@@ -725,6 +751,10 @@
       if (document.hidden) return;
       renderCard();
       if (Date.now() - lastPull > 15000) pull();
+    });
+    /* 窗口尺寸变了，格子能放几行也跟着变，整片重画一遍（被省略号收掉的条目要还回来） */
+    window.addEventListener('resize', function() {
+      if (fullEl && !fullEl.hidden) renderGrid();
     });
     /* 断网时改动只落本地，网络回来立刻补推 */
     window.addEventListener('online', function() { pull(); });
