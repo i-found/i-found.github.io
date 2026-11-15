@@ -582,11 +582,25 @@
   width: 17px;
   height: 17px;
   margin: 2px 0 0;
-  accent-color: #FF8B8B;
+  padding: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  border: 1.5px solid #D9D9D9;
+  border-radius: 4px;
+  background: #fff;
   cursor: pointer;
+  transition: background .16s ease, border-color .16s ease;
 }
-/* 已勾选：方块变灰，整行都淡下去，不再抢视线 */
-.todo-check:checked { accent-color: #C4C4C4; }
+/* 已勾选：底还是粉的，勾改成灰的，整块不再抢视线 */
+.todo-check:checked {
+  border-color: #FF8B8B;
+  background-color: #FF8B8B;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5' fill='none' stroke='%239E9E9E' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 12px 12px;
+}
+.todo-check:focus-visible { outline: 2px solid #FFC9C9; outline-offset: 2px; }
 .todo-row .todo-text {
   flex: 1 1 auto;
   font-family: "PingFangSC-Regular";
