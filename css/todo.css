@@ -297,10 +297,13 @@
 }
 .todo-cell.is-out { opacity: .34; }
 .todo-cell.is-today { border-color: #FF8B8B; background: #FFF7F7; }
+/* 日期贴顶、徽章贴底：上下留白相同，两者正好关于卡片水平轴对称 */
 .todo-cell-head {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  align-self: stretch;
+  justify-content: space-between;
   flex: 0 0 auto;
 }
 .todo-cell .todo-cell-d {
@@ -318,7 +321,7 @@
   justify-content: center;
   width: 14px;
   height: 14px;
-  margin-top: 3px;
+  margin-top: 0;
   padding: 0;
   border-radius: 50%;
   background: #FF8B8B;
