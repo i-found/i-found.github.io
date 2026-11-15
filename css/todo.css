@@ -585,6 +585,8 @@
   accent-color: #FF8B8B;
   cursor: pointer;
 }
+/* 已勾选：方块变灰，整行都淡下去，不再抢视线 */
+.todo-check:checked { accent-color: #C4C4C4; }
 .todo-row .todo-text {
   flex: 1 1 auto;
   font-family: "PingFangSC-Regular";
