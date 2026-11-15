@@ -694,10 +694,12 @@ li.search { position: relative; }
   padding: 1px 2px;
   border-radius: 2px;
 }
+/* 卡片右上只剩删除钮：到上边、右边的距离相等 */
 .record-delete {
   position: absolute;
-  top: 10px;
-  right: 48px;
+  top: 12px;
+  right: 12px;
+  z-index: 3;            /* 标题/正文是 relative，会盖住它，得抬上来才点得到 */
   width: 26px; height: 26px;
   line-height: 26px;
   text-align: center;
@@ -710,24 +712,6 @@ li.search { position: relative; }
   transition: all 0.2s;
 }
 .record-delete:hover { background: #ff4757; color: #fff; }
-
-.record-edit {
-  position: absolute;
-  top: 10px;
-  right: 14px;
-  width: 26px; height: 26px;
-  line-height: 26px;
-  text-align: center;
-  border-radius: 50%;
-  background: #eee;
-  color: #999;
-  font-size: 14px;
-  cursor: pointer;
-  border: none;
-  transition: all 0.2s;
-}
-.record-edit:hover { background: #ff6b81; color: #fff; }
-.record-edit { transform: scaleX(-1); }
 
 .records-empty {
   text-align: center;
@@ -1423,7 +1407,6 @@ li.search { position: relative; }
     for (var i = list.length - 1; i >= 0; i--) {
       var r = list[i];
       html += '<div class="record-card" data-id="' + r.id + '" id="record-' + r.id + '">';
-      html += '<button class="record-edit" data-id="' + r.id + '" title="编辑">✎</button>';
       html += '<button class="record-delete" data-id="' + r.id + '" title="删除">×</button>';
       if (r.title) {
         html += '<div class="record-title">' + escapeHtml(r.title) + '</div>';
@@ -2376,27 +2359,39 @@ li.search { position: relative; }
   _el = document.getElementById('recordText');
   if (_el) _el.addEventListener('keydown', function(e) { if (e.ctrlKey && e.key === 'Enter') saveRecord(); });
 
-  // 删除/编辑/点击跳转 事件委托
+  // 删除/看图 事件委托（编辑改成双击卡片）
+  var lbClickTimer = null;   /* 图片单击稍等一下，好跟双击卡片区分开 */
   _el = document.getElementById('recordsContainer');
   if (_el) _el.addEventListener('click', function(e) {
     if (e.target.classList.contains('record-delete')) {
       deleteRecord(parseInt(e.target.getAttribute('data-id')));
       return;
     }
-    if (e.target.classList.contains('record-edit')) {
-      openModal(parseInt(e.target.getAttribute('data-id')));
-      return;
-    }
     if (e.target.classList.contains('record-image')) {
+      if (e.detail > 1) return;      /* 连着点第二下是要双击进编辑，别再开灯箱 */
       /* 同一条记录里的图片排成一组，点哪张就从哪张开始翻 */
       var group = e.target.closest('.record-images');
       var nodes = group ? Array.prototype.slice.call(group.querySelectorAll('.record-image')) : [];
       var srcs = nodes.map(function(n) { return n.getAttribute('data-src'); });
       var at = nodes.indexOf(e.target);
       if (!srcs.length) srcs = [e.target.getAttribute('data-src')];
-      openLightbox(srcs, at < 0 ? 0 : at);
+      if (lbClickTimer) clearTimeout(lbClickTimer);
+      lbClickTimer = setTimeout(function() {
+        lbClickTimer = null;
+        openLightbox(srcs, at < 0 ? 0 : at);
+      }, 200);
       return;
     }
+  });
+
+  // 双击卡片任意处进编辑
+  if (_el) _el.addEventListener('dblclick', function(e) {
+    if (e.target.closest('.record-delete')) return;
+    var card = e.target.closest('.record-card');
+    if (!card) return;
+    if (lbClickTimer) { clearTimeout(lbClickTimer); lbClickTimer = null; }
+    closeLightbox();
+    openModal(parseInt(card.getAttribute('data-id')));
   });
 
   // 灯箱：点空白关闭，点箭头翻页，左右键也能翻
