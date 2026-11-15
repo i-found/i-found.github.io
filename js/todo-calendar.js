@@ -577,7 +577,11 @@
         + '<input type="checkbox" class="todo-check"' + (x.done ? ' checked' : '') + '>'
         + '<span class="todo-text">' + esc(x.text) + '</span>'
         + '<input type="text" class="todo-edit-input" autocomplete="off">'
-        + '<button type="button" class="todo-edit" title="编辑">✎</button>'
+        + '<button type="button" class="todo-edit" title="编辑" aria-label="编辑">'
+        + '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false">'
+        + '<path d="M4 20l1-5 10-10 4 4-10 10-5 1z" fill="none" stroke="currentColor"'
+        + ' stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>'
+        + '</svg></button>'
         + '<button type="button" class="todo-done" title="保存">✓</button>'
         + '</div>'
         + '</li>';

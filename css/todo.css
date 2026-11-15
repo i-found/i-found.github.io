@@ -316,15 +316,15 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 15px;
-  height: 15px;
+  width: 14px;
+  height: 14px;
   margin-top: 3px;
   padding: 0;
   border-radius: 50%;
   background: #FF8B8B;
   color: #fff;
   font-family: "PingFangSC-Regular";
-  font-size: 9.5px;
+  font-size: 8.5px;
   line-height: 1;
   white-space: nowrap;
 }
@@ -460,7 +460,7 @@
   border: 0;
   border-radius: 50%;
   background: #F7F7F7;
-  color: #FF5252;
+  color: #FF8B8B;
   font-size: 14px;
   line-height: 1;
   cursor: pointer;
@@ -505,6 +505,9 @@
 /* 正文层右边的编辑钮：大小、底色、红笔都跟卡片右上角的关闭钮一致 */
 .todo-row .todo-edit,
 .todo-row .todo-done {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex: 0 0 auto;
   width: 30px;
   height: 30px;
@@ -515,16 +518,16 @@
   background: #F7F7F7;
   font-family: "PingFangSC-Regular";
   font-size: 14px;
-  line-height: 30px;
+  line-height: 1;
   text-align: center;
-  color: #FF5252;
+  color: #FF8B8B;
   cursor: pointer;
   opacity: 1;
   transition: background .16s ease, color .16s ease, opacity .18s ease;
 }
-.todo-row .todo-edit { transform: scaleX(-1); }
+.todo-row .todo-edit svg { display: block; }
 .todo-row:hover .todo-edit { opacity: 1; }
-.todo-row .todo-edit:hover { background: #FFECEC; color: #FF5252; opacity: 1; }
+.todo-row .todo-edit:hover { background: #FFECEC; color: #FF8B8B; opacity: 1; }
 .todo-row .todo-done {
   display: none;
   background: #ff6b81;
