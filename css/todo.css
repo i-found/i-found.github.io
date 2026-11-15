@@ -538,15 +538,7 @@
   transition: background .16s ease, color .16s ease, opacity .18s ease,
               transform .24s cubic-bezier(.2, .8, .2, 1);
 }
-/* 滑开时编辑钮让开：淡出并向右收，别跟删除圆挤在一起 */
-.todo-row.is-open .todo-row-main .todo-edit,
-.todo-row.is-open .todo-row-main .todo-done {
-  opacity: 0;
-  transform: translateX(16px) scale(.86);
-  pointer-events: none;
-}
-/* 编辑态里隐藏的是铅笔、显示的是勾，避免被上面的规则一起带走 */
-.todo-row.is-open .todo-row-main .todo-done { display: none; }
+/* 滑开时铅笔不隐藏：它跟着内容一起让到删除圆左边，仍然可以点击进入编辑 */
 .todo-row .todo-edit svg,
 .todo-row .todo-done svg { display: block; }
 .todo-row:hover .todo-edit { opacity: 1; }
