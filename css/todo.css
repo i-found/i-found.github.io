@@ -90,7 +90,9 @@
 }
 .todo-mini span {
   position: relative;
+  width: 40px;          /* 宽高相等，今天的底色才是个正圆而不是椭圆 */
   height: 40px;
+  justify-self: center;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -533,6 +535,10 @@
   .todo-panel-title { font-size: 18px; }
   .todo-panel-sub { display: none; }
   .todo-week { padding: 10px 0 6px; }
+  .todo-panel-head { gap: 10px; flex-wrap: wrap; }
+  .todo-panel-tools { gap: 6px; margin-left: auto; }
+  .todo-btn { height: 30px; padding: 0 10px; font-size: 12px; }
+  .todo-btn.icon { width: 30px; padding: 0; }
   .todo-grid { gap: 6px; }
   .todo-cell { padding: 6px; border-radius: 10px; }
   .todo-cell .todo-cell-t { display: none; }
@@ -542,5 +548,35 @@
   .todo-card .todo-card-body { padding: 22px 24px; }
   .todo-big { font-size: 46px; }
   .todo-mini { margin-top: 14px; }
-  .todo-mini span { height: 28px; font-size: 12px; }
+  .todo-mini span { width: 28px; height: 28px; font-size: 12px; }
+}
+
+/* 导出/导入完成后飘一行小提示 */
+.todo-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 42px;
+  z-index: 10000;
+  max-width: 78vw;
+  padding: 10px 18px;
+  border-radius: 20px;
+  background: rgba(15, 37, 64, 0.88);
+  font-family: "PingFangSC-Regular";
+  font-size: 13px;
+  line-height: 1.5;
+  color: #fff;
+  text-align: center;
+  pointer-events: none;
+  transform: translateX(-50%);
+  box-shadow: 0 10px 26px rgba(15, 37, 64, 0.22);
+  animation: todo-toast-in .2s ease;
+  transition: opacity .3s ease, transform .3s ease;
+}
+.todo-toast.out {
+  opacity: 0;
+  transform: translateX(-50%) translateY(6px);
+}
+@keyframes todo-toast-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }

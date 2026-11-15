@@ -234,15 +234,21 @@
       + '<button type="button" class="todo-btn icon" data-act="prev" aria-label="上个月">‹</button>'
       + '<button type="button" class="todo-btn" data-act="today">今天</button>'
       + '<button type="button" class="todo-btn icon" data-act="next" aria-label="下个月">›</button>'
+      + '<button type="button" class="todo-btn" data-act="import">导入</button>'
+      + '<button type="button" class="todo-btn" data-act="export">导出</button>'
       + '<button type="button" class="todo-btn" data-act="close">关闭</button>'
       + '</div>'
       + '</div>'
       + '<div class="todo-week">' + WEEK.map(function(w) { return '<span>' + w + '</span>'; }).join('') + '</div>'
       + '<div class="todo-grid"></div>'
+      + '<input type="file" class="todo-import-input" accept=".md,.markdown,text/markdown,text/plain" hidden>'
       + '</div>';
     document.body.appendChild(fullEl);
     gridEl = fullEl.querySelector('.todo-grid');
     titleEl = fullEl.querySelector('#todoTitle');
+
+    var fileInput = fullEl.querySelector('.todo-import-input');
+    if (fileInput) fileInput.addEventListener('change', onFilePicked);
 
     fullEl.addEventListener('click', function(ev) {
       var btn = ev.target.closest('[data-act]');
@@ -251,6 +257,8 @@
         if (act === 'close') closeFull();
         else if (act === 'prev') shiftMonth(-1);
         else if (act === 'next') shiftMonth(1);
+        else if (act === 'export') exportMarkdown();
+        else if (act === 'import') pickMarkdown();
         else if (act === 'today') {
           var t = nowToday();
           viewYear = t.y; viewMonth = t.m;
@@ -556,6 +564,138 @@
     list[i].text = text;
     setList(dayKey, list);
     persist(); pushSoon(); renderAll();
+  }
+
+  /* ---------- 导入 / 导出（Markdown） ----------
+     和记录页一样：导出一份自包含的纯文本，导入时与本地按「日期 + 文字」合并去重，
+     已存在的条目只更新完成状态，不会把本机多出来的计划删掉。 */
+  function two(n) { return n < 10 ? '0' + n : '' + n; }
+  function weekdayOf(key) {
+    var p = key.split('-');
+    return new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10)).getDay();
+  }
+  function stampNow() {
+    var t = new Date();
+    return t.getFullYear() + '-' + two(t.getMonth() + 1) + '-' + two(t.getDate())
+      + ' ' + two(t.getHours()) + ':' + two(t.getMinutes());
+  }
+  function buildMarkdown() {
+    var keys = Object.keys(data).filter(function(k) {
+      return data[k] && data[k].items && data[k].items.length;
+    }).sort();
+    var out = ['# 日历计划', '', '> 导出时间：' + stampNow(), ''];
+    keys.forEach(function(k) {
+      out.push('## ' + k + ' 星期' + WEEK[weekdayOf(k)], '');
+      data[k].items.forEach(function(it) {
+        out.push('- [' + (it.done ? 'x' : ' ') + '] ' + (it.text || ''));
+      });
+      out.push('');
+    });
+    return { text: out.join('\n'), days: keys.length };
+  }
+  function exportMarkdown() {
+    var md = buildMarkdown();
+    if (!md.days) { toast('还没有计划可以导出'); return; }
+    var t = new Date();
+    var name = '日历计划-' + t.getFullYear() + two(t.getMonth() + 1) + two(t.getDate()) + '.md';
+    var blob = new Blob([md.text], { type: 'text/markdown;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function() {
+      URL.revokeObjectURL(url);
+      if (a.parentNode) a.parentNode.removeChild(a);
+    }, 400);
+    toast('已导出 ' + md.days + ' 天计划');
+  }
+  /* 认两种写法：`## 2026-11-15 星期日` 或 `## 2026年11月15日`，下面是 `- [ ] / - [x]` 清单。
+     没有日期标题的清单段落跳过，宁可少读也不乱塞。 */
+  function parseMarkdown(text) {
+    var out = {};
+    var cur = null;
+    var headRe = /^\s{0,3}#{1,6}\s*(.+?)\s*$/;
+    var dateRe = /(\d{4})\s*[-\/年.]\s*(\d{1,2})\s*[-\/月.]\s*(\d{1,2})/;
+    var itemRe = /^\s{0,3}[-*+]\s+\[([ xX])\]\s*(.+?)\s*$/;
+    var lines = String(text || '').split(/\r?\n/);
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i];
+      var h = headRe.exec(line);
+      if (h) {
+        cur = null;
+        var dm = dateRe.exec(h[1]);
+        if (dm) {
+          var y = parseInt(dm[1], 10), mo = parseInt(dm[2], 10), d = parseInt(dm[3], 10);
+          if (mo >= 1 && mo <= 12 && d >= 1 && d <= 31) {
+            cur = y + '-' + two(mo) + '-' + two(d);
+            if (!out[cur]) out[cur] = [];
+          }
+        }
+        continue;
+      }
+      if (!cur) continue;
+      var it = itemRe.exec(line);
+      if (it) {
+        var txt = it[2].trim();
+        if (txt) out[cur].push({ text: txt, done: it[1].toLowerCase() === 'x' });
+      }
+    }
+    return out;
+  }
+  function importMarkdown(text) {
+    var parsed = parseMarkdown(text);
+    var days = Object.keys(parsed).filter(function(k) { return parsed[k].length; });
+    if (!days.length) { toast('没读到计划，检查一下是不是 Markdown 清单'); return; }
+    var added = 0, fixed = 0, touched = 0;
+    days.forEach(function(k) {
+      var list = listOf(k).slice();
+      var byText = {};
+      list.forEach(function(x) { byText[x.text] = x; });
+      var changed = false;
+      parsed[k].forEach(function(x) {
+        var hit = byText[x.text];
+        if (hit) {
+          if (!!hit.done !== !!x.done) { hit.done = !!x.done; fixed++; changed = true; }
+          return;
+        }
+        var item = { id: 't' + Date.now() + Math.floor(Math.random() * 1000), text: x.text, done: !!x.done };
+        list.push(item);
+        byText[x.text] = item;
+        added++;
+        changed = true;
+      });
+      if (changed) { setList(k, list); touched++; }
+    });
+    if (!touched) { toast('文件里的计划和本机一致，没有变动'); return; }
+    persist(); pushSoon(); renderAll();
+    toast('导入完成：新增 ' + added + ' 项' + (fixed ? '，更新完成状态 ' + fixed + ' 项' : '') + '，涉及 ' + touched + ' 天');
+  }
+  function pickMarkdown() {
+    var input = fullEl && fullEl.querySelector('.todo-import-input');
+    if (!input) return;
+    input.value = '';          /* 同一个文件连导两次也能触发 change */
+    input.click();
+  }
+  function onFilePicked(ev) {
+    var file = ev.target.files && ev.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function() {
+      try { importMarkdown(String(reader.result || '')); }
+      catch (e) { toast('导入失败：' + (e && e.message ? e.message : e)); }
+    };
+    reader.onerror = function() { toast('导入失败：文件读不出来'); };
+    reader.readAsText(file, 'utf-8');
+  }
+  function toast(msg) {
+    var el = document.createElement('div');
+    el.className = 'todo-toast';
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(function() { el.className = 'todo-toast out'; }, 1800);
+    setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, 2300);
   }
 
   function renderAll() {
