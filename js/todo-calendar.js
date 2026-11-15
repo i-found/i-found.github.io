@@ -333,26 +333,42 @@
     else clampCellLists();
   }
 
-  /* 格子高度固定，条目放不下时把最后一行换成省略号，别让字被切一半。
-     多出来的条目只隐藏不删除，尺寸变了能原样回来。 */
+  /* 格子高度有限，条目放不下时按真实像素位置逐条收起（不用行高做除法，
+     浏览器缩放、字体回退都不会算偏），只隐藏不删除，尺寸变了能原样回来。
+     收起来的条目用最后一行右侧的小省略号提示，不再单独占一行，
+     这样能显示几条就显示几条，不会为了省略号白扔一条内容。 */
   function clampCellLists() {
     if (!gridEl) return;
     var lists = gridEl.querySelectorAll('.todo-cell-list');
     for (var i = 0; i < lists.length; i++) {
       var list = lists[i];
-      var more = list.querySelector('.todo-cell-more');
-      if (more) list.removeChild(more);
       var rows = list.querySelectorAll('.todo-cell-i');
       if (!rows.length) continue;
-      for (var j = 0; j < rows.length; j++) rows[j].style.display = '';
-      var rowH = rows[0].offsetHeight || 15;
-      var fit = Math.floor((list.clientHeight + 1) / rowH);
-      if (!fit || rows.length <= fit) continue;
-      for (var k = fit - 1; k < rows.length; k++) rows[k].style.display = 'none';
-      var m = document.createElement('span');
-      m.className = 'todo-cell-more';
-      m.textContent = '…';
-      list.appendChild(m);
+      for (var j = 0; j < rows.length; j++) {
+        rows[j].style.display = '';
+        rows[j].classList.remove('has-tail');
+      }
+      var box = list.getBoundingClientRect();
+      if (!box.height) continue;          /* 还没排版出高度就别动 */
+      var limit = box.bottom + 1;
+      var shown = rows.length;
+      while (shown > 0 && rows[shown - 1].getBoundingClientRect().bottom > limit) {
+        shown--;
+        rows[shown].style.display = 'none';
+      }
+      if (shown === rows.length) {
+        list.classList.remove('has-more');
+        list.style.removeProperty('--more-bottom');
+        continue;
+      }
+      list.classList.add('has-more');
+      if (shown > 0) {
+        rows[shown - 1].classList.add('has-tail');
+        /* 省略号贴住最后一条的下沿，而不是贴格子底部 */
+        var rowH = rows[0].getBoundingClientRect().height || 15;
+        var gap = box.height - shown * rowH;
+        list.style.setProperty('--more-bottom', Math.max(0, Math.round(gap)) + 'px');
+      }
     }
   }
 

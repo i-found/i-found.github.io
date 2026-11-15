@@ -343,16 +343,22 @@
 .todo-cell.is-done-all .todo-cell-i,
 .todo-cell.is-done-all .todo-cell-i.is-done { color: rgba(46, 204, 113, 0.62); }
 
-.todo-cell-more {
-  flex: 0 0 auto;
-  display: block;
-  padding-left: 11px;
+/* 还有条目没显示：贴在最后一条右侧的小省略号（不占行，能显示几条显示几条） */
+.todo-cell-list.has-more { position: relative; }
+.todo-cell-list.has-more::after {
+  content: "…";
+  position: absolute;
+  right: 0;
+  bottom: var(--more-bottom, 0px);
   font-family: "PingFangSC-Regular";
   font-size: 10.5px;
   line-height: 15px;
   height: 15px;
   color: #C0C0C0;
+  pointer-events: none;
 }
+.todo-cell-i.has-tail { padding-right: 14px; }
+.todo-cell.is-done-all .todo-cell-list.has-more::after { color: rgba(46, 204, 113, 0.62); }
 
 /* ===== 当天计划卡（叠在月历上，模仿音乐页「专辑详情 → 单曲浮层」） ===== */
 .todo-day {
