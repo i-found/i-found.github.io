@@ -255,16 +255,15 @@
   transition: border-color .18s ease, color .18s ease, background .18s ease;
 }
 .todo-btn:hover { border-color: #FF8B8B; color: #FF8B8B; }
-/* 翻月那颗：圆还是 32，里面的 <> 放大；字符天生靠基线，用 flex 彻底摆正 */
+/* 翻月那颗：照记录页灯箱的箭头来——SVG 折线、圆头收口，跟圆严格同心 */
 .todo-btn.icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 32px;
   padding: 0;
-  font-size: 22px;
-  line-height: 1;
 }
+.todo-btn.icon svg { display: block; width: 18px; height: 18px; }
 .todo-btn.primary {
   border-color: transparent;
   background: #FF8B8B;
@@ -705,7 +704,8 @@
   .todo-panel-head { gap: 10px; flex-wrap: wrap; }
   .todo-panel-tools { gap: 6px; margin-left: auto; }
   .todo-btn { height: 30px; padding: 0 10px; font-size: 12px; }
-  .todo-btn.icon { width: 30px; padding: 0; font-size: 17px; }
+  .todo-btn.icon { width: 30px; padding: 0; }
+  .todo-btn.icon svg { width: 16px; height: 16px; }
   .todo-grid { gap: 6px; }
   .todo-cell { padding: 6px; border-radius: 10px; }
   .todo-cell-list { display: none; }
