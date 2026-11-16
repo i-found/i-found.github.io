@@ -579,7 +579,8 @@ li.search { position: relative; }
 .record-card {
   background: #fafafa;
   border-radius: 8px;
-  padding: 20px 24px;
+  /* 底部留 8px：删除钮就在这一行里，距底边 8、距左边 8，跟原来压角时一样匀 */
+  padding: 20px 24px 8px;
   margin-bottom: 16px;
   position: relative;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
@@ -696,7 +697,7 @@ li.search { position: relative; }
 .record-bottom .record-delete {
   position: static;
   flex: 0 0 auto;
-  margin-left: -14px;   /* 卡片内边距 24，退回来 14，保持原本贴着卡片左侧 10px 的位置 */
+  margin-left: -16px;   /* 卡片内边距 24，退回来 16 → 距左边 8，和距底边 8 相等 */
 }
 .record-time {
   font-size: 13px;
@@ -764,8 +765,7 @@ li.search { position: relative; }
   transition: background .18s ease, color .18s ease;
 }
 .record-edit { top: 10px; right: 10px; }
-/* 删除钮压在卡片左下角的空白里：正文离底边有 12+20 的空档，正好放得下 */
-.record-delete { left: 10px; bottom: 8px; }
+/* 删除钮的位置由 .record-bottom 那行决定（见上文），这里不再单独压角 */
 .record-edit svg,
 .record-delete svg { display: block; }
 .record-edit:hover { background: #FFECEC; color: #FF8B8B; }
