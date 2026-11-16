@@ -684,35 +684,48 @@ li.search { position: relative; }
 /* 弹窗工具栏 */
 .modal-toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
 
-/* 卡片底部一行：左边标签、右边时间。左下角还压着删除钮，所以整体右移 34px 让开它 */
+/* 卡片底部一行：删除钮、标签、时间都排在同一行，三者按删除钮的中心线对齐 */
 .record-bottom {
   display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
-  padding-left: 34px;
+}
+/* 删除钮原来是绝对定位压在左下角，那样和标签不在一条中心线上；
+   改成这行的第一个元素，行高由它决定，标签胶囊跟着它的中心居中 */
+.record-bottom .record-delete {
+  position: static;
+  flex: 0 0 auto;
+  margin-left: -14px;   /* 卡片内边距 24，退回来 14，保持原本贴着卡片左侧 10px 的位置 */
 }
 .record-time {
   font-size: 13px;
   color: #999;
   float: right;
 }
-.record-bottom .record-time { float: none; margin-left: auto; }
+/* 时间固定靠右不换行：标签再多也在自己的地盘里折行，三者始终同一条线 */
+.record-bottom .record-time { float: none; margin-left: auto; flex: 0 0 auto; white-space: nowrap; }
 /* 标签胶囊：浅描边 + 小圆点，跟卡片底色区分开，但不用彩色抢正文 */
-.record-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.record-tags {
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  flex: 1 1 0; min-width: 0;
+}
+/* 胶囊高度写死 22px，别再让 line-height 把框撑高，跟删除钮（24px）视觉齐平 */
 .record-tag {
   position: relative;
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  box-sizing: border-box;
+  height: 22px;
   max-width: 100%;
-  padding: 3px 11px;
+  padding: 0 10px;
   border: 1px solid #E7E7E7;
   border-radius: 999px;
   background: #fff;
   color: #8A8A8A;
   font-size: 12px;
-  line-height: 1.7;
+  line-height: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1280,6 +1293,19 @@ li.search { position: relative; }
     });
   }
 
+  /* 推给云端的字段：单条保存和「补同步」两处共用，免得哪天加了字段漏掉一处 */
+  function recordPayload(record) {
+    return {
+      id: String(record.id),
+      title: record.title || '',
+      text: record.text || '',
+      images: record.images || [],
+      tags: Array.isArray(record.tags) ? record.tags.slice() : [],
+      created_at: record.time || record.id,
+      updated_at: record.updatedTime || record.time || record.id
+    };
+  }
+
   // 从云端拉取记录，并换算成页面内部格式（id 为数字，time/updatedTime 为毫秒时间戳）
   function loadFromD1() {
     if (!hasToken()) return Promise.resolve(null);
@@ -1294,7 +1320,7 @@ li.search { position: relative; }
           title: r.title || '',
           text: r.text || '',
           images: r.images || [],
-          /* 云端目前不存标签：给不给都照收，缺了就是空 */
+          /* 云端现在也存标签了；老 worker 不返回这个字段时按空处理 */
           tags: r.tags,
           time: r.created_at || idNum,
           updatedTime: r.updated_at || r.created_at || idNum
@@ -1319,14 +1345,7 @@ li.search { position: relative; }
   function pushRecordToD1(record) {
     if (!hasToken()) return Promise.resolve();
     showSyncStatus('同步中…', 'syncing');
-    return d1API('POST', '/api/records', {
-      id: String(record.id),
-      title: record.title || '',
-      text: record.text || '',
-      images: record.images || [],
-      created_at: record.time || record.id,
-      updated_at: record.updatedTime || record.time || record.id
-    }).then(function() {
+    return d1API('POST', '/api/records', recordPayload(record)).then(function() {
       /* 推送成功就把这条写进云端快照，后续导入/合并判断才不会误判 */
       lastCloudRecords = lastCloudRecords.filter(function(x) { return String(x.id) !== String(record.id); });
       lastCloudRecords.push(record);
@@ -1397,14 +1416,7 @@ li.search { position: relative; }
       chain = chain.then(function() {
         if (!hasToken()) return;
         showSyncStatus('正在补同步本地记录…', 'syncing');
-        return d1API('POST', '/api/records', {
-          id: String(r.id),
-          title: r.title || '',
-          text: r.text || '',
-          images: r.images || [],
-          created_at: r.time || r.id,
-          updated_at: r.updatedTime || r.time || r.id
-        }).then(function() { result.pushed++; }).catch(function(err) {
+        return d1API('POST', '/api/records', recordPayload(r)).then(function() { result.pushed++; }).catch(function(err) {
           result.failed++;
           result.lastError = err.message || '网络错误';
           if (err.status === 401) {
@@ -1535,11 +1547,6 @@ li.search { position: relative; }
         + '<path d="M4 20l1-5 10-10 4 4-10 10-5 1z" fill="none" stroke="currentColor"'
         + ' stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>'
         + '</svg></button>';
-      html += '<button class="record-delete" data-id="' + r.id + '" title="删除" aria-label="删除">'
-        + '<svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true" focusable="false">'
-        + '<path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor"'
-        + ' stroke-width="2" stroke-linecap="round"/>'
-        + '</svg></button>';
       if (r.title) {
         html += '<div class="record-title">' + escapeHtml(r.title) + '</div>';
       }
@@ -1553,9 +1560,14 @@ li.search { position: relative; }
         }
         html += '</div>';
       }
-      /* 底部一行：左边标签、右边时间（时间只显示一个：改过就「修改于」） */
+      /* 底部一行：删除钮、标签、时间从左到右贴着同一条中心线（时间只显示一个：改过就「修改于」） */
       var tags = Array.isArray(r.tags) ? r.tags : [];
       html += '<div class="record-bottom">';
+      html += '<button class="record-delete" data-id="' + r.id + '" title="删除" aria-label="删除">'
+        + '<svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true" focusable="false">'
+        + '<path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor"'
+        + ' stroke-width="2" stroke-linecap="round"/>'
+        + '</svg></button>';
       if (tags.length) {
         html += '<div class="record-tags">';
         for (var ti = 0; ti < tags.length; ti++) {
@@ -1565,7 +1577,6 @@ li.search { position: relative; }
       }
       html += '<span class="record-time">' + (isModifiedRecord(r) ? '修改于 ' + formatTime(r.updatedTime) : formatTime(r.time || r.id)) + '</span>';
       html += '</div>';
-      html += '<div style="clear:both;"></div>';
       html += '</div>';
     }
     container.innerHTML = html;
@@ -2919,6 +2930,8 @@ li.search { position: relative; }
     if (!a || !b) return false;
     if ((a.title || '') !== (b.title || '')) return false;
     if ((a.text || '') !== (b.text || '')) return false;
+    /* 标签也算内容：只有标签不同时不能当成「同一份」，否则云端改的标签会被本地压回去 */
+    if (!sameTagList(a.tags, b.tags)) return false;
     var ai = (a.images && a.images.length) ? a.images : (a.image ? [a.image] : []);
     var bi = (b.images && b.images.length) ? b.images : (b.image ? [b.image] : []);
     return ai.length === bi.length;
@@ -2955,8 +2968,8 @@ li.search { position: relative; }
         if (exist.localImages && exist.localImages.length) {
           winner = Object.assign({}, r, { localImages: exist.localImages });
         }
-        /* 标签只存在本地（云端不存），云端版本胜出时别把它洗掉 */
-        if (exist.tags && exist.tags.length) {
+        /* 云端能存标签之后，它有就听它的；它没有（老数据、还没加列）才沿用本地那份 */
+        if (!(winner.tags && winner.tags.length) && exist.tags && exist.tags.length) {
           winner = Object.assign({}, winner, { tags: exist.tags });
         }
         map[r.id] = winner;
