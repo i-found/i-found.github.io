@@ -684,11 +684,50 @@ li.search { position: relative; }
 /* 弹窗工具栏 */
 .modal-toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
 
+/* 卡片底部一行：左边标签、右边时间。左下角还压着删除钮，所以整体右移 34px 让开它 */
+.record-bottom {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-left: 34px;
+}
 .record-time {
   font-size: 13px;
   color: #999;
   float: right;
 }
+.record-bottom .record-time { float: none; margin-left: auto; }
+/* 标签胶囊：浅描边 + 小圆点，跟卡片底色区分开，但不用彩色抢正文 */
+.record-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.record-tag {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 3px 11px;
+  border: 1px solid #E7E7E7;
+  border-radius: 999px;
+  background: #fff;
+  color: #8A8A8A;
+  font-size: 12px;
+  line-height: 1.7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.record-tag::before {
+  content: '';
+  flex-shrink: 0;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: #DCDCDC;
+}
+/* 搜索命中标签：胶囊变粉，描边留给 .locate-ring */
+.record-tag.search-hit { border-color: #FFC9C9; background: #fff0f0; color: #FF8B8B; }
+.record-tag.search-hit::before { background: #FFC9C9; }
+.record-tag .locate-ring { border-width: 2px; }
 .search-hl {
   background: #fff176;
   padding: 1px 2px;
@@ -820,6 +859,46 @@ li.search { position: relative; }
 }
 .img-upload-label:hover { background: #e0e0e0; }
 .img-upload-label input { display: none; }
+/* 「添加标签」是 button，继承按钮默认样式会串字体，这里拉回和图片那颗一致 */
+.tag-add-btn { border: 0; font-family: inherit; }
+
+/* 标签编辑区：点了按钮才出现 */
+.tag-editor { margin-top: 10px; }
+.tag-editor[hidden] { display: none; }
+.tag-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.tag-chips:not(:empty) { margin-bottom: 8px; }
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px 4px 12px;
+  border: 1px solid #E7E7E7;
+  border-radius: 999px;
+  background: #fff;
+  color: #7C7C7C;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.tag-chip-dot { width: 5px; height: 5px; border-radius: 50%; background: #DCDCDC; flex-shrink: 0; }
+.tag-chip-x {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px; padding: 0;
+  border: 0; border-radius: 50%; background: none;
+  color: #C0C0C0; font-size: 14px; line-height: 1; cursor: pointer;
+}
+.tag-chip-x:hover { background: #FFECEC; color: #FF8B8B; }
+.tag-input {
+  width: 100%;
+  padding: 8px 14px;
+  border: 1px solid #E8E8E8;
+  border-radius: 999px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #333;
+  box-sizing: border-box;
+  outline: none;
+}
+.tag-input:focus { border-color: #FFC9C9; }
 
 /* 弹窗按钮 */
 .modal-buttons {
@@ -1032,6 +1111,13 @@ li.search { position: relative; }
         📷 添加图片
         <input type="file" id="imageInput" accept="image/*" multiple>
       </label>
+      <button type="button" class="img-upload-label tag-add-btn" id="addTagBtn">🏷️ 添加标签</button>
+    </div>
+    <!-- 标签：点了「添加标签」才露出输入框；已加的标签在下面排成胶囊，可单个删 -->
+    <div class="tag-editor" id="tagEditor" hidden>
+      <div class="tag-chips" id="tagChips"></div>
+      <input type="text" class="tag-input" id="tagInput" maxlength="12"
+             placeholder="输入标签后回车，比如：剪辑灵感" autocomplete="off">
     </div>
     <div class="modal-buttons">
       <button class="btn-cancel" id="cancelRecord">取消</button>
@@ -1083,6 +1169,9 @@ li.search { position: relative; }
   var records = [];
   var lastCloudRecords = [];   // 最近一次从云端拉到的快照，导入时用来判断哪些记录真的需要上传
   var editingImages = []; // 编辑模式下的图片数组（支持多张）
+  var editingTags = [];   // 弹窗里正在编辑的标签（保存时才落到记录上）
+  var TAG_MAX_COUNT = 6;  // 一条记录最多挂几个标签
+  var TAG_MAX_LEN = 12;   // 单个标签最长几个字
   var editingRecordId = null; // 编辑模式下的记录 ID
 
   // ========== IndexedDB 存储（解决 5MB localStorage 限制）==========
@@ -1205,6 +1294,8 @@ li.search { position: relative; }
           title: r.title || '',
           text: r.text || '',
           images: r.images || [],
+          /* 云端目前不存标签：给不给都照收，缺了就是空 */
+          tags: r.tags,
           time: r.created_at || idNum,
           updatedTime: r.updated_at || r.created_at || idNum
         });
@@ -1462,8 +1553,18 @@ li.search { position: relative; }
         }
         html += '</div>';
       }
-      /* 只显示一个时间：改过就显示「修改于」，没改过就显示创建时间 */
+      /* 底部一行：左边标签、右边时间（时间只显示一个：改过就「修改于」） */
+      var tags = Array.isArray(r.tags) ? r.tags : [];
+      html += '<div class="record-bottom">';
+      if (tags.length) {
+        html += '<div class="record-tags">';
+        for (var ti = 0; ti < tags.length; ti++) {
+          html += '<span class="record-tag">' + escapeHtml(tags[ti]) + '</span>';
+        }
+        html += '</div>';
+      }
       html += '<span class="record-time">' + (isModifiedRecord(r) ? '修改于 ' + formatTime(r.updatedTime) : formatTime(r.time || r.id)) + '</span>';
+      html += '</div>';
       html += '<div style="clear:both;"></div>';
       html += '</div>';
     }
@@ -1508,6 +1609,7 @@ li.search { position: relative; }
           document.getElementById('imagePreviewArea').style.display = 'none';
           document.getElementById('imagePreviewGrid').innerHTML = '';
         }
+        editingTags = Array.isArray(record.tags) ? record.tags.slice() : [];
       }
     } else {
       // 新增模式
@@ -1515,11 +1617,73 @@ li.search { position: relative; }
       document.getElementById('recordTitle').value = '';
       document.getElementById('modalTime').textContent = '创建于 ' + formatTime(now);
       editingImages = [];
+      editingTags = [];
       document.getElementById('imagePreviewArea').style.display = 'none';
       document.getElementById('imagePreviewGrid').innerHTML = '';
     }
+    /* 有标签就直接把编辑区露出来，省一次点击；没标签则等用户点「添加标签」 */
+    renderTagChips();
+    syncTagEditor();
     document.getElementById('recordModal').classList.add('show');
     document.getElementById('recordTitle').focus();
+  }
+
+  /* ================= 标签 ================= */
+  function cleanTag(s) {
+    return String(s || '').replace(/\s+/g, ' ').trim().slice(0, TAG_MAX_LEN);
+  }
+
+  /* 编辑区：有标签就显示，没标签就收起来（按钮仍能再拉开） */
+  function syncTagEditor() {
+    var editor = document.getElementById('tagEditor');
+    if (!editor) return;
+    editor.hidden = !editingTags.length;
+    var input = document.getElementById('tagInput');
+    if (input && !editor.hidden) input.value = '';
+  }
+
+  function renderTagChips() {
+    var box = document.getElementById('tagChips');
+    if (!box) return;
+    box.innerHTML = '';
+    editingTags.forEach(function(tag, i) {
+      var chip = document.createElement('span');
+      chip.className = 'tag-chip';
+      var dot = document.createElement('span');
+      dot.className = 'tag-chip-dot';
+      var txt = document.createElement('span');
+      txt.textContent = tag;
+      var x = document.createElement('button');
+      x.type = 'button';
+      x.className = 'tag-chip-x';
+      x.textContent = '×';
+      x.setAttribute('aria-label', '删除标签 ' + tag);
+      x.addEventListener('click', function() {
+        editingTags.splice(i, 1);
+        renderTagChips();
+      });
+      chip.appendChild(dot);
+      chip.appendChild(txt);
+      chip.appendChild(x);
+      box.appendChild(chip);
+    });
+  }
+
+  /* 输入框里的内容变成标签：回车、逗号、顿号都算分隔，一次可以粘好几个 */
+  function commitTagInput() {
+    var input = document.getElementById('tagInput');
+    if (!input) return;
+    var raw = input.value;
+    if (!raw) return;
+    raw.split(/[,，、;；]+/).forEach(function(part) {
+      var tag = cleanTag(part);
+      if (!tag || editingTags.length >= TAG_MAX_COUNT) return;
+      if (editingTags.indexOf(tag) !== -1) return;
+      editingTags.push(tag);
+    });
+    input.value = '';
+    renderTagChips();
+    if (editingTags.length) syncTagEditor();
   }
 
   // 查找记录
@@ -1589,6 +1753,18 @@ li.search { position: relative; }
     if (!updated) updated = created;
     r.time = created;
     r.updatedTime = updated;
+    /* 标签：数组或逗号串都认，统一成去重后的干净数组；没有就把字段删掉 */
+    var rawTags = r.tags;
+    if (typeof rawTags === 'string') rawTags = rawTags.split(/[,，、;；]+/);
+    var cleanTags = [];
+    if (Array.isArray(rawTags)) {
+      rawTags.forEach(function(t) {
+        var v = cleanTag(t);
+        if (v && cleanTags.indexOf(v) === -1 && cleanTags.length < TAG_MAX_COUNT) cleanTags.push(v);
+      });
+    }
+    if (cleanTags.length) r.tags = cleanTags;
+    else delete r.tags;
     delete r.createdTime;
     delete r.createdAt;
     delete r.created_at;
@@ -1654,6 +1830,23 @@ li.search { position: relative; }
     return true;
   }
 
+  // 两组标签是否完全一样（顺序也算，免得编辑时来回搬位置被判成没改）
+  function sameTagList(a, b) {
+    a = Array.isArray(a) ? a : [];
+    b = Array.isArray(b) ? b : [];
+    if (a.length !== b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] !== b[i]) return false;
+    }
+    return true;
+  }
+
+  /* 标签落到记录上：空了就把字段删干净，不留一堆空数组 */
+  function setRecordTags(record, tags) {
+    if (tags && tags.length) record.tags = tags.slice();
+    else delete record.tags;
+  }
+
   /* 维护两种图片字段：
      · record.images     —— 给云端和推送用的（已上传的保持 URL，新图保持 base64，避免重复上传）
      · record.localImages —— 本地原图备份，只存在浏览器里、不推送；与 images 等长，
@@ -1688,6 +1881,38 @@ li.search { position: relative; }
   function closeModal() {
     document.getElementById('recordModal').classList.remove('show');
     editingRecordId = null;
+    editingTags = [];
+    var chips = document.getElementById('tagChips');
+    if (chips) chips.innerHTML = '';
+    var editor = document.getElementById('tagEditor');
+    if (editor) editor.hidden = true;
+    var tagInput = document.getElementById('tagInput');
+    if (tagInput) tagInput.value = '';
+  }
+
+  /* 「添加标签」：拉开编辑区并把光标送进去 */
+  var addTagBtn = document.getElementById('addTagBtn');
+  if (addTagBtn) {
+    addTagBtn.addEventListener('click', function() {
+      var editor = document.getElementById('tagEditor');
+      if (editor) editor.hidden = false;
+      var tagInput = document.getElementById('tagInput');
+      if (tagInput) tagInput.focus();
+    });
+  }
+  var tagInputEl = document.getElementById('tagInput');
+  if (tagInputEl) {
+    tagInputEl.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ',' || e.key === '，' || e.key === '、') {
+        e.preventDefault();
+        e.stopPropagation();   // 别让回车冒到弹窗的快捷键上
+        commitTagInput();
+      }
+    });
+    /* 粘贴或直接敲逗号时立刻拆成胶囊，不用再按一次回车 */
+    tagInputEl.addEventListener('input', function() {
+      if (/[,，、;；]/.test(this.value)) commitTagInput();
+    });
   }
 
   // 处理粘贴事件（截图图片/图片文件/普通文件/文字）
@@ -1772,8 +1997,8 @@ li.search { position: relative; }
   function saveRecord() {
     var text = document.getElementById('recordText').value.trim();
     var title = document.getElementById('recordTitle').value.trim();
-    if (!text && !editingImages.length && !title) {
-      alert('请输入文字或添加图片~');
+    if (!text && !editingImages.length && !title && !editingTags.length) {
+      alert('请输入文字、添加图片或打个标签~');
       return;
     }
     var now = Date.now();
@@ -1789,12 +2014,14 @@ li.search { position: relative; }
              点保存但什么都没改 → 不动 updatedTime、不推送云端，记录仍是创建时的样子。 */
           var didChange = (record.title || '') !== nextTitle ||
                           (record.text || '') !== nextText ||
-                          !sameImageList(displayImages(record), editingImages);
+                          !sameImageList(displayImages(record), editingImages) ||
+                          !sameTagList(record.tags, editingTags);
           if (didChange) {
             var imgsBefore = displayImages(record);
             record.title = nextTitle;
             record.text = nextText;
             syncRecordImages(record, editingImages);   // 图片：已上传的沿用 URL，新图存 base64
+            setRecordTags(record, editingTags);
             /* 图片换了，旧的识别结果作废，保存后重新识别 */
             if (!sameImageList(imgsBefore, displayImages(record))) {
               record.ocrText = '';
@@ -1814,6 +2041,7 @@ li.search { position: relative; }
             updatedTime: now
           };
           syncRecordImages(addRec, editingImages);
+          setRecordTags(addRec, editingTags);
           records.push(addRec);
           savedRecord = addRec;
         }
@@ -1828,6 +2056,7 @@ li.search { position: relative; }
           updatedTime: now
         };
         syncRecordImages(newRec, editingImages);
+        setRecordTags(newRec, editingTags);
         records.push(newRec);
         savedRecord = newRec;
       }
@@ -2335,6 +2564,13 @@ li.search { position: relative; }
       if (dateText && dateText.toLowerCase().indexOf(q.toLowerCase()) >= 0) {
         rows.push({ id: r.id, field: '日期', label: dateText, context: r.title || (r.text || '').slice(0, 24) });
       }
+      /* 第五类：标签。分类就叫「标签」，点了定位到那颗胶囊 */
+      var tagList = Array.isArray(r.tags) ? r.tags : [];
+      for (var tg = 0; tg < tagList.length; tg++) {
+        if (tagList[tg] && PinyinMatch.hit(tagList[tg], q)) {
+          rows.push({ id: r.id, field: '标签', label: tagList[tg], context: dateText, tag: tagList[tg] });
+        }
+      }
     });
     currentSearchRows = rows;
     /* 面板改显示搜索结果了，别再被历史更新覆盖 */
@@ -2362,7 +2598,7 @@ li.search { position: relative; }
       addMark(ctx, r.context, q);
       b.appendChild(top);
       b.appendChild(ctx);
-      b.addEventListener('click', function() { saveSearchHistory(q); goRecordField(r.id, r.field, r.isImage); });
+      b.addEventListener('click', function() { saveSearchHistory(q); goRecordField(r.id, r.field, r.isImage, r.tag); });
       /* 悬停高亮统一由面板上的 mousemove 处理，见上方注释 */
       recordSearchResults.appendChild(b);
     });
@@ -2403,7 +2639,7 @@ li.search { position: relative; }
     setTimeout(function() { el.classList.remove('search-hit'); }, 2400);
   }
 
-  function goRecordField(id, field, isImage) {
+  function goRecordField(id, field, isImage, tag) {
     closeSearchPopup();
     render();
     var card = document.getElementById('record-' + id);
@@ -2418,6 +2654,19 @@ li.search { position: relative; }
     }
     else if (field === '正文') target = card.querySelector('.record-text') || card;
     else if (field === '日期') target = card.querySelector('.record-time') || card;
+    /* 标签：光圈落在命中的那颗胶囊上，找不到就框整组 */
+    else if (field === '标签') {
+      var tagWrap = card.querySelector('.record-tags');
+      if (tagWrap) {
+        var want = String(tag || '').trim();
+        var nodes = tagWrap.querySelectorAll('.record-tag');
+        var found = null;
+        for (var i = 0; i < nodes.length; i++) {
+          if (nodes[i].textContent.trim() === want) { found = nodes[i]; break; }
+        }
+        target = found || tagWrap;
+      }
+    }
     flashRecord(target, anchor);
   }
 
@@ -2481,7 +2730,7 @@ li.search { position: relative; }
         if (!currentSearchRows.length) renderSearch(q);
         var r = currentSearchRows[activeSearchIndex] || currentSearchRows[0];
         if (!r) return;
-        goRecordField(r.id, r.field, r.isImage);
+        goRecordField(r.id, r.field, r.isImage, r.tag);
       }
     });
   }
@@ -2705,6 +2954,10 @@ li.search { position: relative; }
         var winner = r;
         if (exist.localImages && exist.localImages.length) {
           winner = Object.assign({}, r, { localImages: exist.localImages });
+        }
+        /* 标签只存在本地（云端不存），云端版本胜出时别把它洗掉 */
+        if (exist.tags && exist.tags.length) {
+          winner = Object.assign({}, winner, { tags: exist.tags });
         }
         map[r.id] = winner;
       }
