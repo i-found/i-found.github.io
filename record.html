@@ -594,7 +594,7 @@ li.search { position: relative; }
 }
 
 .record-title {
-  font-size: 18px;
+  font-size: 21px;
   font-weight: bold;
   color: #2c3e50;
   margin-bottom: 10px;
@@ -609,6 +609,8 @@ li.search { position: relative; }
   word-break: break-word;
   margin-bottom: 12px;
 }
+/* Ctrl+B 加粗的正文：比默认 bold 略轻一点，跟标题的 700 区分开 */
+.record-text b, .record-text strong { font-weight: 600; }
 .record-image {
   max-width: 100%;
   border-radius: 6px;
@@ -697,7 +699,8 @@ li.search { position: relative; }
 .record-bottom .record-delete {
   position: static;
   flex: 0 0 auto;
-  margin-left: -16px;   /* 卡片内边距 24，退回来 16 → 距左边 8，和距底边 8 相等 */
+  /* 不再往回缩：删除钮左缘跟标题、正文的左缘对齐（同为卡片内边距 24） */
+  margin-left: 0;
 }
 .record-time {
   font-size: 13px;
@@ -839,6 +842,34 @@ li.search { position: relative; }
   font-family: inherit;
 }
 .modal-content textarea:focus { border-color: #ff6b81; }
+
+/* 正文编辑区（contenteditable）：外观跟原来的 textarea 一致 */
+.modal-content .record-rich {
+  width: 100%;
+  min-height: 140px;
+  max-height: 55vh;
+  overflow-y: auto;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 15px;
+  line-height: 1.7;
+  box-sizing: border-box;
+  font-family: inherit;
+  outline: none;
+  white-space: pre-wrap;
+  word-break: break-word;
+  cursor: text;
+}
+.modal-content .record-rich:focus { border-color: #ff6b81; }
+.modal-content .record-rich b,
+.modal-content .record-rich strong { font-weight: 700; }
+/* 空内容时显示占位文案（:empty 认不出 <br>，所以由 JS 挂 is-empty） */
+.modal-content .record-rich.is-empty::before {
+  content: attr(data-placeholder);
+  color: #bbb;
+  pointer-events: none;
+}
 
 /* 图片预览 */
 .image-preview-area { margin-top: 12px; }
@@ -1114,8 +1145,10 @@ li.search { position: relative; }
     <div class="modal-time" id="modalTime"></div>
     <input type="text" class="modal-title-input" id="recordTitle" placeholder="输入笔记标题"
            autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-    <textarea id="recordText" placeholder="写下你想记录的..."
-              autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
+    <!-- 正文用可编辑 div 而不是 textarea：只有它能局部加粗（Ctrl+B） -->
+    <div id="recordText" class="record-rich" contenteditable="true" role="textbox"
+         aria-multiline="true" data-placeholder="写下你想记录的..."
+         autocorrect="off" autocapitalize="off" spellcheck="false"></div>
     <div class="image-preview-area" id="imagePreviewArea" style="display:none;">
       <div class="image-preview-grid" id="imagePreviewGrid"></div>
     </div>
@@ -1550,7 +1583,7 @@ li.search { position: relative; }
       if (r.title) {
         html += '<div class="record-title">' + escapeHtml(r.title) + '</div>';
       }
-      html += '<div class="record-text">' + escapeHtml(r.text) + '</div>';
+      html += '<div class="record-text">' + formatRichText(r.text) + '</div>';
       var imgs = displayImages(r);
       if (imgs.length) {
         html += '<div class="record-images">';
@@ -1584,9 +1617,92 @@ li.search { position: relative; }
 
   // 搜索关键词高亮
   function highlightText(text, keyword) {
-    if (!keyword) return escapeHtml(text);
+    if (!keyword) return formatRichText(text);
     var esc = escapeHtml(text);
-    return esc.replace(new RegExp('(' + keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'), '<mark class="search-hl">$1</mark>');
+    /* 先高亮再解析加粗：这样搜索词落在粗体里也能正常出 mark，星号也不会被关键词吃掉 */
+    return parseBoldMarkup(esc.replace(new RegExp('(' + keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'), '<mark class="search-hl">$1</mark>'));
+  }
+
+  /* ============ 正文加粗（Ctrl+B） ============
+     库里存的还是纯文本，只把加粗段落写成 **这样**，好处是导出、搜索、
+     云端同步、老记录全不用改；渲染时再还原成 <b>。 */
+
+  // **加粗** → <b>加粗</b>（入参需是 escape 过的 HTML）
+  function parseBoldMarkup(escaped) {
+    return String(escaped == null ? '' : escaped).replace(/\*\*([\s\S]+?)\*\*/g, '<b>$1</b>');
+  }
+
+  function formatRichText(text) {
+    return parseBoldMarkup(escapeHtml(text == null ? '' : String(text)));
+  }
+
+  // 编辑区 DOM → 带 ** 标记的纯文本
+  function richToMarkup(root) {
+    var s = '';
+    var kids = root.childNodes;
+    for (var i = 0; i < kids.length; i++) {
+      var c = kids[i];
+      if (c.nodeType === 3) { s += c.nodeValue; continue; }
+      if (c.nodeType !== 1) continue;
+      var tag = c.nodeName.toLowerCase();
+      if (tag === 'br') { s += '\n'; continue; }
+      var inner = richToMarkup(c);
+      if (!inner) continue;
+      var bold = tag === 'b' || tag === 'strong' || isBoldNode(c);
+      if (bold) inner = '**' + inner + '**';
+      // 浏览器回车会生成 <div>/<p>，换算行：块之间补一个 \n
+      if (tag === 'div' || tag === 'p' || tag === 'li') {
+        if (s && s.charAt(s.length - 1) !== '\n') s += '\n';
+        s += inner;
+      } else {
+        s += inner;
+      }
+    }
+    return s;
+  }
+
+  function isBoldNode(el) {
+    try {
+      if (el.style && el.style.fontWeight) return parseInt(el.style.fontWeight, 10) >= 600;
+      return parseInt(window.getComputedStyle(el).fontWeight, 10) >= 600;
+    } catch (e) { return false; }
+  }
+
+  // 带 ** 标记的纯文本 → 编辑区 DOM
+  function setRecordText(value) {
+    var el = document.getElementById('recordText');
+    if (!el) return;
+    var text = String(value == null ? '' : value);
+    el.innerHTML = '';
+    var re = /\*\*([\s\S]+?)\*\*/g, last = 0, m;
+    var pushText = function (str) {
+      var parts = String(str).split('\n');
+      for (var i = 0; i < parts.length; i++) {
+        if (i) el.appendChild(document.createElement('br'));
+        if (parts[i]) el.appendChild(document.createTextNode(parts[i]));
+      }
+    };
+    while ((m = re.exec(text))) {
+      pushText(text.slice(last, m.index));
+      var b = document.createElement('b');
+      b.textContent = m[1];
+      el.appendChild(b);
+      last = m.index + m[0].length;
+    }
+    pushText(text.slice(last));
+    updateRichEmpty();
+  }
+
+  function getRecordText() {
+    var el = document.getElementById('recordText');
+    return el ? richToMarkup(el) : '';
+  }
+
+  function updateRichEmpty() {
+    var el = document.getElementById('recordText');
+    if (!el) return;
+    var has = !!String(el.textContent || '').replace(/\u200b/g, '').trim();
+    el.classList.toggle('is-empty', !has);
   }
 
   function escapeHtml(str) {
@@ -1608,7 +1724,7 @@ li.search { position: relative; }
       var record = findRecord(editingRecordId);
       if (record) {
         document.getElementById('recordTitle').value = record.title || '';
-        document.getElementById('recordText').value = record.text || '';
+        setRecordText(record.text || '');
         /* 编辑弹窗里显示这条记录的创建时间（列表里显示的是"修改于"，这里补回创建时间） */
         document.getElementById('modalTime').textContent = '创建于 ' + formatTime(record.time || record.id);
         var editImgs = displayImages(record);
@@ -1624,7 +1740,7 @@ li.search { position: relative; }
       }
     } else {
       // 新增模式
-      document.getElementById('recordText').value = '';
+      setRecordText('');
       document.getElementById('recordTitle').value = '';
       document.getElementById('modalTime').textContent = '创建于 ' + formatTime(now);
       editingImages = [];
@@ -1961,6 +2077,18 @@ li.search { position: relative; }
       for (var k = 0; k < imageFiles.length; k++) handleImage(imageFiles[k]);
       return;
     }
+
+    /* 纯文字：正文现在是可编辑 div，直接粘会带进原网页的字体颜色字号，
+       只取纯文本，跟以前 textarea 的表现一致 */
+    var tgt = e.target;
+    if (tgt && tgt.closest && tgt.closest('#recordText')) {
+      var plain = cd.getData ? cd.getData('text/plain') : '';
+      if (plain) {
+        e.preventDefault();
+        document.execCommand('insertText', false, plain);
+        updateRichEmpty();
+      }
+    }
   }
 
   // 处理图片选择（追加到数组，不覆盖之前的）
@@ -2006,7 +2134,7 @@ li.search { position: relative; }
 
   // 保存记录
   function saveRecord() {
-    var text = document.getElementById('recordText').value.trim();
+    var text = getRecordText().trim();
     var title = document.getElementById('recordTitle').value.trim();
     if (!text && !editingImages.length && !title && !editingTags.length) {
       alert('请输入文字、添加图片或打个标签~');
@@ -2746,9 +2874,19 @@ li.search { position: relative; }
     });
   }
 
-  // 键盘快捷键 Ctrl+Enter 保存
+  // 键盘快捷键：Ctrl+Enter 保存、Ctrl+B 加粗
   _el = document.getElementById('recordText');
-  if (_el) _el.addEventListener('keydown', function(e) { if (e.ctrlKey && e.key === 'Enter') saveRecord(); });
+  if (_el) _el.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && e.key === 'Enter') { saveRecord(); return; }
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'b' || e.key === 'B')) {
+      e.preventDefault();
+      document.execCommand('bold');
+      updateRichEmpty();
+    }
+  });
+  // 输入/删除后维护占位文案
+  if (_el) _el.addEventListener('input', updateRichEmpty);
+  updateRichEmpty();
 
   // 编辑/删除/看图 事件委托（双击卡片也能进编辑，算备用入口）
   var lbClickTimer = null;   /* 图片单击稍等一下，好跟双击卡片区分开 */
