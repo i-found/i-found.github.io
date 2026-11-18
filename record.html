@@ -1313,16 +1313,39 @@ li.search { position: relative; }
       opts.body = JSON.stringify(body);
       headers['Content-Type'] = 'application/json';
     }
+    /* 以前没有超时：网络到 Cloudflare 卡住时请求会一直挂着，状态永远停在「同步中…」。
+       现在 20 秒没有响应就掐断，至少能告诉用户是网络问题，而不是假装还在同步。 */
+    var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var timer = null;
+    if (ctrl) {
+      opts.signal = ctrl.signal;
+      timer = setTimeout(function() { try { ctrl.abort(); } catch (e) {} }, 20000);
+    }
+    var done = function() { if (timer) { clearTimeout(timer); timer = null; } };
+
     return fetch(API_BASE + path, opts).then(function(res) {
+      done();
       if (res.status === 401) {
         var err = new Error('密钥不正确');
         err.status = 401;
         throw err;
       }
       if (!res.ok) {
-        return res.text().then(function(t) { throw new Error('HTTP ' + res.status); });
+        var e2 = new Error('HTTP ' + res.status);
+        e2.status = res.status;
+        throw e2;
       }
       return res.json();
+    }, function(err) {
+      done();
+      if (err && err.name === 'AbortError') {
+        var e3 = new Error('连不上云端（20 秒无响应），检查这台电脑的网络');
+        e3.timeout = true;
+        throw e3;
+      }
+      var e4 = new Error('连不上云端：' + ((err && err.message) || '网络错误'));
+      e4.network = true;
+      throw e4;
     });
   }
 
@@ -1359,7 +1382,7 @@ li.search { position: relative; }
           updatedTime: r.updated_at || r.created_at || idNum
         });
       });
-      showSyncStatus('云端已拉取 ✓', 'success');
+      showSyncStatus('云端已拉取 ' + out.length + ' 条 ✓', 'success');
       setTimeout(function() { showSyncStatus('', ''); }, 2000);
       return out;
     }).catch(function(err) {
@@ -1369,7 +1392,7 @@ li.search { position: relative; }
         showSyncStatus('密钥不正确，请重新设置（本地数据不受影响）', 'error');
         return null;
       }
-      showSyncStatus('同步失败: ' + err.message, 'error');
+      showSyncStatus('同步失败: ' + err.message + '（点这里重试）', 'error');
       return null;
     });
   }
@@ -3288,6 +3311,35 @@ li.search { position: relative; }
   }
 
   // 初始化：先本地加载，再从云端拉取合并，然后把本地独有/更新的记录补推回云端
+  /* 与云端同步一次：拉全量 → 合并 → 把本地独有的补传上去。
+     页面初始化时自动跑一次；同步失败后点左下角状态文字也能再跑一次。 */
+  var syncRunning = false;
+  function syncWithCloud() {
+    if (!hasToken() || syncRunning) return Promise.resolve();
+    syncRunning = true;
+    var finish = function() { syncRunning = false; };
+    return loadFromD1().then(function(d1Records) {
+      if (d1Records === null) return;
+      lastCloudRecords = d1Records.slice();
+      var localBefore = records.slice();
+      var filteredCloud = d1Records.filter(function(r) { return !isPendingDelete(r.id); });
+      mergeRecords(filteredCloud);
+      saveRecordsToLocal();
+      render();
+      return pushLocalChanges(localBefore, d1Records).then(function(res) {
+        if (res.failed > 0) {
+          showSyncStatus('本地有 ' + res.failed + ' 条未同步：' + res.lastError + '（点这里重试）', 'error');
+        } else if (res.pushed > 0 || res.deletedRetried > 0) {
+          showSyncStatus('补同步完成：上传 ' + res.pushed + ' 条，删除重试 ' + res.deletedRetried + ' 条 ✓', 'success');
+          setTimeout(function() { showSyncStatus('', ''); }, 3000);
+        } else {
+          showSyncStatus('已同步 ' + records.length + ' 条 ✓', 'success');
+          setTimeout(function() { showSyncStatus('', ''); }, 2000);
+        }
+      });
+    }).then(finish, finish);
+  }
+
   function init() {
     updateSyncUI();
     loadRecords(); // 异步加载（IndexedDB）
@@ -3296,29 +3348,15 @@ li.search { position: relative; }
     /* 保存记录时就会自动识别图片文字；这里只是把历史漏掉的静默补一遍 */
     setTimeout(autoBackfillOcr, 2500);
 
-    if (hasToken()) {
-      loadFromD1().then(function(d1Records) {
-        if (d1Records === null) return;
-        lastCloudRecords = d1Records.slice();
-        var localBefore = records.slice();
-        var pending = getPendingDeletes();
-        var filteredCloud = d1Records.filter(function(r) { return !isPendingDelete(r.id); });
-        mergeRecords(filteredCloud);
-        saveRecordsToLocal();
-        render();
-        return pushLocalChanges(localBefore, d1Records).then(function(res) {
-          if (res.failed > 0) {
-            showSyncStatus('本地有 ' + res.failed + ' 条未同步：' + res.lastError + '，联网后刷新会自动重试', 'error');
-          } else if (res.pushed > 0 || res.deletedRetried > 0) {
-            showSyncStatus('补同步完成：上传 ' + res.pushed + ' 条，删除重试 ' + res.deletedRetried + ' 条 ✓', 'success');
-            setTimeout(function() { showSyncStatus('', ''); }, 3000);
-          } else {
-            showSyncStatus('已同步 ✓', 'success');
-            setTimeout(function() { showSyncStatus('', ''); }, 2000);
-          }
-        });
-      });
+    // 状态文字可以点：卡住或失败时手动重来一次，不用刷新整页
+    var st = document.getElementById('syncStatus');
+    if (st) {
+      st.style.cursor = 'pointer';
+      st.title = '点这里重新同步';
+      st.addEventListener('click', function() { syncWithCloud(); });
     }
+
+    syncWithCloud();
   }
 
   // 暴露给内联 onclick 调用
